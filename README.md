@@ -11,11 +11,19 @@ Welcome to the Telegram Link Shortener Bot project! This bot allows users to sho
 3. Set up environment variables: Create a `.env` file in the project root and provide your Telegram Bot Token, MongoDB credentials, and other necessary settings.
 4. Start the bot: `npm start`
 
-## Features
+## Commands
 
-- Shorten URLs with the `/shorten` command.
-- View your shortened links with the `/mylinks` command.
-- Get a friendly greeting and command list with the `/start` command.
+- `/start`: Get a friendly greeting and command list.
+- `/shorten [url]`: Shorten a URL.
+- `/mylinks`: View your shortened links.
+- `/deleteallmylinks`: Delete all your shortened links.
+
+## Technology Stack
+
+- Node.js
+- MongoDB
+- Telegram Bot API
+- Shortid library
 
 ## Contributing
 
