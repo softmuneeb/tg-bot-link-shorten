@@ -24,12 +24,28 @@ const client = new MongoClient(uri, {
   },
 });
 
+async function deleteAllUserLinks(chatId) {
+  try {
+    const db = client.db(dbName);
+    await db.collection('short_links').deleteMany({ chatId });
+    console.log(`Deleted all links for chat ID ${chatId}`);
+  } catch (err) {
+    console.error('Error deleting user links:', err);
+  }
+}
+
 async function start() {
   try {
     await client.connect();
     console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
+
+    bot.onText(/\/deleteallmylinks/, async msg => {
+      const chatId = msg.chat.id;
+      deleteAllUserLinks(chatId);
+      bot.sendMessage(chatId, 'All your links have been deleted.');
+    });
 
     bot.onText(/\/start/, msg => {
       const chatId = msg.chat.id;
