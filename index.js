@@ -15,7 +15,7 @@ const uri = `mongodb+srv://${username}:${password}@${host}/?retryWrites=true&w=m
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
 const dbName = 'link_shortener';
-
+console.log({ uri });
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -37,6 +37,7 @@ async function deleteAllUserLinks(chatId) {
 async function start() {
   try {
     await client.connect();
+    await client.db('admin').command({ ping: 1 });
     console.log('Connected to MongoDB');
 
     const db = client.db(dbName);
