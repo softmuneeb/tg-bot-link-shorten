@@ -1,133 +1,145 @@
-const dotenv = require('dotenv');
-const { MongoClient, ServerApiVersion } = require('mongodb');
 const TelegramBot = require('node-telegram-bot-api');
-const shortid = require('shortid');
-
-dotenv.config();
-
+const dotenv = require('dotenv');
+dotenv.config()
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const username = process.env.MONGO_USERNAME;
-const password = process.env.MONGO_PASSWORD;
-const host = process.env.MONGO_HOST;
-
-const uri = `mongodb+srv://${username}:${password}@${host}/?retryWrites=true&w=majority`;
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
-const dbName = 'link_shortener';
-console.log({ uri });
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
+const options = {
+  reply_markup: {
+    keyboard: [
+      ['Shorten a URL'],
+      ['Buy a domain name'],
+      ['Subscribe to plans'],
+      ['See my shortened links'],
+      ['See my domains'],
+    ],
+    resize_keyboard: true,
+    one_time_keyboard: true,
   },
+};
+
+const state = {};
+
+bot.onText(/\/start/, msg => {
+  const chatId = msg.chat.id;
+  state[chatId] = {};
+  bot.sendMessage(
+    chatId,
+    'Welcome to the URL Shortener Bot! Please select an option:',
+    options,
+  );
 });
 
-async function deleteAllUserLinks(chatId) {
-  try {
-    const db = client.db(dbName);
-    await db.collection('short_links').deleteMany({ chatId });
-    console.log(`Deleted all links for chat ID ${chatId}`);
-  } catch (err) {
-    console.error('Error deleting user links:', err);
+bot.onText(/Shorten a URL/, msg => {
+  const chatId = msg.chat.id;
+  state[chatId].action = 'shorten';
+  bot.sendMessage(chatId, 'Please provide the URL you want to shorten:');
+});
+
+bot.onText(/Buy a domain name/, msg => {
+  const chatId = msg.chat.id;
+  state[chatId].action = 'buy';
+  bot.sendMessage(chatId, 'Please enter the desired domain name:');
+});
+
+bot.onText(/Subscribe to plans/, msg => {
+  const chatId = msg.chat.id;
+  state[chatId].action = 'subscribe';
+  bot.sendMessage(chatId, 'Choose a subscription plan:', {
+    reply_markup: {
+      keyboard: [['Daily'], ['Weekly'], ['Monthly']],
+      resize_keyboard: true,
+      one_time_keyboard: true,
+    },
+  });
+});
+
+bot.onText(/See my shortened links/, msg => {
+  const chatId = msg.chat.id;
+  // Implement logic to retrieve and display shortened links
+  const shortenedLinks = getShortenedLinks(chatId); // Stubbed function
+  if (shortenedLinks.length > 0) {
+    const linksText = shortenedLinks.join('\n');
+    bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
+  } else {
+    bot.sendMessage(chatId, 'You have no shortened links yet.');
   }
+});
+
+bot.onText(/See my domains/, msg => {
+  const chatId = msg.chat.id;
+  // Implement logic to retrieve and display purchased domains
+  const purchasedDomains = getPurchasedDomains(chatId); // Stubbed function
+  if (purchasedDomains.length > 0) {
+    const domainsText = purchasedDomains.join('\n');
+    bot.sendMessage(chatId, `Here are your purchased domains:\n${domainsText}`);
+  } else {
+    bot.sendMessage(chatId, 'You have no purchased domains yet.');
+  }
+});
+
+bot.onText(/Daily|Weekly|Monthly/, (msg, match) => {
+  const chatId = msg.chat.id;
+  const plan = match[0];
+  // Implement logic for handling subscription plans
+  // For example, process payment and set subscription in the state
+  state[chatId].subscription = plan;
+  bot.sendMessage(
+    chatId,
+    `Payment successful! You are now subscribed to the ${plan} plan. Enjoy unlimited URL shortening with your purchased domain names.`,
+  );
+});
+
+bot.on('message', msg => {
+  const chatId = msg.chat.id;
+  const message = msg.text;
+
+  switch (state[chatId]?.action) {
+    case 'shorten':
+      // Implement logic to shorten the provided URL
+      const shortenedURL = shortenURL(message); // Stubbed function
+      bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`);
+      break;
+
+    case 'buy':
+      // Implement logic to check domain availability and process purchase
+      const domainPurchaseResult = buyDomain(chatId, message); // Stubbed function
+      bot.sendMessage(chatId, domainPurchaseResult);
+      break;
+
+    case 'subscribe':
+      // Handle cases where user sends unexpected messages during subscription process
+      break;
+
+    default:
+      bot.sendMessage(chatId, "I'm sorry, I didn't understand that command.");
+  }
+
+  delete state[chatId]?.action;
+});
+
+// Stubbed functions for demonstration purposes
+function getShortenedLinks(chatId) {
+  return ['jamesten.com/hnbsGud']; // Replace with actual logic
 }
 
-async function start() {
-  try {
-    await client.connect();
-    await client.db('admin').command({ ping: 1 });
-    console.log('Connected to MongoDB');
-
-    const db = client.db(dbName);
-
-    bot.onText(/\/deleteallmylinks/, async msg => {
-      const chatId = msg.chat.id;
-      deleteAllUserLinks(chatId);
-      bot.sendMessage(chatId, 'All your links have been deleted.');
-    });
-
-    bot.onText(/\/start/, msg => {
-      const chatId = msg.chat.id;
-      const greetings = `Hello there! I'm your link-shortening bot. Here are the commands you can use`;
-
-      const keyboardOptions = {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '/shorten', callback_data: 'shorten' }],
-            [{ text: '/mylinks', callback_data: 'mylinks' }],
-          ],
-        },
-      };
-
-      bot.sendMessage(chatId, greetings, keyboardOptions);
-    });
-
-    bot.on('callback_query', async query => {
-      const chatId = query.message.chat.id;
-      const command = query.data;
-
-      switch (command) {
-        case 'shorten':
-          bot.sendMessage(
-            chatId,
-            'Please provide the URL you want to shorten.',
-          );
-          break;
-
-        case 'mylinks':
-          try {
-            const userLinks = await db
-              .collection('short_links')
-              .find({ chatId })
-              .toArray();
-
-            if (userLinks.length === 0) {
-              bot.sendMessage(chatId, 'No shortened links found.');
-            } else {
-              let response = 'Your shortened links:\n';
-              userLinks.forEach(link => {
-                response += `- ${link.originalUrl} -> ${link.shortUrl}\n\n`;
-              });
-              bot.sendMessage(chatId, response);
-            }
-          } catch (err) {
-            console.error('Error fetching user links:', err);
-            bot.sendMessage(
-              chatId,
-              'An error occurred while fetching your links.',
-            );
-          }
-          break;
-
-        default:
-          bot.sendMessage(chatId, 'Invalid command.');
-          break;
-      }
-
-      bot.answerCallbackQuery(query.id);
-    });
-
-    bot.onText(/^(?!\/)(.+)$/, async (msg, match) => {
-      const chatId = msg.chat.id;
-      const originalUrl = match[1];
-
-      // Generate short URL logic
-      const shortUrl = `https://custom-link.com/${shortid.generate()}`;
-
-      // Store original and short URLs in MongoDB
-      await db.collection('short_links').insertOne({
-        chatId,
-        originalUrl,
-        shortUrl,
-      });
-
-      bot.sendMessage(chatId, `Shortened URL: ${shortUrl}`);
-    });
-  } catch (err) {
-    console.error('Error connecting to MongoDB:', err);
-  }
+function getPurchasedDomains(chatId) {
+  return ['jamesten.com']; // Replace with actual logic
 }
 
-start(); // Start the server after connecting to MongoDB and setting up bot commands
+function shortenURL(url) {
+  return 'SHORTENED_URL'; // Replace with actual logic
+}
+
+function buyDomain(chatId, domain) {
+  if (domain === 'jamesten.com') {
+    return 'Sorry, the domain name jamesten.com is already taken.';
+  }
+  // Implement logic to process domain purchase
+  return (
+    'Congratulations! You have successfully purchased the domain name ' + domain
+  );
+}
+
+console.log('Bot is running...');
