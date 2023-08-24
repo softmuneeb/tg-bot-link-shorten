@@ -1,34 +1,42 @@
-# Telegram Link Shortener Bot
+Escrow system API description:
 
-![Telegram Link Shortener Bot](bot.png)
+1. Create Escrow Transaction:
+   - Endpoint: POST /api/escrow/create
+   - Description: This endpoint allows a user to initiate a new escrow transaction by specifying the involved parties, funds, and terms.
 
-Welcome to the Telegram Link Shortener Bot project! This bot allows users to shorten URLs using a simple command. It's built with Node.js, the Telegram Bot API, and MongoDB for data storage.
+2. Get Escrow Details:
+   - Endpoint: GET /api/escrow/:id
+   - Description: Retrieve the details of a specific escrow transaction using its unique identifier.
 
-## Getting Started
+3. Update Escrow Status:
+   - Endpoint: PUT /api/escrow/:id/update
+   - Description: Update the status of an escrow transaction (e.g., from "Initiated" to "Funds Released" or "Refunded").
 
-1. Clone this repository: `git clone https://github.com/softmuneeb/telegram-link-shortener-bot.git`
-2. Install dependencies: `npm install`
-3. Set up environment variables: Create a `.env` file in the project root and provide your Telegram Bot Token, MongoDB credentials, and other necessary settings.
-4. Start the bot: `npm start`
+4. Release Funds:
+   - Endpoint: POST /api/escrow/:id/release
+   - Description: Initiate the release of funds from escrow to the designated recipient once the agreed-upon conditions are met.
 
-## Commands
+5. Refund Funds:
+   - Endpoint: POST /api/escrow/:id/refund
+   - Description: If the conditions are not met or an issue arises, initiate the refund of funds back to the sender.
 
-- `/start`: Get a friendly greeting and command list.
-- `/shorten [url]`: Shorten a URL.
-- `/mylinks`: View your shortened links.
-- `/deleteallmylinks`: Delete all your shortened links.
+6. Dispute Escrow:
+   - Endpoint: POST /api/escrow/:id/dispute
+   - Description: If there is a disagreement between the parties, this endpoint can be used to raise a dispute and involve a mediator or arbitrator.
 
-## Technology Stack
+7. Mediation Process:
+   - Endpoint: POST /api/escrow/:id/mediate
+   - Description: If a dispute arises, this endpoint facilitates the mediation process, allowing a third party to intervene and make a decision.
 
-- Node.js
-- MongoDB
-- Telegram Bot API
-- Shortid library
+8. Retrieve User Escrows:
+   - Endpoint: GET /api/user/:userId/escrows
+   - Description: Get a list of escrow transactions involving a specific user, whether they are the sender, recipient, or mediator.
 
-## Contributing
+9. Escrow History:
+   - Endpoint: GET /api/escrow/:id/history
+   - Description: Retrieve the transaction history and status changes for a particular escrow transaction.
 
-If you're interested in contributing to this project, please read the [Contributing Guidelines](CONTRIBUTING.md) to get started.
+10. Escrow Metrics:
+    - Endpoint: GET /api/escrow/metrics
+    - Description: Get aggregated metrics about the escrow transactions, such as total amount held in escrow, successful transactions, disputes, etc.
 
-## License
-
-This project is licensed under the [MIT License](LICENSE).

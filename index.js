@@ -1,145 +1,80 @@
 const TelegramBot = require('node-telegram-bot-api');
 const dotenv = require('dotenv');
-dotenv.config()
+dotenv.config();
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
-const options = {
-  reply_markup: {
-    keyboard: [
-      ['Shorten a URL'],
-      ['Buy a domain name'],
-      ['Subscribe to plans'],
-      ['See my shortened links'],
-      ['See my domains'],
-    ],
-    resize_keyboard: true,
-    one_time_keyboard: true,
-  },
-};
-
-const state = {};
-
 bot.onText(/\/start/, msg => {
   const chatId = msg.chat.id;
-  state[chatId] = {};
-  bot.sendMessage(
-    chatId,
-    'Welcome to the URL Shortener Bot! Please select an option:',
-    options,
-  );
+
+  const startMenu = `
+    👋 Welcome to the Escrow Bot!
+    I'm here to assist you with secure transactions.
+
+    Here are the available options:
+
+    1. 💼 Create New Escrow
+    2. 📊 View Existing Escrows
+    3. 💸 Release Funds
+    4. 🔙 Refund Funds
+    5. 🛡️ Initiate Dispute
+    6. 🕊️ Mediation Process
+    7. ℹ️ Help & FAQs
+    `;
+
+  bot.sendMessage(chatId, startMenu);
 });
 
-bot.onText(/Shorten a URL/, msg => {
-  const chatId = msg.chat.id;
-  state[chatId].action = 'shorten';
-  bot.sendMessage(chatId, 'Please provide the URL you want to shorten:');
+bot.onText(/1/, msg => {
+  // Simulate creating a new escrow
+  const response =
+    "You've initiated a new escrow. Please provide transaction details.";
+  bot.sendMessage(msg.chat.id, response);
+  // You can prompt for transaction details here
 });
 
-bot.onText(/Buy a domain name/, msg => {
-  const chatId = msg.chat.id;
-  state[chatId].action = 'buy';
-  bot.sendMessage(chatId, 'Please enter the desired domain name:');
+bot.onText(/2/, msg => {
+  // Simulate viewing existing escrows
+  const response =
+    'Here are your existing escrows:\n1. Escrow #1\n2. Escrow #2';
+  bot.sendMessage(msg.chat.id, response);
 });
 
-bot.onText(/Subscribe to plans/, msg => {
-  const chatId = msg.chat.id;
-  state[chatId].action = 'subscribe';
-  bot.sendMessage(chatId, 'Choose a subscription plan:', {
-    reply_markup: {
-      keyboard: [['Daily'], ['Weekly'], ['Monthly']],
-      resize_keyboard: true,
-      one_time_keyboard: true,
-    },
-  });
+bot.onText(/3/, msg => {
+  // Simulate releasing funds from an escrow
+  const response = "You've released funds from escrow #1.";
+  bot.sendMessage(msg.chat.id, response);
+  // You can add logic to handle fund release here
 });
 
-bot.onText(/See my shortened links/, msg => {
-  const chatId = msg.chat.id;
-  // Implement logic to retrieve and display shortened links
-  const shortenedLinks = getShortenedLinks(chatId); // Stubbed function
-  if (shortenedLinks.length > 0) {
-    const linksText = shortenedLinks.join('\n');
-    bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
-  } else {
-    bot.sendMessage(chatId, 'You have no shortened links yet.');
-  }
+bot.onText(/4/, msg => {
+  // Simulate refunding funds back to sender
+  const response = "You've initiated a refund for escrow #2.";
+  bot.sendMessage(msg.chat.id, response);
+  // You can add logic to handle refund here
 });
 
-bot.onText(/See my domains/, msg => {
-  const chatId = msg.chat.id;
-  // Implement logic to retrieve and display purchased domains
-  const purchasedDomains = getPurchasedDomains(chatId); // Stubbed function
-  if (purchasedDomains.length > 0) {
-    const domainsText = purchasedDomains.join('\n');
-    bot.sendMessage(chatId, `Here are your purchased domains:\n${domainsText}`);
-  } else {
-    bot.sendMessage(chatId, 'You have no purchased domains yet.');
-  }
+bot.onText(/5/, msg => {
+  // Simulate initiating a dispute
+  const response = "You've initiated a dispute for escrow #3.";
+  bot.sendMessage(msg.chat.id, response);
+  // You can add logic to handle dispute initiation here
 });
 
-bot.onText(/Daily|Weekly|Monthly/, (msg, match) => {
-  const chatId = msg.chat.id;
-  const plan = match[0];
-  // Implement logic for handling subscription plans
-  // For example, process payment and set subscription in the state
-  state[chatId].subscription = plan;
-  bot.sendMessage(
-    chatId,
-    `Payment successful! You are now subscribed to the ${plan} plan. Enjoy unlimited URL shortening with your purchased domain names.`,
-  );
+bot.onText(/6/, msg => {
+  // Simulate starting mediation process
+  const response = "You've started the mediation process for escrow #4.";
+  bot.sendMessage(msg.chat.id, response);
+  // You can add logic to handle mediation here
 });
 
-bot.on('message', msg => {
-  const chatId = msg.chat.id;
-  const message = msg.text;
-
-  switch (state[chatId]?.action) {
-    case 'shorten':
-      // Implement logic to shorten the provided URL
-      const shortenedURL = shortenURL(message); // Stubbed function
-      bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`);
-      break;
-
-    case 'buy':
-      // Implement logic to check domain availability and process purchase
-      const domainPurchaseResult = buyDomain(chatId, message); // Stubbed function
-      bot.sendMessage(chatId, domainPurchaseResult);
-      break;
-
-    case 'subscribe':
-      // Handle cases where user sends unexpected messages during subscription process
-      break;
-
-    default:
-      bot.sendMessage(chatId, "I'm sorry, I didn't understand that command.");
-  }
-
-  delete state[chatId]?.action;
+bot.onText(/7/, msg => {
+  // Simulate accessing help and FAQs
+  const response = 'Here is the help section:\n...';
+  bot.sendMessage(msg.chat.id, response);
+  // You can provide actual help and FAQs here
 });
 
-// Stubbed functions for demonstration purposes
-function getShortenedLinks(chatId) {
-  return ['jamesten.com/hnbsGud']; // Replace with actual logic
-}
-
-function getPurchasedDomains(chatId) {
-  return ['jamesten.com']; // Replace with actual logic
-}
-
-function shortenURL(url) {
-  return 'SHORTENED_URL'; // Replace with actual logic
-}
-
-function buyDomain(chatId, domain) {
-  if (domain === 'jamesten.com') {
-    return 'Sorry, the domain name jamesten.com is already taken.';
-  }
-  // Implement logic to process domain purchase
-  return (
-    'Congratulations! You have successfully purchased the domain name ' + domain
-  );
-}
-
-console.log('Bot is running...');
+// Start the bot
+console.log('Escrow Bot is running...');
