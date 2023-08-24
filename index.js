@@ -1,6 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const dotenv = require('dotenv');
-dotenv.config()
+dotenv.config();
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
@@ -103,35 +103,32 @@ bot.onText(/Daily|Weekly|Monthly/, (msg, match) => {
   bot.sendMessage(
     chatId,
     `Payment successful! You are now subscribed to the ${plan} plan. Enjoy unlimited URL shortening with your purchased domain names.`,
+    options,
   );
 });
 
 bot.on('message', msg => {
   const chatId = msg.chat.id;
   const message = msg.text;
+  const action = state[chatId]?.action;
 
-  switch (state[chatId]?.action) {
-    case 'shorten':
-      // Implement logic to shorten the provided URL
-      const shortenedURL = shortenURL(message); // Stubbed function
-      bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`);
-      break;
-
-    case 'buy':
-      // Implement logic to check domain availability and process purchase
-      const domainPurchaseResult = buyDomain(chatId, message); // Stubbed function
-      bot.sendMessage(chatId, domainPurchaseResult);
-      break;
-
-    case 'subscribe':
-      // Handle cases where user sends unexpected messages during subscription process
-      break;
-
-    default:
-      bot.sendMessage(chatId, "I'm sorry, I didn't understand that command.");
+  if (action === 'shorten') {
+    // Implement logic to shorten the provided URL
+    const shortenedURL = shortenURL(message); // Stubbed function
+    bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`);
+    delete state[chatId]?.action;
+  } else if (action === 'buy') {
+    // Implement logic to check domain availability and process purchase
+    const domainPurchaseResult = buyDomain(chatId, message); // Stubbed function
+    bot.sendMessage(chatId, domainPurchaseResult);
+    delete state[chatId]?.action;
+  } else if (action === 'subscribe') {
+    // Handle cases where user sends unexpected messages during subscription process
+    delete state[chatId]?.action;
   }
-
-  delete state[chatId]?.action;
+  // else {
+  //   bot.sendMessage(chatId, "I'm sorry, I didn't understand that command.");
+  // }
 });
 
 // Stubbed functions for demonstration purposes
