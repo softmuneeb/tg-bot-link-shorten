@@ -9,10 +9,11 @@ const options = {
   reply_markup: {
     keyboard: [
       ['Shorten a URL'],
-      ['Buy a domain name'],
-      ['Subscribe to plans'],
       ['See my shortened links'],
+      ['Buy a domain name'],
       ['See my domains'],
+      ['Subscribe to plans'],
+      ['See my subscribed plan'],
     ],
     resize_keyboard: true,
     one_time_keyboard: true,
@@ -53,6 +54,20 @@ bot.onText(/Subscribe to plans/, msg => {
       one_time_keyboard: true,
     },
   });
+});
+
+bot.onText(/See my subscribed plan/, msg => {
+  const chatId = msg.chat.id;
+  const subscribedPlan = state[chatId]?.subscription;
+
+  if (subscribedPlan) {
+    bot.sendMessage(
+      chatId,
+      `You are currently subscribed to the ${subscribedPlan} plan. Enjoy unlimited URL shortening with your purchased domain names.`,
+    );
+  } else {
+    bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
+  }
 });
 
 bot.onText(/See my shortened links/, msg => {
