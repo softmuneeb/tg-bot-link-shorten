@@ -1,0 +1,49 @@
+1. API checkDomain
+https://api.connectreseller.com/ConnectReseller/ESHOP/checkDomain?APIKey=${apiKey}&websiteName=${domainName}
+{
+  responseMsg: {
+    message: 'Domain Available for Registration',
+    id: 0,
+    statusCode: 200
+  },
+  responseData: null
+}
+
+
+2. API SearchDomainList:
+https://api.connectreseller.com/ConnectReseller/ESHOP/SearchDomainList?APIKey=${API_KEY}&page=1&maxIndex=10&searchQuery=test&orderby=WebsiteName&orderType=asc
+{
+  totalCount: 1,
+  records: [
+    {
+      entryId: 1917472,
+      domainName: 'netzenatest.sbs',
+      customerName: null,
+      resellerName: null,
+      expirationDate: 1723177436000,
+      creationDate: 1691555036000,
+      actionStatus: true,
+      statusName: 'Active',
+      statusId: 8,
+      resellerId: 12122,
+      customerId: 157421,
+      authInfo: null,
+      description: null,
+      contactId: null,
+      actionDate: null,
+      batchId: null,
+      transactionId: null,
+      suspendedByAdminFlag: false,
+      tldId: null,
+      tldName: null,
+      count: null,
+      suspendedByResellerFlag: false,
+      lockedByAdminFlag: false,
+      lockedByResellerFlag: false
+    }
+  ]
+}
+
+3. API UpdateNameServer
+https://api.connectreseller.com/ConnectReseller/ESHOP/UpdateNameServer?APIKey=${apiKey}&domainNameId=${domainNameId}&websiteName=${websiteName}&nameServer1=${nameServer1}&nameServer2=${nameServer2}
+Error updating name server.  Request failed with status code 400
