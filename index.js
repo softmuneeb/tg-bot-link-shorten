@@ -1,16 +1,37 @@
 const TelegramBot = require('node-telegram-bot-api');
-const dotenv = require('dotenv');
 const shortid = require('shortid');
+const dotenv = require('dotenv');
+const fs = require('fs');
 dotenv.config();
+
+const DEVELOPER_CHAT_ID = 5729797630;
+const ADMIN_CHAT_ID = 5729797630;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+
+const adminOptions = {
+  reply_markup: {
+    keyboard: [['See All Analytics'], ['Kick Out User']],
+    resize_keyboard: true,
+    one_time_keyboard: true,
+  },
+};
+
+const devOptions = {
+  reply_markup: {
+    keyboard: [['Backup Data'], ['Restore Data']],
+    resize_keyboard: true,
+    one_time_keyboard: true,
+  },
+};
 
 const options = {
   reply_markup: {
     keyboard: [
       ['Shorten a URL'],
       ['See my shortened links'],
+      ['See My Analytics'],
       ['Buy a domain name'],
       ['See my domains'],
       ['Subscribe to plans'],
@@ -30,11 +51,95 @@ const planEndingTime = {};
 bot.onText(/\/start/, msg => {
   const chatId = msg.chat.id;
 
-  bot.sendMessage(
-    chatId,
-    'Welcome to the URL Shortener Bot! Please select an option:',
-    options,
-  );
+  // Check if the user is the admin
+  if (isAdmin(chatId)) {
+    bot.sendMessage(
+      chatId,
+      'Welcome, Admin! Please select an option:',
+      adminOptions,
+    );
+  } else if (isDeveloper(chatId)) {
+    bot.sendMessage(
+      chatId,
+      'Welcome, Developer! Choose an option:',
+      devOptions,
+    );
+  } else {
+    bot.sendMessage(
+      chatId,
+      'Welcome to the URL Shortener Bot! Please select an option:',
+      options,
+    );
+  }
+});
+
+bot.onText(/See My Analytics/, msg => {
+  const chatId = msg.chat.id;
+
+  // Check if the user is a normal user
+  if (isNormalUser(chatId)) {
+    // Implement logic to show analytics to the user
+    // For example, you can send a message with analytics data
+    bot.sendMessage(chatId, 'Here are your analytics data...');
+  } else {
+    bot.sendMessage(chatId, 'You are not authorized to view analytics.');
+  }
+});
+
+bot.onText(/See All Analytics/, msg => {
+  const chatId = msg.chat.id;
+
+  // Check if the user is the admin
+  if (!isAdmin(chatId)) {
+    bot.sendMessage(chatId, 'You are not authorized to view analytics.');
+    return;
+  }
+
+  // Implement logic to retrieve and display analytics
+  // Replace with your own logic to fetch analytics data
+  const analyticsData = getAnalyticsData(); // Stubbed function
+  bot.sendMessage(chatId, `Analytics Data:\n${analyticsData}`);
+});
+
+bot.onText(/Kick Out User/, msg => {
+  const chatId = msg.chat.id;
+
+  // Check if the user is the admin
+  if (!isAdmin(chatId)) {
+    bot.sendMessage(chatId, 'You are not authorized to kick out users.');
+    return;
+  }
+
+  bot.sendMessage(chatId, 'Please provide the username of the user to kick:');
+  state[chatId].action = 'kick-user';
+});
+
+bot.onText(/Backup Data/, msg => {
+  const chatId = msg.chat.id;
+
+  // Check if the user is a developer
+  if (!isDeveloper(chatId)) {
+    bot.sendMessage(chatId, 'You are not authorized to perform this action.');
+    return;
+  }
+
+  // Call the backup function
+  backupTheData();
+  bot.sendMessage(chatId, 'Backup created successfully.');
+});
+
+bot.onText(/Restore Data/, msg => {
+  const chatId = msg.chat.id;
+
+  // Check if the user is a developer
+  if (!isDeveloper(chatId)) {
+    bot.sendMessage(chatId, 'You are not authorized to perform this action.');
+    return;
+  }
+
+  // Call the restore function
+  restoreData();
+  bot.sendMessage(chatId, 'Data restored successfully.');
 });
 
 bot.onText(/Shorten a URL/, msg => {
@@ -140,7 +245,9 @@ bot.onText(/Daily|Weekly|Monthly/, (msg, match) => {
 bot.on('message', msg => {
   const chatId = msg.chat.id;
   const message = msg.text;
-  if (!state[chatId]) state[chatId] = {};
+  // if (!state[chatId]) state[chatId] = {};
+  if (!state[chatId]) restoreData();
+
   const action = state[chatId]?.action;
 
   if (action === 'choose-domain') {
@@ -173,6 +280,19 @@ bot.on('message', msg => {
     delete state[chatId]?.action;
   } else if (action === 'subscribe') {
     // Handle cases where user sends unexpected messages during subscription process
+    delete state[chatId]?.action;
+  } else if (action === 'kick-user') {
+    // Implement logic to kick out the specified user
+    const userToKick = message;
+    const kicked = kickUser(userToKick); // Stubbed function
+    if (kicked) {
+      bot.sendMessage(chatId, `User ${userToKick} has been kicked out.`);
+    } else {
+      bot.sendMessage(
+        chatId,
+        `User ${userToKick} not found or unable to kick.`,
+      );
+    }
     delete state[chatId]?.action;
   }
   // else {
@@ -208,14 +328,75 @@ function shortenURLAndSave(chatId, domain, url) {
   return shortenedURL;
 }
 
+function isNormalUser(chatId) {
+  // Implement logic to determine if the user is a normal user
+  // Return true if the user is a normal user, false otherwise
+  return !isAdmin(chatId) && !isDeveloper(chatId);
+}
+
+// Stubbed function for demonstration purposes
+function isDeveloper(chatId) {
+  // Implement logic to determine if the user is a developer
+  // Return true if the user is a developer, false otherwise
+  return chatId === DEVELOPER_CHAT_ID; // Replace with the actual developer's chat ID
+}
+// Stubbed function for demonstration purposes
+function isAdmin(chatId) {
+  // Implement logic to determine if the user is the admin
+  // Return true if the user is the admin, false otherwise
+  return chatId === ADMIN_CHAT_ID; // Replace with the actual admin's chat ID
+}
+
+// Stubbed function for demonstration purposes
+function getAnalyticsData() {
+  return 'Analytics data will be shown here.';
+}
+
+// Stubbed function for demonstration purposes
+function kickUser(username) {
+  // Implement logic to kick out the specified user
+  // Return true if successful, false otherwise
+  return true; // Change this based on your actual implementation
+}
+
+function restoreData() {
+  try {
+    const backupJSON = fs.readFileSync('backup.json', 'utf-8');
+    const restoredData = JSON.parse(backupJSON);
+
+    Object.assign(state, restoredData.state);
+    Object.assign(linksOf, restoredData.linksOf);
+    Object.assign(domainsOf, restoredData.domainsOf);
+    Object.assign(domainSold, restoredData.domainSold);
+    Object.assign(planEndingTime, restoredData.planEndingTime);
+
+    console.log('Data restored.');
+  } catch (error) {
+    console.error('Error restoring data:', error.message);
+  }
+}
+
+function backupTheData() {
+  const backupData = {
+    state,
+    linksOf,
+    domainsOf,
+    domainSold,
+    planEndingTime,
+  };
+
+  const backupJSON = JSON.stringify(backupData, null, 2);
+
+  fs.writeFileSync('backup.json', backupJSON, 'utf-8');
+  console.log('Backup created.');
+}
+
 function buyDomain(chatId, domain) {
   if (domainSold[domain]) {
     return `Sorry, the domain name ${domain} is already taken.`;
   }
   domainSold[domain] = true;
 
-  // choose 1 format for domains like www.google.com, https://www.google.com, https://google.com, https://learn.google.com // Check new Url().domain etc or any other method to store domain names
-  // Implement logic to process domain purchase
   domainsOf[chatId] = domainsOf[chatId]
     ? domainsOf[chatId].concat(domain)
     : [domain];
