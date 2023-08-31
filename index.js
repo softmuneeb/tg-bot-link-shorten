@@ -1,8 +1,11 @@
 const TelegramBot = require('node-telegram-bot-api');
+const { startServer } = require('./api.js');
 const shortid = require('shortid');
 const dotenv = require('dotenv');
 const fs = require('fs');
 dotenv.config();
+startServer();
+
 
 const DEVELOPER_CHAT_ID = 5729797630;
 const ADMIN_CHAT_ID = 5729797630;
@@ -314,8 +317,9 @@ function getPurchasedDomains(chatId) {
 }
 
 function ownsDomainName(chatId) {
-  return domainsOf[chatId] && domainsOf[chatId].length > 0;
+  return getPurchasedDomains(chatId).length > 0;
 }
+
 function isSubscribed(chatId) {
   return planEndingTime[chatId] && planEndingTime[chatId] > Date.now();
 }
