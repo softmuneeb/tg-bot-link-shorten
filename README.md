@@ -6,7 +6,7 @@ Welcome to the Telegram Link Shortener Bot project! This bot allows users to sho
 
 ## Getting Started
 
-1. Clone this repository: `git clone https://github.com/softmuneeb/telegram-link-shortener-bot.git`
+1. Clone this repository: `git clone https://github.com/softmuneeb/tg-bot-link-shorten`
 2. Install dependencies: `npm install`
 3. Set up environment variables: Create a `.env` file in the project root and provide your Telegram Bot Token, MongoDB credentials, and other necessary settings.
 4. Start the bot: `npm start`
