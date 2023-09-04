@@ -11,6 +11,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/save-payment-blockbee', (req, res) => {
+  console.log('Full URL:', req.originalUrl);
   console.log('Received payment data:', req.body);
   // Here you can save the payment information to your database or perform any other necessary actions.
   console.log(JSON.stringify(req.body, null, 2));
