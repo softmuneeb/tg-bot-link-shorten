@@ -1,4 +1,4 @@
-# Telegram Link Shortener Bot
+# Telegram Bot that Sell Subscriptions, Sell Domains, Shorten Links (Programming and DevOps work)
 
 ![Telegram Link Shortener Bot](bot.png)
 

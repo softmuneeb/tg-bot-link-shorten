@@ -11,7 +11,7 @@ https://api.connectreseller.com/ConnectReseller/ESHOP/checkDomain?APIKey=${apiKe
 
 
 2. API SearchDomainList:
-https://api.connectreseller.com/ConnectReseller/ESHOP/SearchDomainList?APIKey=${API_KEY}&page=1&maxIndex=10&searchQuery=test&orderby=WebsiteName&orderType=asc
+https://api.connectreseller.com/ConnectReseller/ESHOP/SearchDomainList?APIKey=${API_KEY}&page=1&maxIndex=100
 {
   totalCount: 1,
   records: [
@@ -47,3 +47,66 @@ https://api.connectreseller.com/ConnectReseller/ESHOP/SearchDomainList?APIKey=${
 3. API UpdateNameServer
 https://api.connectreseller.com/ConnectReseller/ESHOP/UpdateNameServer?APIKey=${apiKey}&domainNameId=${domainNameId}&websiteName=${websiteName}&nameServer1=${nameServer1}&nameServer2=${nameServer2}
 Error updating name server.  Request failed with status code 400
+
+
+4. ViewDomain
+https://api.connectreseller.com/ConnectReseller/ESHOP/ViewDomain?APIKey=${API_KEY}&websiteName=${domainName}
+Domain Details: {
+  responseMsg: {
+    message: 'Domain softlemon.sbs is available ',
+    id: 0,
+    statusCode: 200
+  },
+  responseData: {
+    domainNameId: 1945623,
+    websiteName: 'softlemon.sbs',
+    orderDate: 1693484074000,
+    creationDate: 1693484074000,
+    lastUpdatedDate: 1693484074000,
+    expirationDate: 1725106474000,
+    nameserver1: null,
+    nameserver2: null,
+    nameserver3: null,
+    nameserver4: null,
+    nameserver5: null,
+    nameserver6: null,
+    nameserver7: null,
+    nameserver8: null,
+    nameserver9: null,
+    nameserver10: null,
+    nameserver11: null,
+    nameserver12: null,
+    nameserver13: null,
+    status: 'Active',
+    authCode: 'auth@43699db8A5re',
+    isDomainLocked: false,
+    isThiefProtected: true,
+    isPrivacyProtection: true,
+    isParked: false,
+    customerId: 150106,
+    registrantContactId: 'OR_184210',
+    adminContactId: 'OR_184210',
+    technicalContactId: 'OR_184210',
+    billingContactId: 'OR_184210',
+    isRegistrantVerification: false,
+    registrantVerificationDate: null,
+    websiteId: 1932872,
+    dnszoneStatus: 1,
+    dnszoneId: 150615
+  }
+}
+
+5. AddDNSRecord
+https://api.connectreseller.com/ConnectReseller/ESHOP/AddDNSRecord?APIKey=nJW0XHJEqWknD8b&DNSZoneID=00&RecordName=host.example.com&RecordType=A&RecordValue=recordvalue&RecordPriority=0&RecordTTL=43200
+{
+  "responseMsg": {
+    "message": "DNS Management Successfully Enabled",
+    "id": 0,
+    "statusCode": 200
+  },
+  "responseData": {
+    "message": "Records ADDED Successfully ",
+    "id": 1112759306,
+    "statusCode": 200
+  }
+}

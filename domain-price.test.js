@@ -5,12 +5,13 @@ const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
 
 // Function to test domain availability
 async function checkDomainAvailability(domainName) {
-  const apiUrl = `https://api.connectreseller.com/ConnectReseller/ESHOP/checkDomain?APIKey=${API_KEY}&websiteName=${domainName}`;
+  const apiUrl = `https://api.connectreseller.com/ConnectReseller/ESHOP/checkDomainPrice?APIKey=${API_KEY}&websiteName=${domainName}`;
 
   try {
     const response = await axios.get(apiUrl);
     const { statusCode } = response.data.responseMsg;
-    console.log(response.data);
+    console.log(JSON.stringify(response.data, null, 2));
+
     if (statusCode === 200) {
       return `Domain ${domainName} is available for purchase!`;
     } else if (statusCode === 400) {
@@ -26,7 +27,7 @@ async function checkDomainAvailability(domainName) {
 
 // Example usage
 async function testDomainAvailability() {
-  const domainToCheck = 'softblue.sbs'; // Replace with the domain name you want to check
+  const domainToCheck = 'softgreen.sbs'; // Replace with the domain name you want to check
   const result = await checkDomainAvailability(domainToCheck);
   console.log(result);
 }

@@ -1,13 +1,14 @@
 const axios = require('axios');
+const dotenv = require('dotenv');
+dotenv.config();
 
-const API_KEY = 'iYJ6Q8X2tUNLeT3'; // Replace with your actual API key
-const apiUrl = `https://api.connectreseller.com/ConnectReseller/ESHOP/SearchDomainList?APIKey=${API_KEY}&page=1&maxIndex=10&searchQuery=test&orderby=WebsiteName&orderType=asc`;
-
+const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
+const apiUrl = `https://api.connectreseller.com/ConnectReseller/ESHOP/SearchDomainList?APIKey=${API_KEY}&page=1&maxIndex=100`;
 async function getRegisteredDomainNames() {
   try {
     const response = await axios.get(apiUrl);
     const domainRecords = response.data.records;
-
+    console.log(response.data);
     const domainNames = domainRecords.map(record => record.domainName);
 
     return domainNames;
