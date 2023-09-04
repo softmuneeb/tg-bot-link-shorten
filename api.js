@@ -11,11 +11,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/save-payment-blockbee', (req, res) => {
-  console.log('Full URL:', req.originalUrl);
-  console.log('Received payment data:', req.body);
+  console.log('Received payment data:', req.originalUrl);
   // Here you can save the payment information to your database or perform any other necessary actions.
   // bot send message: You payment is successful now you can buy domains and shorten links
-  console.log(JSON.stringify(req.body, null, 2));
+  console.log(JSON.stringify(req.params, null, 2));
   res.json({ message: 'Payment data received and processed successfully' });
 });
 
