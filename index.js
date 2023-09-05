@@ -6,7 +6,6 @@ const fs = require('fs');
 dotenv.config();
 startServer();
 
-
 const DEVELOPER_CHAT_ID = 5729797630;
 const ADMIN_CHAT_ID = 5729797630;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -16,16 +15,12 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 const adminOptions = {
   reply_markup: {
     keyboard: [['See All Analytics'], ['Kick Out User']],
-    resize_keyboard: true,
-    one_time_keyboard: true,
   },
 };
 
 const devOptions = {
   reply_markup: {
     keyboard: [['Backup Data'], ['Restore Data']],
-    resize_keyboard: true,
-    one_time_keyboard: true,
   },
 };
 
@@ -40,8 +35,6 @@ const options = {
       ['Subscribe to plans'],
       ['See my subscribed plan'],
     ],
-    resize_keyboard: true,
-    one_time_keyboard: true,
   },
 };
 
@@ -172,17 +165,25 @@ bot.onText(/Buy a domain name/, msg => {
     return;
   }
   state[chatId].action = 'buy';
-  bot.sendMessage(chatId, 'Please enter the desired domain name:');
+  bot.sendMessage(chatId, 'Please enter the desired domain name:', {
+    reply_markup: {
+      remove_keyboard: true,
+    },
+  });
 });
 
 bot.onText(/Subscribe to plans/, msg => {
   const chatId = msg.chat.id;
+
+  if (isSubscribed(chatId)) {
+    bot.sendMessage(chatId, 'You are already subscribed to a plan', options);
+    return;
+  }
+
   state[chatId].action = 'subscribe';
   bot.sendMessage(chatId, 'Choose a subscription plan:', {
     reply_markup: {
       keyboard: [['Daily'], ['Weekly'], ['Monthly']],
-      resize_keyboard: true,
-      one_time_keyboard: true,
     },
   });
 });
@@ -192,15 +193,26 @@ bot.onText(/See my subscribed plan/, msg => {
   const subscribedPlan = state[chatId]?.subscription;
 
   if (subscribedPlan) {
+    if (!isSubscribed(chatId)) {
+      bot.sendMessage(
+        chatId,
+        `Your ${subscribedPlan} subscription is expired on ${new Date(
+          planEndingTime[chatId],
+        )}`,
+      );
+      return;
+    }
+
     bot.sendMessage(
       chatId,
       `You are currently subscribed to the ${subscribedPlan} plan. Your plan is valid till ${new Date(
         planEndingTime[chatId],
       )}`,
     );
-  } else {
-    bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
+    return;
   }
+
+  bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
 });
 
 bot.onText(/See my shortened links/, msg => {
@@ -261,8 +273,6 @@ bot.on('message', msg => {
       {
         reply_markup: {
           keyboard,
-          resize_keyboard: true,
-          one_time_keyboard: true,
         },
       },
     );
@@ -278,8 +288,15 @@ bot.on('message', msg => {
     delete state[chatId]?.action;
   } else if (action === 'buy') {
     // Implement logic to check domain availability and process purchase
+
+    const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/;
+
+    if (!domainRegex.test(message)) {
+      bot.sendMessage(chatId, 'Domain name is invalid. Please try again');
+      return;
+    }
     const domainPurchaseResult = buyDomain(chatId, message); // Stubbed function
-    bot.sendMessage(chatId, domainPurchaseResult);
+    bot.sendMessage(chatId, domainPurchaseResult, options);
     delete state[chatId]?.action;
   } else if (action === 'subscribe') {
     // Handle cases where user sends unexpected messages during subscription process
