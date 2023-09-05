@@ -3,40 +3,26 @@ const { startServer } = require('./api.js');
 const shortid = require('shortid');
 const dotenv = require('dotenv');
 const fs = require('fs');
+const {
+  instructionsOf,
+  priceOf,
+  adminOptions,
+  devOptions,
+  options,
+} = require('./config.js');
+
+const {
+  isValidUrl,
+  isNormalUser,
+  isDeveloper,
+  isAdmin,
+} = require('./utils.js');
 dotenv.config();
 startServer();
 
-const DEVELOPER_CHAT_ID = 5729797630;
-const ADMIN_CHAT_ID = 5729797630;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
-
-const adminOptions = {
-  reply_markup: {
-    keyboard: [['See All Analytics'], ['Kick Out User']],
-  },
-};
-
-const devOptions = {
-  reply_markup: {
-    keyboard: [['Backup Data'], ['Restore Data']],
-  },
-};
-
-const options = {
-  reply_markup: {
-    keyboard: [
-      ['Shorten a URL'],
-      ['See my shortened links'],
-      ['See My Analytics'],
-      ['Buy a domain name'],
-      ['See my domains'],
-      ['Subscribe to plans'],
-      ['See my subscribed plan'],
-    ],
-  },
-};
 
 const state = {};
 const linksOf = {};
@@ -238,6 +224,15 @@ bot.onText(/See my domains/, msg => {
     bot.sendMessage(chatId, 'You have no purchased domains yet.');
   }
 });
+
+bot.onText(/Crypto Deposit|Bank Deposit/, msg => {
+  const chatId = msg.chat.id;
+  const paymentOption = msg.text;
+
+  // Send payment instructions to the user
+  bot.sendMessage(chatId, instructionsOf[paymentOption], options);
+});
+
 const timeOf = {
   Daily: 86400 * 1000,
   Weekly: 7 * 86400 * 1000,
@@ -248,12 +243,16 @@ bot.onText(/Daily|Weekly|Monthly/, (msg, match) => {
   const plan = match[0];
   // Implement logic for handling subscription plans
   // For example, process payment and set subscription in the state
-  planEndingTime[chatId] = Date.now() + timeOf[plan];
-  state[chatId].subscription = plan;
+
+  // Send payment options
   bot.sendMessage(
     chatId,
-    `Payment successful! You are now subscribed to the ${plan} plan. Enjoy unlimited URL shortening with your purchased domain names.`,
-    options,
+    `Price of ${plan} subscription is ${priceOf[plan]} USD.`,
+    {
+      reply_markup: {
+        keyboard: [['Crypto Deposit', 'Bank Deposit']],
+      },
+    },
   );
 });
 
@@ -370,30 +369,6 @@ function shortenURLAndSave(chatId, domain, url) {
   const data = { url, shortenedURL };
   linksOf[chatId] = linksOf[chatId] ? linksOf[chatId].concat(data) : [data];
   return shortenedURL;
-}
-
-function isValidUrl(url) {
-  const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
-  return urlRegex.test(url);
-}
-
-function isNormalUser(chatId) {
-  // Implement logic to determine if the user is a normal user
-  // Return true if the user is a normal user, false otherwise
-  return !isAdmin(chatId) && !isDeveloper(chatId);
-}
-
-// Stubbed function for demonstration purposes
-function isDeveloper(chatId) {
-  // Implement logic to determine if the user is a developer
-  // Return true if the user is a developer, false otherwise
-  return chatId === DEVELOPER_CHAT_ID; // Replace with the actual developer's chat ID
-}
-// Stubbed function for demonstration purposes
-function isAdmin(chatId) {
-  // Implement logic to determine if the user is the admin
-  // Return true if the user is the admin, false otherwise
-  return chatId === ADMIN_CHAT_ID; // Replace with the actual admin's chat ID
 }
 
 // Stubbed function for demonstration purposes
