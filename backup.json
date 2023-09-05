@@ -3,7 +3,9 @@
     "5729797630": {
       "subscription": "Daily"
     },
-    "6687923716": { "subscription": "Daily" }
+    "6687923716": {
+      "subscription": "Daily"
+    }
   },
   "linksOf": {
     "5729797630": [
@@ -11,11 +13,21 @@
         "url": "https://google.com/abcaijdoasidjhao",
         "shortenedURL": "x.com/xiMLrVJTz"
       }
+    ],
+    "6687923716": [
+      {
+        "url": "https://koko.com",
+        "shortenedURL": "m.com/0wZR1uZEl"
+      }
     ]
   },
   "domainsOf": {
-    "5729797630": ["x.com"],
-    "6687923716": ["m.com"]
+    "5729797630": [
+      "x.com"
+    ],
+    "6687923716": [
+      "m.com"
+    ]
   },
   "domainSold": {
     "x.com": true,
