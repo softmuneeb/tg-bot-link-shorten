@@ -266,7 +266,13 @@ bot.on('message', msg => {
   const action = state[chatId]?.action;
 
   if (action === 'choose-domain') {
-    const keyboard = [getPurchasedDomains(chatId)];
+    if (!isValidUrl(message)) {
+      bot.sendMessage(chatId, 'Please provide a valid URL');
+      return;
+    }
+
+    const domains = getPurchasedDomains(chatId);
+    const keyboard = [domains];
     bot.sendMessage(
       chatId,
       `Please choose the domain you want to link with your short link`,
@@ -279,6 +285,12 @@ bot.on('message', msg => {
     state[chatId].action = 'shorten';
     state[chatId].url = message;
   } else if (action === 'shorten') {
+    const domains = getPurchasedDomains(chatId);
+    if (!domains.includes(message)) {
+      bot.sendMessage(chatId, 'Please choose a valid domain');
+      return;
+    }
+
     // Implement logic to shorten the provided URL
     const domain = message;
     // delete state[chatId]?.selectedDomain;
@@ -347,6 +359,11 @@ function shortenURLAndSave(chatId, domain, url) {
   const data = { url, shortenedURL };
   linksOf[chatId] = linksOf[chatId] ? linksOf[chatId].concat(data) : [data];
   return shortenedURL;
+}
+
+function isValidUrl(url) {
+  const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
+  return urlRegex.test(url);
 }
 
 function isNormalUser(chatId) {
