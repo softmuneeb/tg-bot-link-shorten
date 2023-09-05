@@ -1,0 +1,77 @@
+NODEJS Package:
+  const coin = 'polygon_matic';
+  const myAddress = ''; // auto gen by BB
+  const callbackUrl = 'https://softgreen.sbs/save-payment-blockbee';
+  const params = { chatId: '333' };
+  const blockbeeParams = {};
+{
+  address: '0x8b0FcFEb867A735fF6270785B7A176FF7e8c13BE',
+  data: {
+    status: 'success',
+    callback_url: 'https://softgreen.sbs/save-payment-blockbee?chatId=333',
+    address_in: '0x8b0FcFEb867A735fF6270785B7A176FF7e8c13BE',
+    address_out: '0x9a7221b5e32d5f99e8da95585835442e29afb38f',
+    notify_pending: false,
+    notify_confirmations: 1,
+    priority: 'default',
+    callbacks: []
+  }
+}
+Result in railway logs:
+Received payment data: /save-payment-blockbee?chatId=333&uuid=2d135cf7-979d-40c1-8abb-ce6b0a231a4a&address_in=0x8b0FcFEb867A735fF6270785B7A176FF7e8c13BE&address_out=0x9a7221b5e32d5f99e8da95585835442e29afb38f&confirmations=2&txid_in=0x18877e81add233ef72f49e229c8e0822f691c0ba04d83eaf55105ac2cdd20d54&txid_out=0x64187a4b701e890a6b6940bc51d559b68050d797f8fc811cc2c2155a00767723&fee=4908042936186995&fee_coin=0.004908042936186995&value=500000000000000000&value_coin=0.5&value_forwarded=485896250682512517&value_forwarded_coin=0.485896250682512517&coin=polygon_matic&price=0.5443885419&result=sent&pending=0
+
+
+REST API:
+https://api.blockbee.io
+/polygon/matic/create/?pending=0&confirmations=1&post=0&priority=default&multi_token=0&multi_chain=0&convert=0&apikey=M2ob6qm3RbB9JLAeHw2ynElH2LGGBMwVJocO0hfIfWk5gcyww77A8Lxo0xKQNRCc&callback=https%3A%2F%2Fsoftgreen.sbs%2Fsave-payment-blockbee
+
+{
+  "status": "success",
+  "address_in": "0xC9dDFC22c6D5D4aBa772E517b9621A5231ae6eb4",
+  "address_out": "0x9a7221b5e32d5f99e8da95585835442e29afb38f",
+  "callback_url": "https://softgreen.sbs/save-payment-blockbee",
+  "minimum_transaction_coin": "0.50000000",
+  "priority": "default"
+}
+
+
+
+Received payment data: /save-payment-blockbee?
+uuid=d6edb974-c836-420c-93d2-5039308572d9&amp;address_in=0xC9dDFC22c6D5D4aBa772E517b9621A5231ae6eb4&amp;
+address_out=0x9a7221b5e32d5f99e8da95585835442e29afb38f&amp;
+confirmations=2&amp;
+txid_in=0xd71dc53cbb766bcc157817901452c37d36ff5788884d3e1e10304170adb797b7&amp;
+txid_out=0xcdd9f5a09cb380a9e818fbc2816b21a6e5266c019d36424003d68b3270c18d35&amp;
+fee=4919438585441757&amp;
+fee_coin=0.004919438585441757&amp;
+value=500000000000000000&amp;
+value_coin=0.5&amp;
+value_forwarded=487024419958733963&amp;
+value_forwarded_coin=0.487024419958733963&amp;
+coin=polygon_matic
+&amp;price=0.5449608521
+&amp;
+result=sent&amp;
+pending=0
+
+
+
+Status: 200 OKTime: 2251msSize: 270 B
+Headers:
+Access-Control-Allow-Credentials:true
+Access-Control-Allow-Origin:*
+Cf-Cache-Status:DYNAMIC
+Cf-Ray:80149042bd4d9c67-IAD
+Connection:keep-alive
+Content-Encoding:br
+Content-Type:application/json
+Date:Mon04 Sep 2023 07:36:48 GMT
+Nel:{"success_fraction":0,"report_to":"cf-nel","max_age":604800}
+Referrer-Policy:same-origin
+Report-To:{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=lQof8%2BxmD6dE2lKJvIFKuDRsO2jEl3m%2FnP%2FLsQPWT6ZEJT7NG47MuZ1yj8y47tSatbeqLQ%2FcTBmO7rZxxaWnEXCxxUvk4uPS45WjZGEVpDHZIzwUfUH4ejNhqs1mq7yjWw%3D%3D"}],"group":"cf-nel","max_age":604800}
+Server:cloudflare
+Transfer-Encoding:chunked
+Vary:originCookie
+X-Content-Type-Options:nosniff
+X-Final-Url:https://api.blockbee.io/polygon%2Fmatic/create/?apikey=M2ob6qm3RbB9JLAeHw2ynElH2LGGBMwVJocO0hfIfWk5gcyww77A8Lxo0xKQNRCc&callback=https%3A%2F%2Fsoftgreen.sbs%2Fsave-payment-blockbee&pending=0&confirmations=1&post=0&priority=default&multi_token=0&multi_chain=0&convert=0
+X-Frame-Options:SAMEORIGIN
