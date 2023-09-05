@@ -307,8 +307,19 @@ bot.on('message', msg => {
       bot.sendMessage(chatId, 'Domain name is invalid. Please try again');
       return;
     }
-    const domainPurchaseResult = buyDomain(chatId, message); // Stubbed function
-    bot.sendMessage(chatId, domainPurchaseResult, options);
+    const domain = message.toLowerCase();
+    const domainPurchaseSuccess = buyDomain(chatId, domain); // Stubbed function
+
+    if (!domainPurchaseSuccess) {
+      bot.sendMessage(
+        chatId,
+        'Domain purchase fail, try another name',
+        options,
+      );
+      return;
+    }
+
+    bot.sendMessage(chatId, 'Domain purchase successful', options);
     delete state[chatId]?.action;
   } else if (action === 'subscribe') {
     // Handle cases where user sends unexpected messages during subscription process
@@ -430,17 +441,17 @@ function backupTheData() {
 }
 
 function buyDomain(chatId, domain) {
+  // check dns records
   if (domainSold[domain]) {
-    return `Sorry, the domain name ${domain} is already taken.`;
+    return false;
   }
   domainSold[domain] = true;
 
   domainsOf[chatId] = domainsOf[chatId]
     ? domainsOf[chatId].concat(domain)
     : [domain];
-  return (
-    'Congratulations! You have successfully purchased the domain name ' + domain
-  );
+
+  return true;
 }
 
 console.log('Bot is running...');
