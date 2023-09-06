@@ -310,11 +310,11 @@ bot.on('message', msg => {
     const domainPurchaseSuccess = buyDomain(chatId, domain); // Stubbed function
 
     if (!domainPurchaseSuccess) {
-      bot.sendMessage(
-        chatId,
-        'Domain purchase fail, try another name',
-        options,
-      );
+      bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
+        reply_markup: {
+          remove_keyboard: true,
+        },
+      });
       return;
     }
 
@@ -344,8 +344,6 @@ bot.on('message', msg => {
 
 // Stubbed functions for demonstration purposes
 function getShortenedLinks(chatId) {
-  console.log(linksOf[chatId]);
-  console.log(JSON.stringify(linksOf[chatId]));
   return !linksOf[chatId]
     ? []
     : linksOf[chatId].map(d => `${d.shortenedURL} -> ${d.url}`); // Replace with actual logic
@@ -410,9 +408,8 @@ function backupTheData() {
   };
 
   const backupJSON = JSON.stringify(backupData, null, 2);
-
   fs.writeFileSync('backup.json', backupJSON, 'utf-8');
-  console.log('Backup created.');
+  console.log('Backup created. ', backupJSON);
 }
 
 function buyDomain(chatId, domain) {
