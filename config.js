@@ -11,8 +11,8 @@ const timeOf = {
 };
 
 const instructionsOf = {
-  'Crypto Deposit': `Deposit crypto at this address 0x12340*******8312 and you will receive a payment confirmation here.`,
-  'Bank Deposit': `Deposit USD at this bank account and you will receive a payment confirmation here.
+  'Crypto Transfer': `Deposit crypto at this address 0x12340*******8312 and you will receive a payment confirmation here.`,
+  'Bank Transfer': `Deposit USD at this bank account and you will receive a payment confirmation here.
 accountNumber: 794****519,
 accountName: FIN-Bl****LTD,
 bankName: wema,
@@ -29,6 +29,9 @@ bankName: wema,
 bankCode: 035,
 reference: 54e3*****4d9`,
 };
+
+const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
+const paymentOptions = ['Crypto Transfer', 'Bank Transfer'];
 
 const adminOptions = {
   reply_markup: {
@@ -57,7 +60,9 @@ const options = {
 };
 
 module.exports = {
+  subscriptionOptions,
   priceOf,
+  paymentOptions,
   instructionsOf,
   instructionsOfDomainPayment,
   adminOptions,

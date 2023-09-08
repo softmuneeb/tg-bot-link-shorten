@@ -11,6 +11,8 @@ const {
   options,
   timeOf,
   instructionsOfDomainPayment,
+  paymentOptions,
+  subscriptionOptions,
 } = require('./config.js');
 
 const {
@@ -162,7 +164,11 @@ bot.onText(/Buy a domain name/, msg => {
     },
   });
 });
-
+const chooseSubscription = {
+  reply_markup: {
+    keyboard: subscriptionOptions.map(a => [a]),
+  },
+};
 bot.onText(/Subscribe to plans/, msg => {
   const chatId = msg.chat.id;
 
@@ -171,11 +177,8 @@ bot.onText(/Subscribe to plans/, msg => {
     return;
   }
 
-  bot.sendMessage(chatId, 'Choose a subscription plan:', {
-    reply_markup: {
-      keyboard: [['Daily'], ['Weekly'], ['Monthly']],
-    },
-  });
+  state[chatId].action = 'choose-plan';
+  bot.sendMessage(chatId, 'Choose a subscription plan:', chooseSubscription);
 });
 
 bot.onText(/See my subscribed plan/, msg => {
@@ -229,81 +232,6 @@ bot.onText(/See my domains/, msg => {
   }
 });
 
-bot.onText(/Crypto Deposit|Bank Deposit/, msg => {
-  const chatId = msg.chat.id;
-  const paymentOption = msg.text;
-
-  // Send payment instructions to the user
-  bot.sendMessage(chatId, instructionsOf[paymentOption], options);
-
-  // Simulate Payment Made
-  setTimeout(() => {
-    // handle plan config in webhook endpoint
-    const plan = state[chatId].chosenPlan;
-    planEndingTime[chatId] = Date.now() + timeOf[plan];
-    delete state[chatId]?.chosenPlan;
-    state[chatId].subscription = plan;
-    bot.sendMessage(
-      chatId,
-      `Payment successful! You are now subscribed to the ${plan} plan. Enjoy URL shortening with your purchased domain names.`,
-      options,
-    );
-    //
-  }, 1000);
-});
-
-bot.onText(/Crypto Transfer|Bank Transfer/, msg => {
-  const chatId = msg.chat.id;
-  const paymentOption = msg.text;
-
-  // Send payment instructions to the user
-  bot.sendMessage(chatId, instructionsOfDomainPayment[paymentOption], options);
-
-  // Simulate Payment Made
-  setTimeout(() => {
-    // handle plan config in webhook endpoint
-    const domain = state[chatId].selectedDomain;
-    const domainPurchaseSuccess = buyDomain(chatId, domain); // Stubbed function
-
-    if (!domainPurchaseSuccess) {
-      bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
-        reply_markup: {
-          remove_keyboard: true,
-        },
-      });
-      return;
-    }
-
-    delete state[chatId].selectedDomain;
-
-    bot.sendMessage(
-      chatId,
-      `Payment successful! You have bought ${domain}. Enjoy URL shortening with your purchased domain name.`,
-      options,
-    );
-    //
-  }, 1000);
-});
-
-bot.onText(/Daily|Weekly|Monthly/, (msg, match) => {
-  const chatId = msg.chat.id;
-  const plan = match[0];
-  state[chatId].chosenPlan = plan;
-  // Implement logic for handling subscription plans
-  // For example, process payment and set subscription in the state
-
-  // Send payment options
-  bot.sendMessage(
-    chatId,
-    `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
-    {
-      reply_markup: {
-        keyboard: [['Crypto Deposit', 'Bank Deposit']],
-      },
-    },
-  );
-});
-
 bot.on('message', msg => {
   const chatId = msg.chat.id;
   const message = msg.text;
@@ -311,7 +239,29 @@ bot.on('message', msg => {
 
   const action = state[chatId]?.action;
 
-  if (action === 'choose-domain') {
+  if (action === 'choose-plan') {
+    const plan = message;
+
+    if (!subscriptionOptions.includes(plan)) {
+      bot.sendMessage(chatId, 'Please choose a valid plan', chooseSubscription);
+      return;
+    }
+
+    state[chatId].chosenPlanForPayment = plan;
+
+    // Send payment options
+    bot.sendMessage(
+      chatId,
+      `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
+      {
+        reply_markup: {
+          keyboard: [paymentOptions],
+        },
+      },
+    );
+
+    state[chatId].action = 'subscription-payment';
+  } else if (action === 'choose-domain') {
     if (!isValidUrl(message)) {
       bot.sendMessage(chatId, 'Please provide a valid URL');
       return;
@@ -337,9 +287,7 @@ bot.on('message', msg => {
       return;
     }
 
-    // Implement logic to shorten the provided URL
     const domain = message;
-    // delete state[chatId]?.selectedDomain;
     const shortenedURL = shortenURLAndSave(chatId, domain, state[chatId].url);
     bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, options);
     delete state[chatId]?.url;
@@ -381,15 +329,79 @@ bot.on('message', msg => {
       `Price of ${domain} is ${price} USD. Choose payment method.`,
       {
         reply_markup: {
-          keyboard: [['Crypto Transfer', 'Bank Transfer']],
+          keyboard: [paymentOptions],
         },
       },
     );
 
-    state[chatId].selectedDomain = domain;
+    state[chatId].selectedDomainForPayment = domain;
 
-    delete state[chatId]?.action;
+    state[chatId].action = 'domain-name-payment';
   } else if (action === 'domain-name-payment') {
+    const paymentOption = message;
+
+    if (!paymentOptions.includes(paymentOption)) {
+      bot.sendMessage(chatId, 'Please choose a valid payment option', options);
+      return;
+    }
+
+    // Send payment instructions to the user
+    bot.sendMessage(
+      chatId,
+      instructionsOfDomainPayment[paymentOption],
+      options,
+    );
+    delete state[chatId]?.action;
+
+    // Simulate Payment Made
+    setTimeout(() => {
+      // handle plan config in webhook endpoint
+      const domain = state[chatId].selectedDomainForPayment;
+      const domainPurchaseSuccess = buyDomain(chatId, domain); // Stubbed function
+
+      if (!domainPurchaseSuccess) {
+        bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
+          reply_markup: {
+            remove_keyboard: true,
+          },
+        });
+        return;
+      }
+
+      delete state[chatId].selectedDomainForPayment;
+      bot.sendMessage(
+        chatId,
+        `Payment successful! You have bought ${domain}. Enjoy URL shortening with your purchased domain name.`,
+        options,
+      );
+      //
+    }, 1000);
+  } else if (action === 'subscription-payment') {
+    const paymentOption = message;
+
+    if (!paymentOptions.includes(paymentOption)) {
+      bot.sendMessage(chatId, 'Please choose a valid payment option', options);
+      return;
+    }
+
+    // Send payment instructions to the user
+    bot.sendMessage(chatId, instructionsOf[paymentOption], options);
+    delete state[chatId]?.action;
+
+    // Simulate Payment Made
+    setTimeout(() => {
+      // handle plan config in webhook endpoint
+      const plan = state[chatId].chosenPlanForPayment;
+      planEndingTime[chatId] = Date.now() + timeOf[plan];
+      delete state[chatId]?.chosenPlanForPayment;
+      state[chatId].subscription = plan;
+      bot.sendMessage(
+        chatId,
+        `Payment successful! You are now subscribed to the ${plan} plan. Enjoy URL shortening by purchasing your own domain names.`,
+        options,
+      );
+      //
+    }, 1000);
   } else if (action === 'kick-user') {
     // Implement logic to kick out the specified user
     const userToKick = message;
