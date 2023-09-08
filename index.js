@@ -9,6 +9,8 @@ const {
   adminOptions,
   devOptions,
   options,
+  timeOf,
+  instructionsOfDomainPayment,
 } = require('./config.js');
 
 const {
@@ -16,6 +18,8 @@ const {
   isNormalUser,
   isDeveloper,
   isAdmin,
+  checkDomainAvailability,
+  getPrice,
 } = require('./utils.js');
 dotenv.config();
 startServer();
@@ -30,6 +34,7 @@ const domainsOf = {};
 const domainSold = {};
 const planEndingTime = {};
 
+restoreData();
 bot.onText(/\/start/, msg => {
   const chatId = msg.chat.id;
 
@@ -166,7 +171,6 @@ bot.onText(/Subscribe to plans/, msg => {
     return;
   }
 
-  state[chatId].action = 'subscribe';
   bot.sendMessage(chatId, 'Choose a subscription plan:', {
     reply_markup: {
       keyboard: [['Daily'], ['Weekly'], ['Monthly']],
@@ -231,23 +235,67 @@ bot.onText(/Crypto Deposit|Bank Deposit/, msg => {
 
   // Send payment instructions to the user
   bot.sendMessage(chatId, instructionsOf[paymentOption], options);
+
+  // Simulate Payment Made
+  setTimeout(() => {
+    // handle plan config in webhook endpoint
+    const plan = state[chatId].chosenPlan;
+    planEndingTime[chatId] = Date.now() + timeOf[plan];
+    delete state[chatId]?.chosenPlan;
+    state[chatId].subscription = plan;
+    bot.sendMessage(
+      chatId,
+      `Payment successful! You are now subscribed to the ${plan} plan. Enjoy URL shortening with your purchased domain names.`,
+      options,
+    );
+    //
+  }, 1000);
 });
 
-const timeOf = {
-  Daily: 86400 * 1000,
-  Weekly: 7 * 86400 * 1000,
-  Monthly: 30 * 86400 * 1000,
-};
+bot.onText(/Crypto Transfer|Bank Transfer/, msg => {
+  const chatId = msg.chat.id;
+  const paymentOption = msg.text;
+
+  // Send payment instructions to the user
+  bot.sendMessage(chatId, instructionsOfDomainPayment[paymentOption], options);
+
+  // Simulate Payment Made
+  setTimeout(() => {
+    // handle plan config in webhook endpoint
+    const domain = state[chatId].selectedDomain;
+    const domainPurchaseSuccess = buyDomain(chatId, domain); // Stubbed function
+
+    if (!domainPurchaseSuccess) {
+      bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
+        reply_markup: {
+          remove_keyboard: true,
+        },
+      });
+      return;
+    }
+
+    delete state[chatId].selectedDomain;
+
+    bot.sendMessage(
+      chatId,
+      `Payment successful! You have bought ${domain}. Enjoy URL shortening with your purchased domain name.`,
+      options,
+    );
+    //
+  }, 1000);
+});
+
 bot.onText(/Daily|Weekly|Monthly/, (msg, match) => {
   const chatId = msg.chat.id;
   const plan = match[0];
+  state[chatId].chosenPlan = plan;
   // Implement logic for handling subscription plans
   // For example, process payment and set subscription in the state
 
   // Send payment options
   bot.sendMessage(
     chatId,
-    `Price of ${plan} subscription is ${priceOf[plan]} USD.`,
+    `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
     {
       reply_markup: {
         keyboard: [['Crypto Deposit', 'Bank Deposit']],
@@ -259,8 +307,7 @@ bot.onText(/Daily|Weekly|Monthly/, (msg, match) => {
 bot.on('message', msg => {
   const chatId = msg.chat.id;
   const message = msg.text;
-  // if (!state[chatId]) state[chatId] = {};
-  if (!state[chatId]) restoreData();
+  if (!state[chatId]) state[chatId] = {};
 
   const action = state[chatId]?.action;
 
@@ -303,26 +350,46 @@ bot.on('message', msg => {
     const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/;
 
     if (!domainRegex.test(message)) {
-      bot.sendMessage(chatId, 'Domain name is invalid. Please try again');
+      bot.sendMessage(
+        chatId,
+        'Domain name is invalid. Please try another domain name.',
+      );
       return;
     }
     const domain = message.toLowerCase();
-    const domainPurchaseSuccess = buyDomain(chatId, domain); // Stubbed function
 
-    if (!domainPurchaseSuccess) {
-      bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
-        reply_markup: {
-          remove_keyboard: true,
+    const domainAvailable = checkDomainAvailability(domain, domainSold); // Stubbed function
+
+    if (!domainAvailable) {
+      bot.sendMessage(
+        chatId,
+        'Domain is not available. Please try another domain name.',
+        {
+          reply_markup: {
+            remove_keyboard: true,
+          },
         },
-      });
+      );
       return;
     }
 
-    bot.sendMessage(chatId, 'Domain purchase successful', options);
+    const base = getPrice(domain);
+    const price = base + base * 0.1; // 10% profit
+
+    bot.sendMessage(
+      chatId,
+      `Price of ${domain} is ${price} USD. Choose payment method.`,
+      {
+        reply_markup: {
+          keyboard: [['Crypto Transfer', 'Bank Transfer']],
+        },
+      },
+    );
+
+    state[chatId].selectedDomain = domain;
+
     delete state[chatId]?.action;
-  } else if (action === 'subscribe') {
-    // Handle cases where user sends unexpected messages during subscription process
-    delete state[chatId]?.action;
+  } else if (action === 'domain-name-payment') {
   } else if (action === 'kick-user') {
     // Implement logic to kick out the specified user
     const userToKick = message;
@@ -419,9 +486,7 @@ function buyDomain(chatId, domain) {
   }
   domainSold[domain] = true;
 
-  domainsOf[chatId] = domainsOf[chatId]
-    ? domainsOf[chatId].concat(domain)
-    : [domain];
+  domainsOf[chatId] = (domainsOf[chatId] || []).concat(domain);
 
   return true;
 }

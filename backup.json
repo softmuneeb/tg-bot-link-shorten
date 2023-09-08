@@ -1,40 +1,15 @@
 {
   "state": {
-    "5729797630": {
-      "subscription": "Daily"
-    },
     "6687923716": {
-      "subscription": "Daily"
-    }
+      "subscription": "Monthly"
+      
+    },
+    "5729797630": {}
   },
-  "linksOf": {
-    "5729797630": [
-      {
-        "url": "https://google.com/abcaijdoasidjhao",
-        "shortenedURL": "x.com/xiMLrVJTz"
-      }
-    ],
-    "6687923716": [
-      {
-        "url": "https://koko.com",
-        "shortenedURL": "m.com/0wZR1uZEl"
-      }
-    ]
-  },
-  "domainsOf": {
-    "5729797630": [
-      "x.com"
-    ],
-    "6687923716": [
-      "m.com"
-    ]
-  },
-  "domainSold": {
-    "x.com": true,
-    "m.com": true
-  },
+  "linksOf": {},
+  "domainsOf": {},
+  "domainSold": {},
   "planEndingTime": {
-    "5729797630": 1693316415007,
-    "6687923716": 1694180415007
+    "6687923716": 1696753336125
   }
 }

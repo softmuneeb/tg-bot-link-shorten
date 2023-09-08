@@ -25,7 +25,24 @@ function isAdmin(chatId) {
   return chatId === ADMIN_CHAT_ID; // Replace with the actual admin's chat ID
 }
 
+function checkDomainAvailability(domain, domainSold) {
+  if (domainSold[domain]) {
+    return false;
+  }
+  // Implement logic to check if the domain name is available
+  // Return true if the domain name is available, false otherwise
+  return true; // Replace with the actual logic
+}
+
+function getPrice(domainName) {
+  // Implement logic to get the price of the domain
+  // Return the price of the domain
+  return 1; // Replace with the actual logic
+}
+
 module.exports = {
+  getPrice,
+  checkDomainAvailability,
   isValidUrl,
   isNormalUser,
   isDeveloper,

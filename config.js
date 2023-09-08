@@ -4,16 +4,31 @@ const priceOf = {
   Monthly: 3,
 };
 
-const instructionsOf = {
-  'Crypto Deposit': `Deposit crypto at this address 0x12340923810298312098310298312`,
-  'Bank Deposit': `Deposit USD at this bank account
-accountNumber: 7949313519,
-accountName: FIN-Blue Space Technology LTD,
-bankName: wema,
-bankCode: 035,
-reference: 54e3a785-151b-47d1-b31f-5705582414d9`,
+const timeOf = {
+  Daily: 86400 * 1000,
+  Weekly: 7 * 86400 * 1000,
+  Monthly: 30 * 86400 * 1000,
 };
 
+const instructionsOf = {
+  'Crypto Deposit': `Deposit crypto at this address 0x12340*******8312 and you will receive a payment confirmation here.`,
+  'Bank Deposit': `Deposit USD at this bank account and you will receive a payment confirmation here.
+accountNumber: 794****519,
+accountName: FIN-Bl****LTD,
+bankName: wema,
+bankCode: 035,
+reference: 54e3*****4d9`,
+};
+
+const instructionsOfDomainPayment = {
+  'Crypto Transfer': `Deposit crypto at this address 0x12340*******8312 and you will receive a payment confirmation here.`,
+  'Bank Transfer': `Deposit USD at this bank account and you will receive a payment confirmation here.
+accountNumber: 794****519,
+accountName: FIN-Bl****LTD,
+bankName: wema,
+bankCode: 035,
+reference: 54e3*****4d9`,
+};
 
 const adminOptions = {
   reply_markup: {
@@ -41,4 +56,12 @@ const options = {
   },
 };
 
-module.exports = { priceOf, instructionsOf, adminOptions, devOptions, options  };
+module.exports = {
+  priceOf,
+  instructionsOf,
+  instructionsOfDomainPayment,
+  adminOptions,
+  devOptions,
+  options,
+  timeOf,
+};
