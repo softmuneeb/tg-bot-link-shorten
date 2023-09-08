@@ -4,7 +4,7 @@ dotenv.config();
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
 
 // Function to test domain availability
-async function checkDomainAvailability(domainName) {
+async function checkDomainAvailabilityOnline(domainName) {
   const apiUrl = `https://api.connectreseller.com/ConnectReseller/ESHOP/checkDomain?APIKey=${API_KEY}&websiteName=${domainName}`;
 
   try {
@@ -12,23 +12,30 @@ async function checkDomainAvailability(domainName) {
     const { statusCode } = response.data.responseMsg;
     console.log(response.data);
     if (statusCode === 200) {
-      return `Domain ${domainName} is available for purchase!`;
+      console.error(`Domain ${domainName} is available for purchase!`);
+      return true;
     } else if (statusCode === 400) {
-      return `Domain ${domainName} is not available.`;
+      console.error(`Domain ${domainName} is not available.`);
+      return false;
     } else {
-      return `Error checking domain availability.`;
+      console.error(
+        `Error checking domain availability. statusCode ${statusCode}`,
+      );
+      return false;
     }
   } catch (error) {
     console.error('Error checking domain availability:', error.message);
-    return 'An error occurred while checking domain availability.';
+    return false;
   }
 }
 
 // Example usage
 async function testDomainAvailability() {
   const domainToCheck = 'softblue.sbs'; // Replace with the domain name you want to check
-  const result = await checkDomainAvailability(domainToCheck);
+  const result = await checkDomainAvailabilityOnline(domainToCheck);
   console.log(result);
 }
 
-testDomainAvailability(); // Call the function to test domain availability
+// testDomainAvailability(); // Call the function to test domain availability
+
+module.exports = { checkDomainAvailabilityOnline };

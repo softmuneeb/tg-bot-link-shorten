@@ -1,3 +1,7 @@
+const {
+  checkDomainAvailabilityOnline,
+} = require('./is-domain-available.test.js');
+
 const DEVELOPER_CHAT_ID = 5729797630;
 const ADMIN_CHAT_ID = 5729797630;
 
@@ -25,13 +29,12 @@ function isAdmin(chatId) {
   return chatId === ADMIN_CHAT_ID; // Replace with the actual admin's chat ID
 }
 
-function checkDomainAvailability(domain, domainSold) {
+async function checkDomainAvailability(domain, domainSold) {
   if (domainSold[domain]) {
     return false;
   }
-  // Implement logic to check if the domain name is available
-  // Return true if the domain name is available, false otherwise
-  return true; // Replace with the actual logic
+
+  return await checkDomainAvailabilityOnline(domain);
 }
 
 function getPrice(domainName) {

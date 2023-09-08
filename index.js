@@ -232,7 +232,7 @@ bot.onText(/See my domains/, msg => {
   }
 });
 
-bot.on('message', msg => {
+bot.on('message', async msg => {
   const chatId = msg.chat.id;
   const message = msg.text;
   if (!state[chatId]) state[chatId] = {};
@@ -306,7 +306,7 @@ bot.on('message', msg => {
     }
     const domain = message.toLowerCase();
 
-    const domainAvailable = checkDomainAvailability(domain, domainSold); // Stubbed function
+    const domainAvailable = await checkDomainAvailability(domain, domainSold); // Stubbed function
 
     if (!domainAvailable) {
       bot.sendMessage(
