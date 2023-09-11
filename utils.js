@@ -1,4 +1,10 @@
+const dotenv = require('dotenv');
+dotenv.config();
+const axios = require('axios');
+
 const { checkDomainPriceOnline } = require('./domain-price.test');
+
+const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE;
 
 const DEVELOPER_CHAT_ID = 5729797630;
 const ADMIN_CHAT_ID = 5729797630;
@@ -41,7 +47,24 @@ function getPrice(domainName) {
   return 1; // Replace with the actual logic
 }
 
+async function convertUSDToNaira(amountInUSD) {
+  try {
+    const apiUrl = `https://openexchangerates.org/api/latest.json?app_id=${API_KEY_CURRENCY_EXCHANGE}`;
+
+    const response = await axios.get(apiUrl);
+    const usdToNairaRate = response.data.rates['NGN']; // Get the exchange rate for USD to Naira
+
+    const nairaAmount = amountInUSD * usdToNairaRate;
+    // console.log(`Equivalent amount in Naira: ${nairaAmount.toFixed(2)}`);
+    return nairaAmount.toFixed(2);
+  } catch (error) {
+    console.error(`Error converting currency: ${error.message}`);
+    return error.message;
+  }
+}
+// convertUSDToNaira(1)
 module.exports = {
+  convertUSDToNaira,
   getPrice,
   checkDomainAvailability,
   isValidUrl,

@@ -21,6 +21,7 @@ const {
   isDeveloper,
   isAdmin,
   checkDomainAvailability,
+  convertUSDToNaira,
 } = require('./utils.js');
 const { getCryptoDepositAddress } = require('./blockbee.js');
 const { getBankDepositAddress } = require('./fincra.js');
@@ -404,6 +405,8 @@ bot.on('message', async msg => {
       );
       state[chatId].action = 'crypto-transfer-payment';
     } else {
+      const priceNGN = await convertUSDToNaira(priceOf[plan]);
+
       const {
         accountNumber,
         accountName,
@@ -412,7 +415,7 @@ bot.on('message', async msg => {
         _id,
         business,
         error,
-      } = await getBankDepositAddress(priceOf[plan], chatId);
+      } = await getBankDepositAddress(priceNGN, chatId);
       // save [chatId, _id, business, plan] in db to verify received amount later
 
       if (error) {
@@ -423,7 +426,7 @@ bot.on('message', async msg => {
 
       bot.sendMessage(
         chatId,
-        `Deposit Naira at this bank account and you will receive a payment confirmation here.
+        `Deposit ${priceNGN} NGN at this bank account and you will receive a payment confirmation here.
 
 Account Number ${accountNumber}
 Account Name ${accountName}
