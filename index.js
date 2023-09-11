@@ -306,9 +306,12 @@ bot.on('message', async msg => {
     }
     const domain = message.toLowerCase();
 
-    const domainAvailable = await checkDomainAvailability(domain, domainSold); // Stubbed function
+    const { available, price } = await checkDomainAvailability(
+      domain,
+      domainSold,
+    ); // Stubbed function
 
-    if (!domainAvailable) {
+    if (!available) {
       bot.sendMessage(
         chatId,
         'Domain is not available. Please try another domain name.',
@@ -321,12 +324,11 @@ bot.on('message', async msg => {
       return;
     }
 
-    const base = getPrice(domain);
-    const price = base + base * 0.1; // 10% profit
+    const sellingPrice = parseInt(price + price * 0.11); // 11% profit
 
     bot.sendMessage(
       chatId,
-      `Price of ${domain} is ${price} USD. Choose payment method.`,
+      `Price of ${domain} is ${sellingPrice} USD. Choose payment method.`,
       {
         reply_markup: {
           keyboard: [paymentOptions],

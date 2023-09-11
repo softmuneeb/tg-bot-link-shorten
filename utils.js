@@ -1,6 +1,4 @@
-const {
-  checkDomainAvailabilityOnline,
-} = require('./is-domain-available.test.js');
+const { checkDomainPriceOnline } = require('./domain-price.test');
 
 const DEVELOPER_CHAT_ID = 5729797630;
 const ADMIN_CHAT_ID = 5729797630;
@@ -31,10 +29,10 @@ function isAdmin(chatId) {
 
 async function checkDomainAvailability(domain, domainSold) {
   if (domainSold[domain]) {
-    return false;
+    return { available: false, message: 'Domain is already sold, try another' };
   }
 
-  return await checkDomainAvailabilityOnline(domain);
+  return await checkDomainPriceOnline(domain);
 }
 
 function getPrice(domainName) {
