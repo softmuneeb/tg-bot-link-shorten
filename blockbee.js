@@ -9,7 +9,7 @@ const getAddress = async bb => {
     return address;
   } catch (error) {
     console.error('An error occurred while getting the address:', error);
-    throw error;
+    return error;
   }
 };
 
@@ -19,11 +19,11 @@ const checkLogs = async bb => {
     return data;
   } catch (error) {
     console.error('An error occurred while checking logs:', error);
-    throw error;
+    return error;
   }
 };
 
-const getDepositAddress = async (ticker, webhookParams) => {
+const getCryptoDepositAddress = async (ticker, webhookParams) => {
   const myAddress = ''; // auto gen by BB
   const callbackUrl = 'https://softgreen.sbs/save-payment-blockbee';
   const blockbeeParams = {};
@@ -38,15 +38,15 @@ const getDepositAddress = async (ticker, webhookParams) => {
   );
 
   const address = await getAddress(bb);
-  const data = await checkLogs(bb);
-  console.log({ address, data });
+  // const data = await checkLogs(bb);
+  // console.log({ address, data });
 
   return address;
 };
 
 const driver = async () => {
   try {
-    console.log(await getDepositAddress('ltc', { chatId: '1234' }));
+    console.log(await getCryptoDepositAddress('ltc', { chatId: '1234' }));
   } catch (error) {
     console.error('An error occurred while getting the address:', error);
   }
@@ -54,4 +54,4 @@ const driver = async () => {
 
 // driver()
 
-module.exports = { getDepositAddress, getAddress, checkLogs };
+module.exports = { getCryptoDepositAddress };

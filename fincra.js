@@ -4,22 +4,41 @@ dotenv.config();
 const FINCRA_PRIVATE_KEY = process.env.FINCRA_PRIVATE_KEY;
 const FINCRA_PUBLIC_KEY = process.env.FINCRA_PUBLIC_KEY;
 
-const fincra = new Fincra(FINCRA_PUBLIC_KEY, FINCRA_PRIVATE_KEY, {
-  sandbox: false,
-});
+const getBankDepositAddress = async (amount, merchantReference) => {
+  merchantReference += '';
+  amount += '';
 
-const driver = async () => {
+  const fincra = new Fincra(FINCRA_PUBLIC_KEY, FINCRA_PRIVATE_KEY, {
+    sandbox: false,
+  });
+
   //   const business = await fincra.business.getBusinessId();
-  //     console.log(business);
+  //   console.log(business);
 
   const data = {
-    expiresAt: '60',
-    amount: '100',
-    merchantReference: 'a2',
+    expiresAt: '43800', // 1 month expiry
+    amount,
+    merchantReference,
   };
 
-  const payWithTransfer = await fincra.collection.payWithTransfer(data);
-  console.log(payWithTransfer);
+  let p = {};
+  try {
+    p = await fincra.collection.payWithTransfer(data);
+
+    return {
+      accountNumber: p.data.accountInformation.accountNumber,
+      accountName: p.data.accountInformation.accountName,
+      bankName: p.data.accountInformation.bankName,
+      bankCode: p.data.accountInformation.bankCode,
+      _id: p.data._id,
+      business: p.data.business,
+    };
+  } catch (error) {
+    console.log(error.message, JSON.stringify(p, null, 2));
+    return { error: error.message.error };
+  }
 };
 
-driver();
+// getBankDepositAddress('100', '1234567');
+
+module.exports = { getBankDepositAddress };

@@ -22,7 +22,8 @@ const {
   isAdmin,
   checkDomainAvailability,
 } = require('./utils.js');
-const { getDepositAddress } = require('./blockbee.js');
+const { getCryptoDepositAddress } = require('./blockbee.js');
+const { getBankDepositAddress } = require('./fincra.js');
 dotenv.config();
 startServer();
 
@@ -381,6 +382,7 @@ bot.on('message', async msg => {
       //
     }, 1000);
   } else if (action === 'subscription-payment') {
+    const plan = state[chatId].chosenPlanForPayment;
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
@@ -390,7 +392,6 @@ bot.on('message', async msg => {
 
     // call payment apis and send instructions to user and save
     // the payment to make in db so we can verify the payment when its received
-    console.log(cryptoTransferOptions.map(d => [d.toUpperCase()]));
     if (paymentOption === 'Crypto Transfer') {
       bot.sendMessage(
         chatId,
@@ -403,7 +404,33 @@ bot.on('message', async msg => {
       );
       state[chatId].action = 'crypto-transfer-payment';
     } else {
-      bot.sendMessage(chatId, instructionsOf[paymentOption], options);
+      const {
+        accountNumber,
+        accountName,
+        bankName,
+        bankCode,
+        _id,
+        business,
+        error,
+      } = await getBankDepositAddress(priceOf[plan], chatId);
+      // save [chatId, _id, business, plan] in db to verify received amount later
+
+      if (error) {
+        bot.sendMessage(chatId, error, options);
+        delete state[chatId]?.action;
+        return;
+      }
+
+      bot.sendMessage(
+        chatId,
+        `Deposit Naira at this bank account and you will receive a payment confirmation here.
+
+Account Number ${accountNumber}
+Account Name ${accountName}
+Bank Name ${bankName}
+Bank Code ${bankCode}`,
+        options,
+      );
       delete state[chatId]?.action;
     }
   } else if (action === 'crypto-transfer-payment') {
@@ -413,7 +440,9 @@ bot.on('message', async msg => {
       return;
     }
 
-    const cryptoDepositAddress = await getDepositAddress(ticker, { chatId });
+    const cryptoDepositAddress = await getCryptoDepositAddress(ticker, {
+      chatId,
+    });
     bot.sendMessage(
       chatId,
       `Deposit ${ticker.toUpperCase()} at this address \`${cryptoDepositAddress}\` and you will receive a payment confirmation here.`,
