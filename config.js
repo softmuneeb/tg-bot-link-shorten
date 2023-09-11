@@ -32,6 +32,7 @@ reference: 54e3*****4d9`,
 
 const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
 const paymentOptions = ['Crypto Transfer', 'Bank Transfer'];
+const cryptoTransferOptions = ['btc', 'eth', 'ltc', 'trc20_usdt', 'bep20_busd'];
 
 const adminOptions = {
   reply_markup: {
@@ -60,6 +61,7 @@ const options = {
 };
 
 module.exports = {
+  cryptoTransferOptions,
   subscriptionOptions,
   priceOf,
   paymentOptions,

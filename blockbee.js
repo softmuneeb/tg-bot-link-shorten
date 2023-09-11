@@ -3,26 +3,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 const API_KEY_BLOCKBEE = process.env.API_KEY_BLOCKBEE;
 
-const initializeBlockBee = (
-  coin,
-  myAddress,
-  callbackUrl,
-  params,
-  blockbeeParams,
-  apiKey,
-) => {
-  const bb = new BlockBee(
-    coin,
-    myAddress,
-    callbackUrl,
-    params,
-    blockbeeParams,
-    apiKey,
-  );
-  return bb;
-};
-
-// const conversion = await BlockBee.getConvert(coin, value, from, apiKey)
 const getAddress = async bb => {
   try {
     const address = await bb.getAddress();
@@ -43,31 +23,35 @@ const checkLogs = async bb => {
   }
 };
 
-const driver = async () => {
-  const coin = 'polygon_matic';
+const getDepositAddress = async (ticker, webhookParams) => {
   const myAddress = ''; // auto gen by BB
   const callbackUrl = 'https://softgreen.sbs/save-payment-blockbee';
-  const params = { chatId: '444' };
   const blockbeeParams = {};
-  
-  const bb = initializeBlockBee(
-    coin,
+
+  const bb = new BlockBee(
+    ticker,
     myAddress,
     callbackUrl,
-    params,
+    webhookParams,
     blockbeeParams,
     API_KEY_BLOCKBEE,
   );
 
+  const address = await getAddress(bb);
+  const data = await checkLogs(bb);
+  console.log({ address, data });
+
+  return address;
+};
+
+const driver = async () => {
   try {
-    const address = await getAddress(bb);
-    const data = await checkLogs(bb);
-    console.log({ address, data });
+    console.log(await getDepositAddress('ltc', { chatId: '1234' }));
   } catch (error) {
-    console.error('An error occurred:', error);
+    console.error('An error occurred while getting the address:', error);
   }
 };
 
-driver()
+// driver()
 
-module.exports = { initializeBlockBee, getAddress, checkLogs, driver };
+module.exports = { getDepositAddress, getAddress, checkLogs };

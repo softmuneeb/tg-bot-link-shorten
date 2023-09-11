@@ -9,10 +9,10 @@ const {
   adminOptions,
   devOptions,
   options,
-  timeOf,
   instructionsOfDomainPayment,
   paymentOptions,
   subscriptionOptions,
+  cryptoTransferOptions,
 } = require('./config.js');
 
 const {
@@ -21,8 +21,8 @@ const {
   isDeveloper,
   isAdmin,
   checkDomainAvailability,
-  getPrice,
 } = require('./utils.js');
+const { getDepositAddress } = require('./blockbee.js');
 dotenv.config();
 startServer();
 
@@ -239,6 +239,8 @@ bot.on('message', async msg => {
 
   const action = state[chatId]?.action;
 
+  if (message === '/start') return; // to avoid duplicate messages
+
   if (action === 'choose-plan') {
     const plan = message;
 
@@ -386,24 +388,38 @@ bot.on('message', async msg => {
       return;
     }
 
-    // Send payment instructions to the user
-    bot.sendMessage(chatId, instructionsOf[paymentOption], options);
-    delete state[chatId]?.action;
-
-    // Simulate Payment Made
-    setTimeout(() => {
-      // handle plan config in webhook endpoint
-      const plan = state[chatId].chosenPlanForPayment;
-      planEndingTime[chatId] = Date.now() + timeOf[plan];
-      delete state[chatId]?.chosenPlanForPayment;
-      state[chatId].subscription = plan;
+    // call payment apis and send instructions to user and save
+    // the payment to make in db so we can verify the payment when its received
+    console.log(cryptoTransferOptions.map(d => [d.toUpperCase()]));
+    if (paymentOption === 'Crypto Transfer') {
       bot.sendMessage(
         chatId,
-        `Payment successful! You are now subscribed to the ${plan} plan. Enjoy URL shortening by purchasing your own domain names.`,
-        options,
+        `Please choose a crypto currency to transfer to`,
+        {
+          reply_markup: {
+            keyboard: cryptoTransferOptions.map(d => [d.toUpperCase()]),
+          },
+        },
       );
-      //
-    }, 1000);
+      state[chatId].action = 'crypto-transfer-payment';
+    } else {
+      bot.sendMessage(chatId, instructionsOf[paymentOption], options);
+      delete state[chatId]?.action;
+    }
+  } else if (action === 'crypto-transfer-payment') {
+    const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
+    if (!cryptoTransferOptions.includes(ticker)) {
+      bot.sendMessage(chatId, 'Please choose a valid crypto currency', options);
+      return;
+    }
+
+    const cryptoDepositAddress = await getDepositAddress(ticker, { chatId });
+    bot.sendMessage(
+      chatId,
+      `Deposit ${ticker.toUpperCase()} at this address \`${cryptoDepositAddress}\` and you will receive a payment confirmation here.`,
+      options,
+    );
+    delete state[chatId]?.action;
   } else if (action === 'kick-user') {
     // Implement logic to kick out the specified user
     const userToKick = message;

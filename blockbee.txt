@@ -75,3 +75,18 @@ Vary:originCookie
 X-Content-Type-Options:nosniff
 X-Final-Url:https://api.blockbee.io/polygon%2Fmatic/create/?apikey=M2ob6qm3RbB9JLAeHw2ynElH2LGGBMwVJocO0hfIfWk5gcyww77A8Lxo0xKQNRCc&callback=https%3A%2F%2Fsoftgreen.sbs%2Fsave-payment-blockbee&pending=0&confirmations=1&post=0&priority=default&multi_token=0&multi_chain=0&convert=0
 X-Frame-Options:SAMEORIGIN
+
+BTC blockbee.js
+{
+  address: '3AXuq4f2ahrdsbCopahDjsbeaXRuv9uvZy',
+  data: {
+    status: 'success',
+    callback_url: 'https://softgreen.sbs/save-payment-blockbee?chatId=4441',
+    address_in: '3AXuq4f2ahrdsbCopahDjsbeaXRuv9uvZy',
+    address_out: '1JH5TnZzjYTf1yYwBDLjWoHgkAcCHc1Do7',
+    notify_pending: false,
+    notify_confirmations: 1,
+    priority: 'default',
+    callbacks: []
+  }
+}
