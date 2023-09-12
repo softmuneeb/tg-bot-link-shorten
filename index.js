@@ -43,200 +43,12 @@ const domainSold = {};
 const planEndingTime = {};
 
 restoreData();
-bot.onText(/\/start/, msg => {
-  const chatId = msg.chat.id;
 
-  // Check if the user is the admin
-  if (isAdmin(chatId)) {
-    bot.sendMessage(
-      chatId,
-      'Welcome, Admin! Please select an option:',
-      adminOptions,
-    );
-  } else if (isDeveloper(chatId)) {
-    bot.sendMessage(
-      chatId,
-      'Welcome, Developer! Choose an option:',
-      devOptions,
-    );
-  } else {
-    bot.sendMessage(
-      chatId,
-      'Welcome to the URL Shortener Bot! Please select an option:',
-      options,
-    );
-  }
-});
-
-bot.onText(/See My Analytics/, msg => {
-  const chatId = msg.chat.id;
-
-  // Check if the user is a normal user
-  if (isNormalUser(chatId)) {
-    // Implement logic to show analytics to the user
-    // For example, you can send a message with analytics data
-    bot.sendMessage(chatId, 'Here are your analytics data...');
-  } else {
-    bot.sendMessage(chatId, 'You are not authorized to view analytics.');
-  }
-});
-
-bot.onText(/See All Analytics/, msg => {
-  const chatId = msg.chat.id;
-
-  // Check if the user is the admin
-  if (!isAdmin(chatId)) {
-    bot.sendMessage(chatId, 'You are not authorized to view analytics.');
-    return;
-  }
-
-  // Implement logic to retrieve and display analytics
-  // Replace with your own logic to fetch analytics data
-  const analyticsData = getAnalyticsData(); // Stubbed function
-  bot.sendMessage(chatId, `Analytics Data:\n${analyticsData}`);
-});
-
-bot.onText(/Kick Out User/, msg => {
-  const chatId = msg.chat.id;
-
-  // Check if the user is the admin
-  if (!isAdmin(chatId)) {
-    bot.sendMessage(chatId, 'You are not authorized to kick out users.');
-    return;
-  }
-
-  bot.sendMessage(chatId, 'Please provide the username of the user to kick:');
-  state[chatId].action = 'kick-user';
-});
-
-bot.onText(/Backup Data/, msg => {
-  const chatId = msg.chat.id;
-
-  // Check if the user is a developer
-  if (!isDeveloper(chatId)) {
-    bot.sendMessage(chatId, 'You are not authorized to perform this action.');
-    return;
-  }
-
-  // Call the backup function
-  backupTheData();
-  bot.sendMessage(chatId, 'Backup created successfully.');
-});
-
-bot.onText(/Restore Data/, msg => {
-  const chatId = msg.chat.id;
-
-  // Check if the user is a developer
-  if (!isDeveloper(chatId)) {
-    bot.sendMessage(chatId, 'You are not authorized to perform this action.');
-    return;
-  }
-
-  // Call the restore function
-  restoreData();
-  bot.sendMessage(chatId, 'Data restored successfully.');
-});
-
-bot.onText(/Shorten a URL/, msg => {
-  const chatId = msg.chat.id;
-
-  // he must own a subscription
-  if (!isSubscribed(chatId)) {
-    bot.sendMessage(chatId, 'Subscribe to plans first');
-    return;
-  }
-  // he must own a domain name
-  if (!ownsDomainName(chatId)) {
-    bot.sendMessage(chatId, 'Buy a domain first');
-    return;
-  }
-
-  state[chatId].action = 'choose-domain';
-  bot.sendMessage(chatId, 'Please provide the URL you want to shorten:');
-});
-
-bot.onText(/Buy a domain name/, msg => {
-  const chatId = msg.chat.id;
-
-  // he must own a subscription
-  if (!isSubscribed(chatId)) {
-    bot.sendMessage(chatId, 'Subscribe to plans first');
-    return;
-  }
-  state[chatId].action = 'buy';
-  bot.sendMessage(chatId, 'Please enter the desired domain name:', {
-    reply_markup: {
-      remove_keyboard: true,
-    },
-  });
-});
 const chooseSubscription = {
   reply_markup: {
     keyboard: subscriptionOptions.map(a => [a]),
   },
 };
-bot.onText(/Subscribe to plans/, msg => {
-  const chatId = msg.chat.id;
-
-  if (isSubscribed(chatId)) {
-    bot.sendMessage(chatId, 'You are already subscribed to a plan', options);
-    return;
-  }
-
-  state[chatId].action = 'choose-plan';
-  bot.sendMessage(chatId, 'Choose a subscription plan:', chooseSubscription);
-});
-
-bot.onText(/See my subscribed plan/, msg => {
-  const chatId = msg.chat.id;
-  const subscribedPlan = state[chatId]?.subscription;
-
-  if (subscribedPlan) {
-    if (!isSubscribed(chatId)) {
-      bot.sendMessage(
-        chatId,
-        `Your ${subscribedPlan} subscription is expired on ${new Date(
-          planEndingTime[chatId],
-        )}`,
-      );
-      return;
-    }
-
-    bot.sendMessage(
-      chatId,
-      `You are currently subscribed to the ${subscribedPlan} plan. Your plan is valid till ${new Date(
-        planEndingTime[chatId],
-      )}`,
-    );
-    return;
-  }
-
-  bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
-});
-
-bot.onText(/See my shortened links/, msg => {
-  const chatId = msg.chat.id;
-  // Implement logic to retrieve and display shortened links
-  const shortenedLinks = getShortenedLinks(chatId); // Stubbed function
-  if (shortenedLinks.length > 0) {
-    const linksText = shortenedLinks.join('\n');
-    bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
-  } else {
-    bot.sendMessage(chatId, 'You have no shortened links yet.');
-  }
-});
-
-bot.onText(/See my domains/, msg => {
-  const chatId = msg.chat.id;
-  // Implement logic to retrieve and display purchased domains
-  const purchasedDomains = getPurchasedDomains(chatId); // Stubbed function
-  if (purchasedDomains.length > 0) {
-    const domainsText = purchasedDomains.join('\n');
-    bot.sendMessage(chatId, `Here are your purchased domains:\n${domainsText}`);
-  } else {
-    bot.sendMessage(chatId, 'You have no purchased domains yet.');
-  }
-});
 
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
@@ -245,9 +57,132 @@ bot.on('message', async msg => {
 
   const action = state[chatId]?.action;
 
-  if (message === '/start') return; // to avoid duplicate messages
+  if (message === '/start') {
+    if (isAdmin(chatId)) {
+      bot.sendMessage(
+        chatId,
+        'Welcome, Admin! Please select an option:',
+        adminOptions,
+      );
+    } else if (isDeveloper(chatId)) {
+      bot.sendMessage(
+        chatId,
+        'Welcome, Developer! Choose an option:',
+        devOptions,
+      );
+    } else {
+      bot.sendMessage(
+        chatId,
+        'Welcome to the URL Shortener Bot! Please select an option:',
+        options,
+      );
+    }
+  } else if (action === 'See All Analytics') {
+    if (!isAdmin(chatId)) {
+      bot.sendMessage(chatId, 'You are not authorized to view analytics.');
+      return;
+    }
 
-  if (action === 'choose-plan') {
+    const analyticsData = getAnalyticsData();
+    bot.sendMessage(chatId, `Analytics Data:\n${analyticsData}`);
+  } else if (action === 'See My Analytics') {
+    bot.sendMessage(chatId, 'Here are your analytics data...');
+  } else if (action === 'Kick Out User') {
+    if (!isAdmin(chatId)) {
+      bot.sendMessage(chatId, 'You are not authorized to kick out users.');
+      return;
+    }
+
+    bot.sendMessage(chatId, 'Please provide the username of the user to kick:');
+    state[chatId].action = 'kick-user';
+  } else if (action === 'Backup Data') {
+    if (!isDeveloper(chatId)) {
+      bot.sendMessage(chatId, 'You are not authorized to perform this action.');
+      return;
+    }
+    backupTheData();
+    bot.sendMessage(chatId, 'Backup created successfully.');
+  } else if (action === 'Restore Data') {
+    if (!isDeveloper(chatId)) {
+      bot.sendMessage(chatId, 'You are not authorized to perform this action.');
+      return;
+    }
+    restoreData();
+    bot.sendMessage(chatId, 'Data restored successfully.');
+  } else if (action === 'Shorten a URL') {
+    if (!isSubscribed(chatId)) {
+      bot.sendMessage(chatId, 'Subscribe to plans first');
+      return;
+    }
+    if (!ownsDomainName(chatId)) {
+      bot.sendMessage(chatId, 'Buy a domain first');
+      return;
+    }
+    state[chatId].action = 'choose-domain';
+    bot.sendMessage(chatId, 'Please provide the URL you want to shorten:');
+  } else if (action === 'Buy a domain name') {
+    if (!isSubscribed(chatId)) {
+      bot.sendMessage(chatId, 'Subscribe to plans first');
+      return;
+    }
+    state[chatId].action = 'buy';
+    bot.sendMessage(chatId, 'Please enter the desired domain name:', {
+      reply_markup: {
+        remove_keyboard: true,
+      },
+    });
+  } else if (action === 'Subscribe to plans') {
+    if (isSubscribed(chatId)) {
+      bot.sendMessage(chatId, 'You are already subscribed to a plan', options);
+      return;
+    }
+
+    state[chatId].action = 'choose-plan';
+    bot.sendMessage(chatId, 'Choose a subscription plan:', chooseSubscription);
+  } else if (action === 'See my subscribed plan') {
+    const subscribedPlan = state[chatId]?.subscription;
+
+    if (subscribedPlan) {
+      if (!isSubscribed(chatId)) {
+        bot.sendMessage(
+          chatId,
+          `Your ${subscribedPlan} subscription is expired on ${new Date(
+            planEndingTime[chatId],
+          )}`,
+        );
+        return;
+      }
+
+      bot.sendMessage(
+        chatId,
+        `You are currently subscribed to the ${subscribedPlan} plan. Your plan is valid till ${new Date(
+          planEndingTime[chatId],
+        )}`,
+      );
+      return;
+    }
+
+    bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
+  } else if (action === 'See my shortened links') {
+    const shortenedLinks = getShortenedLinks(chatId);
+    if (shortenedLinks.length > 0) {
+      const linksText = shortenedLinks.join('\n');
+      bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
+    } else {
+      bot.sendMessage(chatId, 'You have no shortened links yet.');
+    }
+  } else if (action === 'See my domains') {
+    const purchasedDomains = getPurchasedDomains(chatId);
+    if (purchasedDomains.length > 0) {
+      const domainsText = purchasedDomains.join('\n');
+      bot.sendMessage(
+        chatId,
+        `Here are your purchased domains:\n${domainsText}`,
+      );
+    } else {
+      bot.sendMessage(chatId, 'You have no purchased domains yet.');
+    }
+  } else if (action === 'choose-plan') {
     const plan = message;
 
     if (!subscriptionOptions.includes(plan)) {
@@ -257,7 +192,6 @@ bot.on('message', async msg => {
 
     state[chatId].chosenPlanForPayment = plan;
 
-    // Send payment options
     bot.sendMessage(
       chatId,
       `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
@@ -301,8 +235,6 @@ bot.on('message', async msg => {
     delete state[chatId]?.url;
     delete state[chatId]?.action;
   } else if (action === 'buy') {
-    // Implement logic to check domain availability and process purchase
-
     const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/;
 
     if (!domainRegex.test(message)) {
@@ -317,7 +249,7 @@ bot.on('message', async msg => {
     const { available, price } = await checkDomainAvailability(
       domain,
       domainSold,
-    ); // Stubbed function
+    );
 
     if (!available) {
       bot.sendMessage(
@@ -355,7 +287,6 @@ bot.on('message', async msg => {
       return;
     }
 
-    // Send payment instructions to the user
     bot.sendMessage(
       chatId,
       instructionsOfDomainPayment[paymentOption],
@@ -367,7 +298,7 @@ bot.on('message', async msg => {
     setTimeout(() => {
       // handle plan config in webhook endpoint
       const domain = state[chatId].selectedDomainForPayment;
-      const domainPurchaseSuccess = buyDomain(chatId, domain); // Stubbed function
+      const domainPurchaseSuccess = buyDomain(chatId, domain);
 
       if (!domainPurchaseSuccess) {
         bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
@@ -470,9 +401,8 @@ Bank Code ${bankCode}`,
     bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'));
     delete state[chatId]?.action;
   } else if (action === 'kick-user') {
-    // Implement logic to kick out the specified user
     const userToKick = message;
-    const kicked = kickUser(userToKick); // Stubbed function
+    const kicked = kickUser(userToKick);
     if (kicked) {
       bot.sendMessage(chatId, `User ${userToKick} has been kicked out.`);
     } else {
@@ -488,11 +418,10 @@ Bank Code ${bankCode}`,
   // }
 });
 
-// Stubbed functions for demonstration purposes
 function getShortenedLinks(chatId) {
   return !linksOf[chatId]
     ? []
-    : linksOf[chatId].map(d => `${d.shortenedURL} -> ${d.url}`); // Replace with actual logic
+    : linksOf[chatId].map(d => `${d.shortenedURL} -> ${d.url}`);
 }
 
 function getPurchasedDomains(chatId) {
@@ -515,16 +444,12 @@ function shortenURLAndSave(chatId, domain, url) {
   return shortenedURL;
 }
 
-// Stubbed function for demonstration purposes
 function getAnalyticsData() {
   return 'Analytics data will be shown here.';
 }
 
-// Stubbed function for demonstration purposes
 function kickUser(username) {
-  // Implement logic to kick out the specified user
-  // Return true if successful, false otherwise
-  return true; // Change this based on your actual implementation
+  return true;
 }
 
 function restoreData() {
@@ -615,8 +540,6 @@ app.get('/save-payment-blockbee', (req, res) => {
     } else {
       bot.sendMessage(chatId, 'Payment failed');
       console.log(`Debug ${req.originalUrl}`);
-      // delete state[chatId]?.action;
-      // delete state[chatId]?.cryptoPaymentSession;
     }
   } else {
     console.log('issue', state[chatId]);

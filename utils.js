@@ -20,13 +20,12 @@ function isNormalUser(chatId) {
   return !isAdmin(chatId) && !isDeveloper(chatId);
 }
 
-// Stubbed function for demonstration purposes
 function isDeveloper(chatId) {
   // Implement logic to determine if the user is a developer
   // Return true if the user is a developer, false otherwise
   return chatId === DEVELOPER_CHAT_ID; // Replace with the actual developer's chat ID
 }
-// Stubbed function for demonstration purposes
+
 function isAdmin(chatId) {
   // Implement logic to determine if the user is the admin
   // Return true if the user is the admin, false otherwise
