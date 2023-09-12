@@ -23,9 +23,21 @@ const checkLogs = async bb => {
   }
 };
 
+const convertUSDToCrypto = async (value, coin) => {
+  const conversion = await BlockBee.getConvert(
+    coin,
+    value,
+    'usd',
+    API_KEY_BLOCKBEE,
+  );
+  return conversion.value_coin;
+};
+// convertUSDToCrypto(10, 'btc');
+
 const getCryptoDepositAddress = async (ticker, webhookParams) => {
   const myAddress = ''; // auto gen by BB
-  const callbackUrl = 'https://softgreen.sbs/save-payment-blockbee';
+  const callbackUrl =
+    'https://3562-2400-adc5-425-8900-42-d36e-79bb-f2bf.ngrok-free.app/save-payment-blockbee';
   const blockbeeParams = {};
 
   const bb = new BlockBee(
@@ -38,20 +50,13 @@ const getCryptoDepositAddress = async (ticker, webhookParams) => {
   );
 
   const address = await getAddress(bb);
+  // const qrCode = await bb.getQrcode(value, size);
   // const data = await checkLogs(bb);
   // console.log({ address, data });
-
+  console.log(address);
   return address;
 };
 
-const driver = async () => {
-  try {
-    console.log(await getCryptoDepositAddress('ltc', { chatId: '1234' }));
-  } catch (error) {
-    console.error('An error occurred while getting the address:', error);
-  }
-};
+// getCryptoDepositAddress('polygon_matic',  '6687923716' ); // chatid
 
-// driver()
-
-module.exports = { getCryptoDepositAddress };
+module.exports = { getCryptoDepositAddress, convertUSDToCrypto };

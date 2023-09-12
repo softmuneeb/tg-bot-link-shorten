@@ -90,3 +90,83 @@ BTC blockbee.js
     callbacks: []
   }
 }
+
+BlockBee.getConvert 'btc', 10, 'usd'
+{
+  status: 'success',
+  value_coin: '0.00038837',
+  exchange_rate: '25748.6'
+}
+
+Received payment data:
+/save-payment-blockbee?
+uuid=ff7520b7-0ccc-4c36-a918-5b0f6bc0fca3&
+address_in=0xC9dDFC22c6D5D4aBa772E517b9621A5231ae6eb4&
+address_out=0x9a7221b5e32d5f99e8da95585835442e29afb38f&
+confirmations=2&
+txid_in=0x3740d602b9d87c5c7e9c8202299bdebc073398fe43960de569a4942dd275e0c5&
+txid_out=0xcfb1de602cdc81d6316bb6e336a90845170c326b0f31e1a2a47379b39aa01613&
+fee=5438534013054310&
+fee_coin=0.00543853401305431&
+value=553000000000000000&
+value_coin=0.553&
+value_forwarded=538414867292376690&
+value_forwarded_coin=0.53841486729237669&
+coin=polygon_matic&
+price=0.5068637291&
+result=sent&
+pending=0
+
+
+Data restored.
+Bot is running...
+Server is running on port 4005
+0xa1E6b8002C9d5652BA7f9Ad9C149e69274AC4136
+Debug /save-payment-blockbee?uuid=27304f0a-7949-4bfc-a78b-15dc3b8a33d4&
+address_in=0xa1E6b8002C9d5652BA7f9Ad9C149e69274AC4136&
+address_out=0x9a7221b5e32d5f99e8da95585835442e29afb38f&
+confirmations=3&
+txid_in=0x8f5c03566fb178fce6422c190888f466d34d8488b14fc41add6308575202d727&
+txid_out=0x9820307be3857676ca86c35d5b97b5550e921f1a5959b3bf1ac66234d27c66ec&
+fee=5447249723757732&
+fee_coin=0.005447249723757732&
+value=556000000000000000&
+value_coin=0.556&
+value_forwarded=539277722652015496&
+value_forwarded_coin=0.539277722652015496&
+coin=polygon_matic&
+price=0.504432622&
+result=sent&
+pending=0
+Backup created.  {
+  "state": {
+    "6687923716": {
+      "chosenPlanForPayment": "Daily"
+    },
+    "5729797630": {}
+  },
+  "linksOf": {},
+  "domainsOf": {},
+  "domainSold": {},
+  "planEndingTime": {}
+}
+
+{
+  "state": {
+    "6687923716": {
+      "chosenPlanForPayment": "Daily",
+      "cryptoPaymentSession": {
+        "priceCrypto": "0.55706",
+        "ticker": "polygon_matic"
+      }
+    },
+    "5729797630": {}
+  },
+  "linksOf": {},
+  "chatIdOf": {
+    "0xa1E6b8002C9d5652BA7f9Ad9C149e69274AC4136": 6687923716
+  },
+  "domainsOf": {},
+  "domainSold": {},
+  "planEndingTime": {}
+}

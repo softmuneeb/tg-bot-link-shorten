@@ -1,7 +1,7 @@
 const priceOf = {
-  Daily: 1,
-  Weekly: 2,
-  Monthly: 3,
+  Daily: 0.28,
+  Weekly: 0.5,
+  Monthly: 0.75,
 };
 
 const timeOf = {
@@ -32,7 +32,14 @@ reference: 54e3*****4d9`,
 
 const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
 const paymentOptions = ['Crypto Transfer', 'Bank Transfer'];
-const cryptoTransferOptions = ['btc', 'eth', 'ltc', 'trc20_usdt', 'bep20_busd'];
+const cryptoTransferOptions = [
+  'btc',
+  'eth',
+  'ltc',
+  'trc20_usdt',
+  'bep20_busd',
+  'polygon_matic',
+];
 
 const adminOptions = {
   reply_markup: {

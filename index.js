@@ -1,10 +1,10 @@
 const TelegramBot = require('node-telegram-bot-api');
-const { startServer } = require('./api.js');
 const shortid = require('shortid');
-const dotenv = require('dotenv');
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
 const fs = require('fs');
 const {
-  instructionsOf,
   priceOf,
   adminOptions,
   devOptions,
@@ -13,6 +13,7 @@ const {
   paymentOptions,
   subscriptionOptions,
   cryptoTransferOptions,
+  timeOf,
 } = require('./config.js');
 
 const {
@@ -23,10 +24,11 @@ const {
   checkDomainAvailability,
   convertUSDToNaira,
 } = require('./utils.js');
-const { getCryptoDepositAddress } = require('./blockbee.js');
+const {
+  getCryptoDepositAddress,
+  convertUSDToCrypto,
+} = require('./blockbee.js');
 const { getBankDepositAddress } = require('./fincra.js');
-dotenv.config();
-startServer();
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -34,6 +36,7 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
 const state = {};
 const linksOf = {};
+const chatIdOf = {};
 const domainsOf = {};
 const domainSold = {};
 const planEndingTime = {};
@@ -438,17 +441,25 @@ Bank Code ${bankCode}`,
     }
   } else if (action === 'crypto-transfer-payment') {
     const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
+    const plan = state[chatId].chosenPlanForPayment;
+    const priceUSD = priceOf[plan];
+    const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
     if (!cryptoTransferOptions.includes(ticker)) {
       bot.sendMessage(chatId, 'Please choose a valid crypto currency', options);
       return;
     }
 
-    const cryptoDepositAddress = await getCryptoDepositAddress(ticker, {
-      chatId,
-    });
+    const cryptoDepositAddress = await getCryptoDepositAddress(ticker, chatId);
+
+    chatIdOf[cryptoDepositAddress] = chatId;
+    state[chatId].cryptoPaymentSession = {
+      priceCrypto,
+      ticker,
+    };
+
     bot.sendMessage(
       chatId,
-      `Deposit ${ticker.toUpperCase()} at this address \`${cryptoDepositAddress}\` and you will receive a payment confirmation here.`,
+      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address ${cryptoDepositAddress} and you will receive a payment confirmation here.`,
       options,
     );
     delete state[chatId]?.action;
@@ -517,6 +528,7 @@ function restoreData() {
 
     Object.assign(state, restoredData.state);
     Object.assign(linksOf, restoredData.linksOf);
+    Object.assign(chatIdOf, restoredData.chatIdOf);
     Object.assign(domainsOf, restoredData.domainsOf);
     Object.assign(domainSold, restoredData.domainSold);
     Object.assign(planEndingTime, restoredData.planEndingTime);
@@ -531,6 +543,7 @@ function backupTheData() {
   const backupData = {
     state,
     linksOf,
+    chatIdOf,
     domainsOf,
     domainSold,
     planEndingTime,
@@ -554,3 +567,72 @@ function buyDomain(chatId, domain) {
 }
 
 console.log('Bot is running...');
+
+const app = express();
+app.use(cors());
+app.set('json spaces', 2);
+app.get('/', (req, res) => {
+  res.json({ message: 'Assalamo Alaikum', from: req.hostname });
+});
+app.get('/save-payment-blockbee', (req, res) => {
+  console.log(`Debug ${req.originalUrl}`);
+  const urlParams = new URLSearchParams(req.originalUrl);
+
+  const address_in = urlParams.get('address_in');
+  const coin = urlParams.get('coin');
+  const price = urlParams.get('price');
+  const value_coin = Number(urlParams.get('value_coin'));
+
+  if (!coin || !price || !address_in || !value_coin) {
+    console.log('Invalid payment data ' + req.originalUrl);
+    res.json({ message: 'Invalid payment data' });
+    return;
+  }
+
+  const chatId = chatIdOf[address_in];
+
+  if (state[chatId]?.cryptoPaymentSession) {
+    const { priceCrypto, ticker } = state[chatId].cryptoPaymentSession;
+
+    if (value_coin >= Number(priceCrypto) && coin === ticker.toLowerCase()) {
+      const plan = state[chatId].chosenPlanForPayment;
+      planEndingTime[chatId] = Date.now() + timeOf[plan];
+      state[chatId].subscription = plan;
+      bot.sendMessage(
+        chatId,
+        `Payment received successfully! You are now subscribed to the ${plan} plan. Enjoy URL shortening by purchasing your own domain names.`,
+        options,
+      );
+
+      delete state[chatId]?.chosenPlanForPayment;
+      delete state[chatId]?.action;
+      delete state[chatId]?.cryptoPaymentSession;
+    } else {
+      bot.sendMessage(chatId, 'Payment failed');
+      // delete state[chatId]?.action;
+      // delete state[chatId]?.cryptoPaymentSession;
+    }
+  } else {
+    console.log('issue', state[chatId]);
+  }
+
+  res.json({ message: 'Payment data received and processed successfully' });
+});
+app.get('/get-json-data', (req, res) => {
+  fs.readFile('backup.json', 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading JSON file:', err);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    }
+    const jsonData = JSON.parse(data);
+    res.json(jsonData);
+  });
+});
+const startServer = () => {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+};
+startServer();
