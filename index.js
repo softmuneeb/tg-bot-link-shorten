@@ -77,7 +77,7 @@ bot.on('message', async msg => {
         options,
       );
     }
-  } else if (action === 'See All Analytics') {
+  } else if (message === 'See All Analytics') {
     if (!isAdmin(chatId)) {
       bot.sendMessage(chatId, 'You are not authorized to view analytics.');
       return;
@@ -85,9 +85,9 @@ bot.on('message', async msg => {
 
     const analyticsData = getAnalyticsData();
     bot.sendMessage(chatId, `Analytics Data:\n${analyticsData}`);
-  } else if (action === 'See My Analytics') {
+  } else if (message === 'See My Analytics') {
     bot.sendMessage(chatId, 'Here are your analytics data...');
-  } else if (action === 'Kick Out User') {
+  } else if (message === 'Kick Out User') {
     if (!isAdmin(chatId)) {
       bot.sendMessage(chatId, 'You are not authorized to kick out users.');
       return;
@@ -95,21 +95,21 @@ bot.on('message', async msg => {
 
     bot.sendMessage(chatId, 'Please provide the username of the user to kick:');
     state[chatId].action = 'kick-user';
-  } else if (action === 'Backup Data') {
+  } else if (message === 'Backup Data') {
     if (!isDeveloper(chatId)) {
       bot.sendMessage(chatId, 'You are not authorized to perform this action.');
       return;
     }
     backupTheData();
     bot.sendMessage(chatId, 'Backup created successfully.');
-  } else if (action === 'Restore Data') {
+  } else if (message === 'Restore Data') {
     if (!isDeveloper(chatId)) {
       bot.sendMessage(chatId, 'You are not authorized to perform this action.');
       return;
     }
     restoreData();
     bot.sendMessage(chatId, 'Data restored successfully.');
-  } else if (action === 'Shorten a URL') {
+  } else if (message === 'Shorten a URL') {
     if (!isSubscribed(chatId)) {
       bot.sendMessage(chatId, 'Subscribe to plans first');
       return;
@@ -120,7 +120,7 @@ bot.on('message', async msg => {
     }
     state[chatId].action = 'choose-domain';
     bot.sendMessage(chatId, 'Please provide the URL you want to shorten:');
-  } else if (action === 'Buy a domain name') {
+  } else if (message === 'Buy a domain name') {
     if (!isSubscribed(chatId)) {
       bot.sendMessage(chatId, 'Subscribe to plans first');
       return;
@@ -131,7 +131,7 @@ bot.on('message', async msg => {
         remove_keyboard: true,
       },
     });
-  } else if (action === 'Subscribe to plans') {
+  } else if (message === 'Subscribe to plans') {
     if (isSubscribed(chatId)) {
       bot.sendMessage(chatId, 'You are already subscribed to a plan', options);
       return;
@@ -139,7 +139,7 @@ bot.on('message', async msg => {
 
     state[chatId].action = 'choose-plan';
     bot.sendMessage(chatId, 'Choose a subscription plan:', chooseSubscription);
-  } else if (action === 'See my subscribed plan') {
+  } else if (message === 'See my subscribed plan') {
     const subscribedPlan = state[chatId]?.subscription;
 
     if (subscribedPlan) {
@@ -163,7 +163,7 @@ bot.on('message', async msg => {
     }
 
     bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
-  } else if (action === 'See my shortened links') {
+  } else if (message === 'See my shortened links') {
     const shortenedLinks = getShortenedLinks(chatId);
     if (shortenedLinks.length > 0) {
       const linksText = shortenedLinks.join('\n');
@@ -171,7 +171,7 @@ bot.on('message', async msg => {
     } else {
       bot.sendMessage(chatId, 'You have no shortened links yet.');
     }
-  } else if (action === 'See my domains') {
+  } else if (message === 'See my domains') {
     const purchasedDomains = getPurchasedDomains(chatId);
     if (purchasedDomains.length > 0) {
       const domainsText = purchasedDomains.join('\n');
