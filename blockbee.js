@@ -34,10 +34,9 @@ const convertUSDToCrypto = async (value, coin) => {
 };
 // convertUSDToCrypto(10, 'btc');
 
-const getCryptoDepositAddress = async (ticker, webhookParams) => {
+const getCryptoDepositAddress = async (ticker, webhookParams, backendServer) => {
   const myAddress = ''; // auto gen by BB
-  const callbackUrl =
-    'https://3562-2400-adc5-425-8900-42-d36e-79bb-f2bf.ngrok-free.app/save-payment-blockbee';
+  const callbackUrl = `${backendServer}/save-payment-blockbee`;
   const blockbeeParams = {};
 
   const bb = new BlockBee(

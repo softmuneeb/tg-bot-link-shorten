@@ -31,6 +31,7 @@ const {
 const { getBankDepositAddress } = require('./fincra.js');
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const SELF_URL = process.env.SELF_URL;
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
@@ -449,7 +450,11 @@ Bank Code ${bankCode}`,
       return;
     }
 
-    const cryptoDepositAddress = await getCryptoDepositAddress(ticker, chatId);
+    const cryptoDepositAddress = await getCryptoDepositAddress(
+      ticker,
+      chatId,
+      SELF_URL,
+    );
 
     chatIdOf[cryptoDepositAddress] = chatId;
     state[chatId].cryptoPaymentSession = {
