@@ -3,26 +3,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 const API_KEY_BLOCKBEE = process.env.API_KEY_BLOCKBEE;
 
-const getAddress = async bb => {
-  try {
-    const address = await bb.getAddress();
-    return address;
-  } catch (error) {
-    console.error('An error occurred while getting the address:', error);
-    return error;
-  }
-};
-
-const checkLogs = async bb => {
-  try {
-    const data = await bb.checkLogs();
-    return data;
-  } catch (error) {
-    console.error('An error occurred while checking logs:', error);
-    return error;
-  }
-};
-
 const convertUSDToCrypto = async (value, coin) => {
   const conversion = await BlockBee.getConvert(
     coin,
@@ -34,7 +14,12 @@ const convertUSDToCrypto = async (value, coin) => {
 };
 // convertUSDToCrypto(10, 'btc');
 
-const getCryptoDepositAddress = async (ticker, webhookParams, backendServer) => {
+const getCryptoDepositAddress = async (
+  priceCrypto,
+  ticker,
+  webhookParams,
+  backendServer,
+) => {
   const myAddress = ''; // auto gen by BB
   const callbackUrl = `${backendServer}/save-payment-blockbee`;
   const blockbeeParams = {};
@@ -48,14 +33,13 @@ const getCryptoDepositAddress = async (ticker, webhookParams, backendServer) => 
     API_KEY_BLOCKBEE,
   );
 
-  const address = await getAddress(bb);
-  // const qrCode = await bb.getQrcode(value, size);
-  // const data = await checkLogs(bb);
-  // console.log({ address, data });
-  console.log(address);
-  return address;
+  const address = await bb.getAddress();
+  const qrCode = await bb.getQrcode(priceCrypto);
+
+  // const data = await bb.checkLogs();
+  return { address, qrCode: qrCode.qr_code };
 };
 
-// getCryptoDepositAddress('polygon_matic',  '6687923716' ); // chatid
+// getCryptoDepositAddress('0.55', 'polygon_matic',  '6687923716', 'https://softgreen.com' ); // chatid
 
 module.exports = { getCryptoDepositAddress, convertUSDToCrypto };

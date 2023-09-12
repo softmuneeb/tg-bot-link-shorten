@@ -450,23 +450,24 @@ Bank Code ${bankCode}`,
       return;
     }
 
-    const cryptoDepositAddress = await getCryptoDepositAddress(
+    const { address, qrCode } = await getCryptoDepositAddress(
+      priceCrypto,
       ticker,
       chatId,
       SELF_URL,
     );
 
-    chatIdOf[cryptoDepositAddress] = chatId;
+    chatIdOf[address] = chatId;
     state[chatId].cryptoPaymentSession = {
       priceCrypto,
       ticker,
     };
-
     bot.sendMessage(
       chatId,
-      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address ${cryptoDepositAddress} and you will receive a payment confirmation here.`,
+      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address ${address} and you will receive a payment confirmation here.`,
       options,
     );
+    bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'));
     delete state[chatId]?.action;
   } else if (action === 'kick-user') {
     // Implement logic to kick out the specified user
@@ -580,7 +581,6 @@ app.get('/', (req, res) => {
   res.json({ message: 'Assalamo Alaikum', from: req.hostname });
 });
 app.get('/save-payment-blockbee', (req, res) => {
-  console.log(`Debug ${req.originalUrl}`);
   const urlParams = new URLSearchParams(req.originalUrl);
 
   const address_in = urlParams.get('address_in');
@@ -614,6 +614,7 @@ app.get('/save-payment-blockbee', (req, res) => {
       delete state[chatId]?.cryptoPaymentSession;
     } else {
       bot.sendMessage(chatId, 'Payment failed');
+      console.log(`Debug ${req.originalUrl}`);
       // delete state[chatId]?.action;
       // delete state[chatId]?.cryptoPaymentSession;
     }
@@ -641,3 +642,13 @@ const startServer = () => {
   });
 };
 startServer();
+
+// getCryptoDepositAddress(
+//   '0.55',
+//   'polygon_matic',
+//   '6687923716',
+//   'https://softgreen.com',
+// ).then(async a => {
+//   bot.sendMessage('6687923716', 'Bot is running', options);
+//   bot.sendPhoto('6687923716', Buffer.from(a.qrCode.qr_code, 'base64'));
+// });

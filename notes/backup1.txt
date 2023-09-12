@@ -1,0 +1,50 @@
+{
+  "state": {
+    "5729797630": {
+      "subscription": "Daily"
+    },
+    "6687923716": {}
+  },
+  "linksOf": {
+    "5729797630": [
+      {
+        "url": "https://google.com/abcaijdoasidjhao",
+        "shortenedURL": "x.com/xiMLrVJTz"
+      }
+    ]
+  },
+  "domainsOf": {
+    "5729797630": [
+      "x.com"
+    ]
+  },
+  "domainSold": {
+    "x.com": true
+  },
+  "planEndingTime": {
+    "5729797630": 1693316415007
+  }
+}
+
+
+{
+  "state": {
+    "6687923716": {
+      "chosenPlanForPayment": "Daily",
+      "cryptoPaymentSession": {
+        "priceCrypto": "0.00001072",
+        "ticker": "btc"
+      }
+    },
+    "5729797630": {}
+  },
+  "linksOf": {},
+  "chatIdOf": {
+    "null": 6687923716,
+    "TFHFv1cxMABymZwZaULG2tia39pMvd6gT7": 6687923716,
+    "35ejRf3JuTVsuhfd7zLJGKquqT8oaqJN4v": 6687923716
+  },
+  "domainsOf": {},
+  "domainSold": {},
+  "planEndingTime": {}
+}
