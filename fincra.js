@@ -1,44 +1,63 @@
-const { Fincra } = require('fincra-node-sdk'); // JavaScript
-const dotenv = require('dotenv');
-dotenv.config();
-const FINCRA_PRIVATE_KEY = process.env.FINCRA_PRIVATE_KEY;
-const FINCRA_PUBLIC_KEY = process.env.FINCRA_PUBLIC_KEY;
+const axios = require('axios');
+require('dotenv').config();
 
-const getBankDepositAddress = async (amount, merchantReference) => {
-  merchantReference += '';
-  amount += '';
-
-  const fincra = new Fincra(FINCRA_PUBLIC_KEY, FINCRA_PRIVATE_KEY, {
-    sandbox: false,
-  });
-
-  //   const business = await fincra.business.getBusinessId();
-  //   console.log(business);
-
-  const data = {
-    expiresAt: '43800', // 1 month expiry
-    amount,
-    merchantReference,
+const createCheckout = async (amount, reference) => {
+  const options = {
+    method: 'POST',
+    url: `https://${process.env.FINCRA_ENDPOINT}/checkout/payments`,
+    headers: {
+      accept: 'application/json',
+      'x-pub-key': process.env.FINCRA_PUBLIC_KEY,
+      'x-business-id': process.env.BUSINESS_ID,
+      'content-type': 'application/json',
+      'api-key': process.env.FINCRA_PRIVATE_KEY,
+    },
+    data: {
+      currency: 'NGN',
+      customer: { name: 'customer name', email: 'someemail@gmail.com' },
+      paymentMethods: ['bank_transfer', 'card'],
+      amount,
+      redirectUrl: `${process.env.SELF_URL}/save-payment-fincra`,
+      reference,
+      feeBearer: 'business', // 'customer',
+      settlementDestination: 'wallet',
+      defaultPaymentMethod: 'bank_transfer',
+    },
   };
 
-  let p = {};
   try {
-    p = await fincra.collection.payWithTransfer(data);
-
-    return {
-      accountNumber: p.data.accountInformation.accountNumber,
-      accountName: p.data.accountInformation.accountName,
-      bankName: p.data.accountInformation.bankName,
-      bankCode: p.data.accountInformation.bankCode,
-      _id: p.data._id,
-      business: p.data.business,
-    };
+    const response = await axios.request(options);
+    return { url: response.data.data.link };
   } catch (error) {
-    console.log(error.message, JSON.stringify(p, null, 2));
-    return { error: error.message.error };
+    console.error(error.message, error.response.data.message);
+    return { error: error.message + ' ' + error.response.data.message };
   }
 };
 
-// getBankDepositAddress('100', '1234567');
+const getBusinessId = () => {
+  const options = {
+    method: 'GET',
+    url: `${process.env.FINCRA_ENDPOINT}/profile/business/me`,
+    headers: {
+      accept: 'application/json',
+      'api-key': process.env.FINCRA_PRIVATE_KEY,
+    },
+  };
 
-module.exports = { getBankDepositAddress };
+  axios
+    .request(options)
+    .then(function (response) {
+      console.log(response.data);
+    })
+    .catch(function (error) {
+      console.error(error);
+    });
+};
+
+// getBusinessId();
+// createCheckout('1', 'txId7');
+// getBankDepositAddress('100', '1234567');
+// getBankDepositAddress('100', '55667788');
+// getAmountsPaid('64c95e7366ea9f0b4a98dc2e', '64c95e7316ea9f0b4a98dc2e');
+
+module.exports = { createCheckout };

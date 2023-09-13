@@ -1,4 +1,4 @@
-const { getBankDepositAddress } = require('./fincra.js');
+const { createCheckout } = require('./fincra.js');
 const TelegramBot = require('node-telegram-bot-api');
 const shortid = require('shortid');
 const express = require('express');
@@ -292,18 +292,10 @@ bot.on('message', async msg => {
       );
       state[chatId].action = 'crypto-transfer-payment';
     } else {
-      const priceNGN = await convertUSDToNaira(priceOf[plan]);
-
-      const {
-        accountNumber,
-        accountName,
-        bankName,
-        bankCode,
-        _id,
-        business,
-        error,
-      } = await getBankDepositAddress(priceNGN, chatId);
-      // save [chatId, _id, business, plan] in db to verify received amount later
+      const priceNGN = Number(await convertUSDToNaira(priceOf[plan]));
+      const reference = shortid.generate();
+      chatIdOf[reference] = chatId;
+      const { url, error } = await createCheckout(priceNGN, reference);
 
       if (error) {
         bot.sendMessage(chatId, error, options);
@@ -311,15 +303,23 @@ bot.on('message', async msg => {
         return;
       }
 
+      const inline_keyboard = {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: 'Make Payment',
+                url,
+              },
+            ],
+          ],
+        },
+      };
+
       bot.sendMessage(
         chatId,
-        `Deposit ${priceNGN} NGN at this bank account and you will receive a payment confirmation here.
-
-Account Number ${accountNumber}
-Account Name ${accountName}
-Bank Name ${bankName}
-Bank Code ${bankCode}`,
-        options,
+        `Pay ${priceNGN} NGN and you will receive a payment confirmation here.`,
+        inline_keyboard,
       );
       delete state[chatId]?.action;
     }
@@ -514,7 +514,30 @@ app.set('json spaces', 2);
 app.get('/', (req, res) => {
   res.json({ message: 'Assalamo Alaikum', from: req.hostname });
 });
+app.get('/save-payment-fincra', (req, res) => {
+  console.log(req.originalUrl);
+
+  const reference = req.query.reference;
+  const chatId = chatIdOf[reference];
+  console.log({ chatId });
+  console.log({ reference });
+  if (state[chatId]?.chosenPlanForPayment) {
+    const plan = state[chatId].chosenPlanForPayment;
+    planEndingTime[chatId] = Date.now() + timeOf[plan];
+    state[chatId].subscription = plan;
+    delete state[chatId]?.chosenPlanForPayment;
+    bot.sendMessage(
+      chatId,
+      `Payment received successfully! You are now subscribed to the ${plan} plan. Enjoy URL shortening by purchasing your own domain names.`,
+      options,
+    );
+    res.send('Payment processed successfully');
+  } else {
+    res.send('Payment already processed or not found');
+  }
+});
 app.get('/save-payment-blockbee', (req, res) => {
+  // handle multiple invocations of the same url
   const urlParams = new URLSearchParams(req.originalUrl);
 
   const address_in = urlParams.get('address_in');
@@ -524,7 +547,7 @@ app.get('/save-payment-blockbee', (req, res) => {
 
   if (!coin || !price || !address_in || !value_coin) {
     console.log('Invalid payment data ' + req.originalUrl);
-    res.json({ message: 'Invalid payment data' });
+    res.send('Invalid payment data');
     return;
   }
 
@@ -533,28 +556,28 @@ app.get('/save-payment-blockbee', (req, res) => {
   if (state[chatId]?.cryptoPaymentSession) {
     const { priceCrypto, ticker } = state[chatId].cryptoPaymentSession;
 
+    console.log(ticker, ticker.toLowerCase());
     if (value_coin >= Number(priceCrypto) && coin === ticker.toLowerCase()) {
       const plan = state[chatId].chosenPlanForPayment;
       planEndingTime[chatId] = Date.now() + timeOf[plan];
       state[chatId].subscription = plan;
       bot.sendMessage(
         chatId,
-        `Payment received successfully! You are now subscribed to the ${plan} plan. Enjoy URL shortening by purchasing your own domain names.`,
+        `${value_coin.toUpperCase()} ${coin} received successfully! You are now subscribed to the ${plan} plan. Enjoy URL shortening by purchasing your own domain names.`,
         options,
       );
 
       delete state[chatId]?.chosenPlanForPayment;
-      delete state[chatId]?.action;
       delete state[chatId]?.cryptoPaymentSession;
     } else {
-      bot.sendMessage(chatId, 'Payment failed');
-      console.log(`Debug ${req.originalUrl}`);
+      console.log(req.originalUrl);
+      res.send('Payment already processed');
     }
   } else {
     console.log('issue', state[chatId]);
   }
 
-  res.json({ message: 'Payment data received and processed successfully' });
+  res.send('Payment data received and processed successfully');
 });
 app.get('/get-json-data', (req, res) => {
   fs.readFile('backup.json', 'utf8', (err, data) => {
