@@ -48,3 +48,26 @@
   "domainSold": {},
   "planEndingTime": {}
 }
+
+{
+  "state": {
+    "6687923716": {
+      "chosenPlanForPayment": "Weekly",
+      "bankPaymentSession": {
+        "accountNumber": "3995658283",
+        "accountName": "FIN-Blue Space Technology LTD",
+        "bankName": "GLOBUS BANK",
+        "bankCode": "103",
+        "_id": "65013dafdb670ba212a400d9",
+        "business": "64c95e7366ea9f0b4a98dc2e",
+        "plan": "Monthly"
+      }
+    },
+    "5729797630": {}
+  },
+  "linksOf": {},
+  "chatIdOf": {},
+  "domainsOf": {},
+  "domainSold": {},
+  "planEndingTime": {}
+}

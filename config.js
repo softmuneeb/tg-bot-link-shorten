@@ -1,7 +1,7 @@
 const priceOf = {
-  Daily: 0.28,
-  Weekly: 0.5,
-  Monthly: 0.75,
+  Daily: 0.03,
+  Weekly: 0.04,
+  Monthly: 0.05,
 };
 
 const timeOf = {
