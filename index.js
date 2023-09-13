@@ -1,3 +1,4 @@
+const { getBankDepositAddress } = require('./fincra.js');
 const TelegramBot = require('node-telegram-bot-api');
 const shortid = require('shortid');
 const express = require('express');
@@ -15,7 +16,6 @@ const {
   cryptoTransferOptions,
   timeOf,
 } = require('./config.js');
-
 const {
   isValidUrl,
   isNormalUser,
@@ -28,7 +28,6 @@ const {
   getCryptoDepositAddress,
   convertUSDToCrypto,
 } = require('./blockbee.js');
-const { getBankDepositAddress } = require('./fincra.js');
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const SELF_URL = process.env.SELF_URL;
@@ -43,12 +42,6 @@ const domainSold = {};
 const planEndingTime = {};
 
 restoreData();
-
-const chooseSubscription = {
-  reply_markup: {
-    keyboard: subscriptionOptions.map(a => [a]),
-  },
-};
 
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
@@ -77,17 +70,9 @@ bot.on('message', async msg => {
         options,
       );
     }
-  } else if (message === 'See All Analytics') {
-    if (!isAdmin(chatId)) {
-      bot.sendMessage(chatId, 'You are not authorized to view analytics.');
-      return;
-    }
-
-    const analyticsData = getAnalyticsData();
-    bot.sendMessage(chatId, `Analytics Data:\n${analyticsData}`);
-  } else if (message === 'See My Analytics') {
-    bot.sendMessage(chatId, 'Here are your analytics data...');
-  } else if (message === 'Kick Out User') {
+  }
+  //
+  else if (message === 'Kick Out User') {
     if (!isAdmin(chatId)) {
       bot.sendMessage(chatId, 'You are not authorized to kick out users.');
       return;
@@ -95,21 +80,21 @@ bot.on('message', async msg => {
 
     bot.sendMessage(chatId, 'Please provide the username of the user to kick:');
     state[chatId].action = 'kick-user';
-  } else if (message === 'Backup Data') {
-    if (!isDeveloper(chatId)) {
-      bot.sendMessage(chatId, 'You are not authorized to perform this action.');
-      return;
+  } else if (action === 'kick-user') {
+    const userToKick = message;
+    const kicked = kickUser(userToKick);
+    if (kicked) {
+      bot.sendMessage(chatId, `User ${userToKick} has been kicked out.`);
+    } else {
+      bot.sendMessage(
+        chatId,
+        `User ${userToKick} not found or unable to kick.`,
+      );
     }
-    backupTheData();
-    bot.sendMessage(chatId, 'Backup created successfully.');
-  } else if (message === 'Restore Data') {
-    if (!isDeveloper(chatId)) {
-      bot.sendMessage(chatId, 'You are not authorized to perform this action.');
-      return;
-    }
-    restoreData();
-    bot.sendMessage(chatId, 'Data restored successfully.');
-  } else if (message === 'Shorten a URL') {
+    delete state[chatId]?.action;
+  }
+  //
+  else if (message === 'Shorten a URL') {
     if (!isSubscribed(chatId)) {
       bot.sendMessage(chatId, 'Subscribe to plans first');
       return;
@@ -120,89 +105,6 @@ bot.on('message', async msg => {
     }
     state[chatId].action = 'choose-domain';
     bot.sendMessage(chatId, 'Please provide the URL you want to shorten:');
-  } else if (message === 'Buy a domain name') {
-    if (!isSubscribed(chatId)) {
-      bot.sendMessage(chatId, 'Subscribe to plans first');
-      return;
-    }
-    state[chatId].action = 'buy';
-    bot.sendMessage(chatId, 'Please enter the desired domain name:', {
-      reply_markup: {
-        remove_keyboard: true,
-      },
-    });
-  } else if (message === 'Subscribe to plans') {
-    if (isSubscribed(chatId)) {
-      bot.sendMessage(chatId, 'You are already subscribed to a plan', options);
-      return;
-    }
-
-    state[chatId].action = 'choose-plan';
-    bot.sendMessage(chatId, 'Choose a subscription plan:', chooseSubscription);
-  } else if (message === 'See my subscribed plan') {
-    const subscribedPlan = state[chatId]?.subscription;
-
-    if (subscribedPlan) {
-      if (!isSubscribed(chatId)) {
-        bot.sendMessage(
-          chatId,
-          `Your ${subscribedPlan} subscription is expired on ${new Date(
-            planEndingTime[chatId],
-          )}`,
-        );
-        return;
-      }
-
-      bot.sendMessage(
-        chatId,
-        `You are currently subscribed to the ${subscribedPlan} plan. Your plan is valid till ${new Date(
-          planEndingTime[chatId],
-        )}`,
-      );
-      return;
-    }
-
-    bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
-  } else if (message === 'See my shortened links') {
-    const shortenedLinks = getShortenedLinks(chatId);
-    if (shortenedLinks.length > 0) {
-      const linksText = shortenedLinks.join('\n');
-      bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
-    } else {
-      bot.sendMessage(chatId, 'You have no shortened links yet.');
-    }
-  } else if (message === 'See my domains') {
-    const purchasedDomains = getPurchasedDomains(chatId);
-    if (purchasedDomains.length > 0) {
-      const domainsText = purchasedDomains.join('\n');
-      bot.sendMessage(
-        chatId,
-        `Here are your purchased domains:\n${domainsText}`,
-      );
-    } else {
-      bot.sendMessage(chatId, 'You have no purchased domains yet.');
-    }
-  } else if (action === 'choose-plan') {
-    const plan = message;
-
-    if (!subscriptionOptions.includes(plan)) {
-      bot.sendMessage(chatId, 'Please choose a valid plan', chooseSubscription);
-      return;
-    }
-
-    state[chatId].chosenPlanForPayment = plan;
-
-    bot.sendMessage(
-      chatId,
-      `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
-      {
-        reply_markup: {
-          keyboard: [paymentOptions],
-        },
-      },
-    );
-
-    state[chatId].action = 'subscription-payment';
   } else if (action === 'choose-domain') {
     if (!isValidUrl(message)) {
       bot.sendMessage(chatId, 'Please provide a valid URL');
@@ -234,7 +136,20 @@ bot.on('message', async msg => {
     bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, options);
     delete state[chatId]?.url;
     delete state[chatId]?.action;
-  } else if (action === 'buy') {
+  }
+  //
+  else if (message === 'Buy a domain name') {
+    if (!isSubscribed(chatId)) {
+      bot.sendMessage(chatId, 'Subscribe to plans first');
+      return;
+    }
+    state[chatId].action = 'choose-domain';
+    bot.sendMessage(chatId, 'Please enter the desired domain name:', {
+      reply_markup: {
+        remove_keyboard: true,
+      },
+    });
+  } else if (action === 'choose-domain') {
     const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/;
 
     if (!domainRegex.test(message)) {
@@ -317,6 +232,43 @@ bot.on('message', async msg => {
       );
       //
     }, 1000);
+  }
+  //
+  else if (message === 'Subscribe to plans') {
+    const chooseSubscription = {
+      reply_markup: {
+        keyboard: subscriptionOptions.map(a => [a]),
+      },
+    };
+
+    if (isSubscribed(chatId)) {
+      bot.sendMessage(chatId, 'You are already subscribed to a plan', options);
+      return;
+    }
+
+    state[chatId].action = 'choose-subscription';
+    bot.sendMessage(chatId, 'Choose a subscription plan:', chooseSubscription);
+  } else if (action === 'choose-subscription') {
+    const plan = message;
+
+    if (!subscriptionOptions.includes(plan)) {
+      bot.sendMessage(chatId, 'Please choose a valid plan', chooseSubscription);
+      return;
+    }
+
+    state[chatId].chosenPlanForPayment = plan;
+
+    bot.sendMessage(
+      chatId,
+      `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
+      {
+        reply_markup: {
+          keyboard: [paymentOptions],
+        },
+      },
+    );
+
+    state[chatId].action = 'subscription-payment';
   } else if (action === 'subscription-payment') {
     const plan = state[chatId].chosenPlanForPayment;
     const paymentOption = message;
@@ -400,18 +352,75 @@ Bank Code ${bankCode}`,
     );
     bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'));
     delete state[chatId]?.action;
-  } else if (action === 'kick-user') {
-    const userToKick = message;
-    const kicked = kickUser(userToKick);
-    if (kicked) {
-      bot.sendMessage(chatId, `User ${userToKick} has been kicked out.`);
-    } else {
+  }
+  //
+  else if (message === 'See my subscribed plan') {
+    const subscribedPlan = state[chatId]?.subscription;
+
+    if (subscribedPlan) {
+      if (!isSubscribed(chatId)) {
+        bot.sendMessage(
+          chatId,
+          `Your ${subscribedPlan} subscription is expired on ${new Date(
+            planEndingTime[chatId],
+          )}`,
+        );
+        return;
+      }
+
       bot.sendMessage(
         chatId,
-        `User ${userToKick} not found or unable to kick.`,
+        `You are currently subscribed to the ${subscribedPlan} plan. Your plan is valid till ${new Date(
+          planEndingTime[chatId],
+        )}`,
       );
+      return;
     }
-    delete state[chatId]?.action;
+
+    bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
+  } else if (message === 'See my shortened links') {
+    const shortenedLinks = getShortenedLinks(chatId);
+    if (shortenedLinks.length > 0) {
+      const linksText = shortenedLinks.join('\n');
+      bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
+    } else {
+      bot.sendMessage(chatId, 'You have no shortened links yet.');
+    }
+  } else if (message === 'See my domains') {
+    const purchasedDomains = getPurchasedDomains(chatId);
+    if (purchasedDomains.length > 0) {
+      const domainsText = purchasedDomains.join('\n');
+      bot.sendMessage(
+        chatId,
+        `Here are your purchased domains:\n${domainsText}`,
+      );
+    } else {
+      bot.sendMessage(chatId, 'You have no purchased domains yet.');
+    }
+  } else if (message === 'Backup Data') {
+    if (!isDeveloper(chatId)) {
+      bot.sendMessage(chatId, 'You are not authorized to perform this action.');
+      return;
+    }
+    backupTheData();
+    bot.sendMessage(chatId, 'Backup created successfully.');
+  } else if (message === 'Restore Data') {
+    if (!isDeveloper(chatId)) {
+      bot.sendMessage(chatId, 'You are not authorized to perform this action.');
+      return;
+    }
+    restoreData();
+    bot.sendMessage(chatId, 'Data restored successfully.');
+  } else if (message === 'See All Analytics') {
+    if (!isAdmin(chatId)) {
+      bot.sendMessage(chatId, 'You are not authorized to view analytics.');
+      return;
+    }
+
+    const analyticsData = getAnalyticsData();
+    bot.sendMessage(chatId, `Analytics Data:\n${analyticsData}`);
+  } else if (message === 'See My Analytics') {
+    bot.sendMessage(chatId, 'Here are your analytics data...');
   }
   // else {
   //   bot.sendMessage(chatId, "I'm sorry, I didn't understand that command.");
