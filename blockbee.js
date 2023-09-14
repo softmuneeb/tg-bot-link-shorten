@@ -10,7 +10,7 @@ const convertUSDToCrypto = async (value, coin) => {
     'usd',
     API_KEY_BLOCKBEE,
   );
-  return conversion.value_coin;
+  return conversion?.value_coin;
 };
 // convertUSDToCrypto(10, 'btc');
 
@@ -37,7 +37,7 @@ const getCryptoDepositAddress = async (
   const qrCode = await bb.getQrcode(priceCrypto);
 
   // const data = await bb.checkLogs();
-  return { address, qrCode: qrCode.qr_code };
+  return { address, qrCode: qrCode?.qr_code };
 };
 
 // getCryptoDepositAddress('0.55', 'polygon_matic',  '6687923716', 'https://softgreen.com' ); // chatid

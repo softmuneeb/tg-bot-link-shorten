@@ -71,3 +71,37 @@
   "domainSold": {},
   "planEndingTime": {}
 }
+
+// What about saving 
+{
+  "state": {
+    "6687923716": {
+      "subscription": "Monthly"
+    },
+    "5729797630": {}
+  },
+  "linksOf": {
+    "6687923716": [
+      {
+        "url": "https://web.telegram.org/k/#@lemon_one_bot",
+        "shortenedURL": "softberry.sbs/WkXhc1NH5"
+      }
+    ]
+  },
+  "chatIdOf": {
+    "kDB0Uue0D": 6687923716,
+    "TvIud8UnR": 6687923716,
+    "BcG2v0P4C": 6687923716
+  },
+  "domainsOf": {
+    "6687923716": [
+      "softberry.sbs"
+    ]
+  },
+  "domainSold": {
+    "softberry.sbs": true
+  },
+  "planEndingTime": {
+    "6687923716": 1697269321089
+  }
+}

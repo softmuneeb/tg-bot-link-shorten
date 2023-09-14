@@ -7,8 +7,8 @@ const apiUrl = `https://api.connectreseller.com/ConnectReseller/ESHOP/SearchDoma
 async function getRegisteredDomainNames() {
   try {
     const response = await axios.get(apiUrl);
-    const domainRecords = response.data.records;
-    console.log(response.data);
+    const domainRecords = response?.data?.records;
+    console.log(response?.data);
     const domainNames = domainRecords.map(record => record.domainName);
 
     return domainNames;

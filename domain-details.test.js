@@ -11,7 +11,7 @@ axios
   .get(apiUrl)
   .then(response => {
     // Handle the response here
-    if (response.status === 200) {
+    if (response?.status === 200) {
       const domainDetails = response.data;
       console.log('Domain Details:', domainDetails);
     } else {

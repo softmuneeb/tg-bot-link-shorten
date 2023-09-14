@@ -143,23 +143,23 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, 'Subscribe to plans first');
       return;
     }
-    state[chatId].action = 'choose-domain';
+    state[chatId].action = 'choose-domain-to-buy';
     bot.sendMessage(chatId, 'Please enter the desired domain name:', {
       reply_markup: {
         remove_keyboard: true,
       },
     });
-  } else if (action === 'choose-domain') {
+  } else if (action === 'choose-domain-to-buy') {
+    const domain = message.toLowerCase();
     const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/;
 
-    if (!domainRegex.test(message)) {
+    if (!domainRegex.test(domain)) {
       bot.sendMessage(
         chatId,
         'Domain name is invalid. Please try another domain name.',
       );
       return;
     }
-    const domain = message.toLowerCase();
 
     const { available, price } = await checkDomainAvailability(
       domain,
@@ -191,10 +191,12 @@ bot.on('message', async msg => {
       },
     );
 
-    state[chatId].selectedDomainForPayment = domain;
-
+    state[chatId].chosenDomainForPayment = domain;
+    state[chatId].chosenDomainPrice = sellingPrice;
     state[chatId].action = 'domain-name-payment';
   } else if (action === 'domain-name-payment') {
+    const domain = state[chatId].chosenDomainForPayment;
+    const price = state[chatId].chosenDomainPrice;
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
@@ -202,36 +204,49 @@ bot.on('message', async msg => {
       return;
     }
 
-    bot.sendMessage(
-      chatId,
-      instructionsOfDomainPayment[paymentOption],
-      options,
-    );
-    delete state[chatId]?.action;
+    if (paymentOption === 'Crypto Transfer') {
+      bot.sendMessage(chatId, `Please choose a crypto currency to transfer`, {
+        reply_markup: {
+          keyboard: cryptoTransferOptions.map(d => [d.toUpperCase()]),
+        },
+      });
+      state[chatId].action = 'crypto-transfer-payment-domain';
+    } else {
+      const priceNGN = Number(await convertUSDToNaira(price));
+      const reference = shortid.generate();
+      chatIdOf[reference] = chatId;
+      const { url, error } = await createCheckout(
+        priceNGN,
+        reference,
+        '/bank-payment-for-domain',
+      );
 
-    // Simulate Payment Made
-    setTimeout(() => {
-      // handle plan config in webhook endpoint
-      const domain = state[chatId].selectedDomainForPayment;
-      const domainPurchaseSuccess = buyDomain(chatId, domain);
-
-      if (!domainPurchaseSuccess) {
-        bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
-          reply_markup: {
-            remove_keyboard: true,
-          },
-        });
+      if (error) {
+        bot.sendMessage(chatId, error, options);
+        delete state[chatId]?.action;
         return;
       }
 
-      delete state[chatId].selectedDomainForPayment;
+      const inline_keyboard = {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: 'Make Payment',
+                url,
+              },
+            ],
+          ],
+        },
+      };
+
       bot.sendMessage(
         chatId,
-        `Payment successful! You have bought ${domain}. Enjoy URL shortening with your purchased domain name.`,
-        options,
+        `Pay ${priceNGN} NGN for ${domain} and you will receive a payment confirmation here.`,
+        inline_keyboard,
       );
-      //
-    }, 1000);
+      delete state[chatId]?.action;
+    }
   }
   //
   else if (message === 'Subscribe to plans') {
@@ -281,21 +296,21 @@ bot.on('message', async msg => {
     // call payment apis and send instructions to user and save
     // the payment to make in db so we can verify the payment when its received
     if (paymentOption === 'Crypto Transfer') {
-      bot.sendMessage(
-        chatId,
-        `Please choose a crypto currency to transfer to`,
-        {
-          reply_markup: {
-            keyboard: cryptoTransferOptions.map(d => [d.toUpperCase()]),
-          },
+      bot.sendMessage(chatId, `Please choose a crypto currency to transfer`, {
+        reply_markup: {
+          keyboard: cryptoTransferOptions.map(d => [d.toUpperCase()]),
         },
-      );
+      });
       state[chatId].action = 'crypto-transfer-payment';
     } else {
       const priceNGN = Number(await convertUSDToNaira(priceOf[plan]));
       const reference = shortid.generate();
       chatIdOf[reference] = chatId;
-      const { url, error } = await createCheckout(priceNGN, reference);
+      const { url, error } = await createCheckout(
+        priceNGN,
+        reference,
+        '/bank-payment-for-subscription',
+      );
 
       if (error) {
         bot.sendMessage(chatId, error, options);
@@ -494,7 +509,7 @@ function backupTheData() {
   console.log('Backup created. ', backupJSON);
 }
 
-function buyDomain(chatId, domain) {
+async function buyDomain(chatId, domain) {
   // check dns records
   if (domainSold[domain]) {
     return false;
@@ -514,9 +529,8 @@ app.set('json spaces', 2);
 app.get('/', (req, res) => {
   res.json({ message: 'Assalamo Alaikum', from: req.hostname });
 });
-app.get('/save-payment-fincra', (req, res) => {
+app.get('/bank-payment-for-subscription', (req, res) => {
   console.log(req.originalUrl);
-
   const reference = req.query.reference;
   const chatId = chatIdOf[reference];
   console.log({ chatId });
@@ -531,6 +545,48 @@ app.get('/save-payment-fincra', (req, res) => {
       `Payment received successfully! You are now subscribed to the ${plan} plan. Enjoy URL shortening by purchasing your own domain names.`,
       options,
     );
+    res.send('Payment processed successfully');
+  } else {
+    res.send('Payment already processed or not found');
+  }
+});
+app.get('/bank-payment-for-domain', async (req, res) => {
+  const sleep = () => new Promise(resolve => setTimeout(resolve, 1000));
+  console.log(req.originalUrl);
+
+  const reference = req.query.reference;
+  const chatId = chatIdOf[reference];
+  console.log({ chatId });
+  console.log({ reference });
+  if (state[chatId]?.chosenDomainForPayment) {
+    const domain = state[chatId].chosenDomainForPayment;
+    const domainPurchaseSuccess = buyDomain(chatId, domain);
+    if (!domainPurchaseSuccess) {
+      bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
+        reply_markup: {
+          remove_keyboard: true,
+        },
+      });
+      return;
+    }
+    // await connectServerToDomain(domain); // can do separately maybe or just send messages of progress to user
+    bot.sendMessage(
+      chatId,
+      `Payment successful! You have bought ${domain}.`,
+      options,
+    );
+    await sleep(1000);
+    bot.sendMessage(chatId, `Successfully connected server with domain`);
+    await sleep(1000);
+    bot.sendMessage(
+      chatId,
+      `Successfully connected domain with server. You can now enjoy URL shortening with ${domain}`,
+    );
+    // await connectDomainToServer(domain); // try catch, happy flow first build
+
+    delete state[chatId]?.chosenDomainPrice;
+    delete state[chatId]?.chosenDomainForPayment;
+
     res.send('Payment processed successfully');
   } else {
     res.send('Payment already processed or not found');

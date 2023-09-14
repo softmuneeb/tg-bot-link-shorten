@@ -36,10 +36,10 @@ const url =
 axios
   .get(url, { params })
   .then(response => {
-    console.log(JSON.stringify(response.data, null, 2));
-    const responseData = response.data.responseData;
+    console.log(JSON.stringify(response?.data, null, 2));
+    const responseData = response?.data?.responseData;
     console.log('Response Data:', responseData);
   })
   .catch(error => {
-    console.error('Error:', error.response.data);
+    console.error('Error:', error?.response?.data);
   });

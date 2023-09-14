@@ -10,16 +10,6 @@ const timeOf = {
   Monthly: 30 * 86400 * 1000,
 };
 
-const instructionsOf = {
-  'Crypto Transfer': `Deposit crypto at this address 0x12340*******8312 and you will receive a payment confirmation here.`,
-  'Bank Transfer': `Deposit USD at this bank account and you will receive a payment confirmation here.
-accountNumber: 794****519,
-accountName: FIN-Bl****LTD,
-bankName: wema,
-bankCode: 035,
-reference: 54e3*****4d9`,
-};
-
 const instructionsOfDomainPayment = {
   'Crypto Transfer': `Deposit crypto at this address 0x12340*******8312 and you will receive a payment confirmation here.`,
   'Bank Transfer': `Deposit USD at this bank account and you will receive a payment confirmation here.
@@ -72,7 +62,6 @@ module.exports = {
   subscriptionOptions,
   priceOf,
   paymentOptions,
-  instructionsOf,
   instructionsOfDomainPayment,
   adminOptions,
   devOptions,

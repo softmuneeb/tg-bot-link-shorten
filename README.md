@@ -1,6 +1,6 @@
 # Telegram Bot that Sell Subscriptions, Sell Domains, Shorten Links (Programming and DevOps work)
 
-![Telegram Link Shortener Bot](bot.png)
+![Telegram Link Shortener Bot](notes/bot.png)
 
 Welcome to the Telegram Link Shortener Bot project! This bot allows users to shorten URLs using a simple command. It's built with Node.js, the Telegram Bot API, and MongoDB for data storage.
 
