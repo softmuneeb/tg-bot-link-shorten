@@ -11,16 +11,17 @@ const convertUSDToCrypto = async (value, coin) => {
   );
   return conversion?.value_coin;
 };
-// convertUSDToCrypto(10, 'btc');
+// convertUSDToCrypto('10', 'btc').then(console.log);
 
 const getCryptoDepositAddress = async (
   priceCrypto,
   ticker,
   webhookParams,
   backendServer,
+  redirectPath,
 ) => {
   const myAddress = ''; // auto gen by BB
-  const callbackUrl = `${backendServer}/save-payment-blockbee`;
+  const callbackUrl = `${backendServer}${redirectPath}`;
   const blockbeeParams = {};
 
   const bb = new BlockBee(

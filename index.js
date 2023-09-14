@@ -179,7 +179,7 @@ bot.on('message', async msg => {
       return;
     }
 
-    const sellingPrice = parseInt(price + price * 0.11); // 11% profit
+    const sellingPrice = Math.ceil(price + price * 0.11); // 11% profit
 
     bot.sendMessage(
       chatId,
@@ -205,7 +205,7 @@ bot.on('message', async msg => {
     }
 
     if (paymentOption === 'Crypto Transfer') {
-      bot.sendMessage(chatId, `Please choose a crypto currency to transfer`, {
+      bot.sendMessage(chatId, `Please choose a crypto currency`, {
         reply_markup: {
           keyboard: cryptoTransferOptions.map(d => [d.toUpperCase()]),
         },
@@ -247,6 +247,36 @@ bot.on('message', async msg => {
       );
       delete state[chatId]?.action;
     }
+  } else if (action === 'crypto-transfer-payment-domain') {
+    const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
+    const priceUSD = state[chatId].chosenDomainPrice;
+    const domain = state[chatId].chosenDomainForPayment;
+    const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
+    if (!cryptoTransferOptions.includes(ticker)) {
+      bot.sendMessage(chatId, 'Please choose a valid crypto currency', options);
+      return;
+    }
+
+    const { address, qrCode } = await getCryptoDepositAddress(
+      priceCrypto,
+      ticker,
+      chatId,
+      SELF_URL,
+      '/crypto-payment-for-domain',
+    );
+
+    chatIdOf[address] = chatId;
+    state[chatId].cryptoPaymentSession = {
+      priceCrypto,
+      ticker,
+    };
+    bot.sendMessage(
+      chatId,
+      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address ${address} to buy ${domain} and you will receive a payment confirmation here.`,
+      options,
+    );
+    bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'));
+    delete state[chatId]?.action;
   }
   //
   else if (message === 'Subscribe to plans') {
@@ -296,7 +326,7 @@ bot.on('message', async msg => {
     // call payment apis and send instructions to user and save
     // the payment to make in db so we can verify the payment when its received
     if (paymentOption === 'Crypto Transfer') {
-      bot.sendMessage(chatId, `Please choose a crypto currency to transfer`, {
+      bot.sendMessage(chatId, `Please choose a crypto currency`, {
         reply_markup: {
           keyboard: cryptoTransferOptions.map(d => [d.toUpperCase()]),
         },
@@ -353,6 +383,7 @@ bot.on('message', async msg => {
       ticker,
       chatId,
       SELF_URL,
+      '/crypto-payment-for-subscription',
     );
 
     chatIdOf[address] = chatId;
@@ -539,7 +570,10 @@ app.get('/bank-payment-for-subscription', (req, res) => {
     const plan = state[chatId].chosenPlanForPayment;
     planEndingTime[chatId] = Date.now() + timeOf[plan];
     state[chatId].subscription = plan;
-    delete state[chatId]?.chosenPlanForPayment;
+
+    delete chatIdOf[reference]; // Save Tx
+    delete state[chatId]?.chosenPlanForPayment; // Save Tx
+
     bot.sendMessage(
       chatId,
       `Payment received successfully! You are now subscribed to the ${plan} plan. Enjoy URL shortening by purchasing your own domain names.`,
@@ -550,14 +584,11 @@ app.get('/bank-payment-for-subscription', (req, res) => {
     res.send('Payment already processed or not found');
   }
 });
+const sleep = () => new Promise(resolve => setTimeout(resolve, 1000));
 app.get('/bank-payment-for-domain', async (req, res) => {
-  const sleep = () => new Promise(resolve => setTimeout(resolve, 1000));
   console.log(req.originalUrl);
-
   const reference = req.query.reference;
   const chatId = chatIdOf[reference];
-  console.log({ chatId });
-  console.log({ reference });
   if (state[chatId]?.chosenDomainForPayment) {
     const domain = state[chatId].chosenDomainForPayment;
     const domainPurchaseSuccess = buyDomain(chatId, domain);
@@ -572,7 +603,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
     // await connectServerToDomain(domain); // can do separately maybe or just send messages of progress to user
     bot.sendMessage(
       chatId,
-      `Payment successful! You have bought ${domain}.`,
+      `Payment successful! You have bought ${domain}`,
       options,
     );
     await sleep(1000);
@@ -584,15 +615,16 @@ app.get('/bank-payment-for-domain', async (req, res) => {
     );
     // await connectDomainToServer(domain); // try catch, happy flow first build
 
-    delete state[chatId]?.chosenDomainPrice;
-    delete state[chatId]?.chosenDomainForPayment;
+    delete chatIdOf[reference]; // Save Tx
+    delete state[chatId]?.chosenDomainPrice; // Save Tx
+    delete state[chatId]?.chosenDomainForPayment; // Save Tx
 
     res.send('Payment processed successfully');
   } else {
     res.send('Payment already processed or not found');
   }
 });
-app.get('/save-payment-blockbee', (req, res) => {
+app.get('/crypto-payment-for-subscription', (req, res) => {
   // handle multiple invocations of the same url
   const urlParams = new URLSearchParams(req.originalUrl);
 
@@ -623,17 +655,85 @@ app.get('/save-payment-blockbee', (req, res) => {
         options,
       );
 
-      delete state[chatId]?.chosenPlanForPayment;
-      delete state[chatId]?.cryptoPaymentSession;
+      delete state[chatId]?.chosenPlanForPayment; // Save Tx
+      delete state[chatId]?.cryptoPaymentSession; // Save Tx
+      res.send('Payment data received and processed successfully');
     } else {
       console.log(req.originalUrl);
       res.send('Payment already processed');
     }
   } else {
+    res.send('Payment issue, no crypto payment session found');
     console.log('issue', state[chatId]);
   }
+});
+app.get('/crypto-payment-for-domain', async (req, res) => {
+  console.log(req.originalUrl);
 
-  res.send('Payment data received and processed successfully');
+  const urlParams = new URLSearchParams(req.originalUrl);
+  // http://localhost:4005/crypto-payment-for-domain?address_in=0x43c8DF00Db0C54F8f750C42775Ba441E4819cF80&coin=polygon_matic&price=0.5&value_coin=3.85
+  const address_in = urlParams.get('address_in');
+  const coin = urlParams.get('coin');
+  const price = urlParams.get('price');
+  const value_coin = Number(urlParams.get('value_coin'));
+
+  console.log({ address_in, coin, price, value_coin });
+  if (!coin || !price || !address_in || !value_coin) {
+    console.log('Invalid payment data ' + req.originalUrl);
+    res.send('Invalid payment data');
+    return;
+  }
+
+  const chatId = chatIdOf[address_in];
+
+  if (state[chatId]?.cryptoPaymentSession) {
+    const { priceCrypto, ticker } = state[chatId].cryptoPaymentSession;
+
+    console.log(ticker, ticker.toLowerCase());
+    if (value_coin >= Number(priceCrypto) && coin === ticker.toLowerCase()) {
+      if (state[chatId]?.chosenDomainForPayment) {
+        const domain = state[chatId].chosenDomainForPayment;
+        const domainPurchaseSuccess = buyDomain(chatId, domain);
+        if (!domainPurchaseSuccess) {
+          bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
+            reply_markup: {
+              remove_keyboard: true,
+            },
+          });
+          return;
+        }
+        // await connectServerToDomain(domain); // can do separately maybe or just send messages of progress to user
+        bot.sendMessage(
+          chatId,
+          `Payment successful! You have bought ${domain}`,
+          options,
+        );
+        await sleep(1000);
+        bot.sendMessage(chatId, `Successfully connected server with domain`);
+        await sleep(1000);
+        bot.sendMessage(
+          chatId,
+          `Successfully connected domain with server. You can now enjoy URL shortening with ${domain}`,
+        );
+        // await connectDomainToServer(domain); // try catch, happy flow first build
+
+        delete state[chatId]?.chosenDomainPrice; // Save Tx
+        delete state[chatId]?.cryptoPaymentSession; // Save Tx
+        delete state[chatId]?.chosenDomainForPayment; // Save Tx
+
+        res.send('Payment processed successfully');
+      } else {
+        res.send('Payment already processed or not found');
+      }
+    } else {
+      console.log(req.originalUrl);
+      res.send(
+        'Payment invalid, either less value sent or coin sent is not correct',
+      );
+    }
+  } else {
+    console.log('issue', state[chatId]);
+  }
 });
 app.get('/get-json-data', (req, res) => {
   fs.readFile('backup.json', 'utf8', (err, data) => {
