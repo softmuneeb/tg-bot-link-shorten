@@ -1,6 +1,5 @@
+require('dotenv').config();
 const axios = require('axios');
-const dotenv = require('dotenv');
-dotenv.config();
 
 // Define your API token and GraphQL query
 const API_TOKEN = process.env.API_KEY_RAILWAY;

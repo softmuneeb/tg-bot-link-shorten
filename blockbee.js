@@ -1,6 +1,5 @@
+require('dotenv').config();
 const BlockBee = require('@blockbee/api');
-const dotenv = require('dotenv');
-dotenv.config();
 const API_KEY_BLOCKBEE = process.env.API_KEY_BLOCKBEE;
 
 const convertUSDToCrypto = async (value, coin) => {

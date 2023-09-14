@@ -1,6 +1,5 @@
+require('dotenv').config();
 const axios = require('axios');
-const dotenv = require('dotenv');
-dotenv.config();
 
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
 const domainName = 'softlemon.sbs'; // Replace with the domain name you want to fetch details for

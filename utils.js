@@ -1,8 +1,8 @@
-const dotenv = require('dotenv');
-dotenv.config();
+require('dotenv').config();
+
 const axios = require('axios');
 
-const { checkDomainPriceOnline } = require('./domain-price.test');
+const { checkDomainPriceOnline } = require('./cr-get-domain-price');
 
 const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE;
 

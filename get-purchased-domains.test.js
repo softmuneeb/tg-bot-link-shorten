@@ -1,6 +1,5 @@
 const axios = require('axios');
-const dotenv = require('dotenv');
-dotenv.config();
+require('dotenv').config();
 
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
 const apiUrl = `https://api.connectreseller.com/ConnectReseller/ESHOP/SearchDomainList?APIKey=${API_KEY}&page=1&maxIndex=100`;

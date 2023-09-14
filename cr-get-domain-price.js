@@ -1,6 +1,5 @@
+require('dotenv').config();
 const axios = require('axios');
-const dotenv = require('dotenv');
-dotenv.config();
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
 
 // Function to test domain availability
