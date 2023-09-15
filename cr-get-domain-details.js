@@ -2,7 +2,7 @@ require('dotenv').config();
 const axios = require('axios');
 
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
-const domainName = 'softlemon.sbs'; // Replace with the domain name you want to fetch details for
+const domainName = 'softlink.sbs'; // Replace with the domain name you want to fetch details for
 
 const apiUrl = `https://api.connectreseller.com/ConnectReseller/ESHOP/ViewDomain?APIKey=${API_KEY}&websiteName=${domainName}`;
 

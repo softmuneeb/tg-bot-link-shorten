@@ -10,7 +10,6 @@ const {
   adminOptions,
   devOptions,
   options,
-  instructionsOfDomainPayment,
   paymentOptions,
   subscriptionOptions,
   cryptoTransferOptions,
@@ -18,7 +17,6 @@ const {
 } = require('./config.js');
 const {
   isValidUrl,
-  isNormalUser,
   isDeveloper,
   isAdmin,
   checkDomainAvailability,
