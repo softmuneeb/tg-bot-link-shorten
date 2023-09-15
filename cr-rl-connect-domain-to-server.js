@@ -1,42 +1,44 @@
 require('dotenv').config();
 const axios = require('axios');
-
-// Define your API token and GraphQL query
 const API_TOKEN = process.env.API_KEY_RAILWAY;
 const GRAPHQL_ENDPOINT = 'https://backboard.railway.app/graphql/v2';
-
-// Define your GraphQL query
-// beba5254-5c21-40e4-9520-96aa644654c0
-const GRAPHQL_QUERY = `
-mutation customDomainCreate {
-    customDomainCreate(
-        input: { domain: "softlemon2.sbs", environmentId: "beba5254-5c21-40e4-9520-96aa644654c0", serviceId: "945d993f-a8af-40cb-982d-2b0f37a791c4"}
-    ) {
-        id
-    }
-}
-`;
-
-// Function to send the GraphQL request
-async function fetchProjectInfo() {
-  try {
-    const response = await axios.post(
-      GRAPHQL_ENDPOINT,
-      { query: GRAPHQL_QUERY },
-      {
-        headers: {
-          Authorization: `Bearer ${API_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
+async function saveDomainInServer(domain) {
+  const GRAPHQL_QUERY = `
+  mutation customDomainCreate {
+      customDomainCreate(
+          input: { domain: "${domain}", environmentId: "beba5254-5c21-40e4-9520-96aa644654c0", serviceId: "945d993f-a8af-40cb-982d-2b0f37a791c4"}
+      ) {
+          id
+          status {
+            dnsRecords {
+              requiredValue
+            }
+          }
+      }
+  }`;
+  const response = await axios.post(
+    GRAPHQL_ENDPOINT,
+    { query: GRAPHQL_QUERY },
+    {
+      headers: {
+        Authorization: `Bearer ${API_TOKEN}`,
+        'Content-Type': 'application/json',
       },
-    );
+    },
+  );
+  const error = response?.data?.errors?.[0]?.message;
 
-    // Handle the GraphQL response data
-    console.log('GraphQL Response:', JSON.stringify(response.data, null, 2));
-  } catch (error) {
+  if (error) {
     console.error('Error:', error);
+    console.log('GraphQL Response:', JSON.stringify(response.data, null, 2));
+    return { error };
   }
-}
 
-// Call the function to fetch project information
-fetchProjectInfo();
+  const server =
+    response?.data?.data?.customDomainCreate?.status?.dnsRecords[0]
+      ?.requiredValue;
+
+  return { server };
+}
+// saveDomainInServer('lemon-is-json-15.sbs');
+module.exports = { saveDomainInServer };

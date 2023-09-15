@@ -28,6 +28,8 @@ const {
   getCryptoDepositAddress,
   convertUSDToCrypto,
 } = require('./blockbee.js');
+const { saveDomainInServer } = require('./cr-rl-connect-domain-to-server.js');
+const { saveServerInDomain } = require('./cr-add-dns-record.js');
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const SELF_URL = process.env.SELF_URL;
@@ -37,6 +39,7 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 const state = {};
 const linksOf = {};
 const chatIdOf = {};
+const fullUrlOf = {};
 const domainsOf = {};
 const domainSold = {};
 const planEndingTime = {};
@@ -496,6 +499,7 @@ function shortenURLAndSave(chatId, domain, url) {
   const shortenedURL = domain + '/' + shortid.generate();
   const data = { url, shortenedURL };
   linksOf[chatId] = linksOf[chatId] ? linksOf[chatId].concat(data) : [data];
+  fullUrlOf[shortenedURL] = url;
   return shortenedURL;
 }
 
@@ -515,6 +519,7 @@ function restoreData() {
     Object.assign(state, restoredData.state);
     Object.assign(linksOf, restoredData.linksOf);
     Object.assign(chatIdOf, restoredData.chatIdOf);
+    Object.assign(fullUrlOf, restoredData.fullUrlOf);
     Object.assign(domainsOf, restoredData.domainsOf);
     Object.assign(domainSold, restoredData.domainSold);
     Object.assign(planEndingTime, restoredData.planEndingTime);
@@ -530,6 +535,7 @@ function backupTheData() {
     state,
     linksOf,
     chatIdOf,
+    fullUrlOf,
     domainsOf,
     domainSold,
     planEndingTime,
@@ -559,6 +565,16 @@ app.use(cors());
 app.set('json spaces', 2);
 app.get('/', (req, res) => {
   res.json({ message: 'Assalamo Alaikum', from: req.hostname });
+});
+app.get('/:id', (req, res) => {
+  const { id } = req.params;
+  const url = fullUrlOf[`${req.hostname}/${id}`];
+  console.log(url);
+  if (url) {
+    res.redirect(url);
+  } else {
+    res.status(404).send('Link not found');
+  }
 });
 app.get('/bank-payment-for-subscription', (req, res) => {
   console.log(req.originalUrl);
@@ -644,8 +660,7 @@ app.get('/crypto-payment-for-subscription', (req, res) => {
   if (state[chatId]?.cryptoPaymentSession) {
     const { priceCrypto, ticker } = state[chatId].cryptoPaymentSession;
 
-    console.log(ticker, ticker.toLowerCase());
-    if (value_coin >= Number(priceCrypto) && coin === ticker.toLowerCase()) {
+    if (value_coin >= Number(priceCrypto) && coin === ticker) {
       const plan = state[chatId].chosenPlanForPayment;
       planEndingTime[chatId] = Date.now() + timeOf[plan];
       state[chatId].subscription = plan;
@@ -671,14 +686,11 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   console.log(req.originalUrl);
 
   const urlParams = new URLSearchParams(req.originalUrl);
-  // http://localhost:4005/crypto-payment-for-domain?address_in=0x43c8DF00Db0C54F8f750C42775Ba441E4819cF80&coin=polygon_matic&price=0.5&value_coin=3.85
-  const address_in = urlParams.get('address_in');
   const coin = urlParams.get('coin');
-  const price = urlParams.get('price');
+  const address_in = urlParams.get('address_in');
   const value_coin = Number(urlParams.get('value_coin'));
 
-  console.log({ address_in, coin, price, value_coin });
-  if (!coin || !price || !address_in || !value_coin) {
+  if (!coin || !address_in || !value_coin) {
     console.log('Invalid payment data ' + req.originalUrl);
     res.send('Invalid payment data');
     return;
@@ -689,8 +701,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   if (state[chatId]?.cryptoPaymentSession) {
     const { priceCrypto, ticker } = state[chatId].cryptoPaymentSession;
 
-    console.log(ticker, ticker.toLowerCase());
-    if (value_coin >= Number(priceCrypto) && coin === ticker.toLowerCase()) {
+    if (value_coin >= Number(priceCrypto) && coin === ticker) {
       if (state[chatId]?.chosenDomainForPayment) {
         const domain = state[chatId].chosenDomainForPayment;
         const domainPurchaseSuccess = buyDomain(chatId, domain);
@@ -702,20 +713,45 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
           });
           return;
         }
-        // await connectServerToDomain(domain); // can do separately maybe or just send messages of progress to user
         bot.sendMessage(
           chatId,
           `Payment successful! You have bought ${domain}`,
           options,
         );
-        await sleep(1000);
-        bot.sendMessage(chatId, `Successfully connected server with domain`);
-        await sleep(1000);
+
+        const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
+        if (error) {
+          bot.sendMessage(chatId, `Error saving domain in server`, {
+            reply_markup: {
+              remove_keyboard: true,
+            },
+          });
+          return;
+        }
+
+        bot.sendMessage(chatId, `Successfully saved domain in server`); // save railway in domain
+        const { error: saveServerInDomainError } = await saveServerInDomain(
+          domain,
+          server,
+        );
+
+        if (saveServerInDomainError) {
+          bot.sendMessage(
+            chatId,
+            `Error saving server in domain ${saveServerInDomainError}`,
+            {
+              reply_markup: {
+                remove_keyboard: true,
+              },
+            },
+          );
+          return;
+        }
+
         bot.sendMessage(
           chatId,
-          `Successfully connected domain with server. You can now enjoy URL shortening with ${domain}`,
+          `Successfully saved server in domain. You can now enjoy URL shortening with ${domain}`,
         );
-        // await connectDomainToServer(domain); // try catch, happy flow first build
 
         delete state[chatId]?.chosenDomainPrice; // Save Tx
         delete state[chatId]?.cryptoPaymentSession; // Save Tx
@@ -733,6 +769,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
     }
   } else {
     console.log('issue', state[chatId]);
+    res.send('Payment session not found, please try again or contact support');
   }
 });
 app.get('/get-json-data', (req, res) => {
