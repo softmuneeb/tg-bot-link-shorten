@@ -40,5 +40,41 @@ async function saveDomainInServer(domain) {
 
   return { server };
 }
+async function isRailwayAPIWorking() {
+  const GRAPHQL_QUERY = `
+  query me {
+  me {
+    projects {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }
+}`;
+  const response = await axios.post(
+    GRAPHQL_ENDPOINT,
+    { query: GRAPHQL_QUERY },
+    {
+      headers: {
+        Authorization: `Bearer ${API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+  const error = response?.data?.errors?.[0]?.message;
+
+  if (error) {
+    console.error('Error query me', error);
+    console.log('GraphQL Response:', JSON.stringify(response.data, null, 2));
+    return { error };
+  }
+
+  return response.data;
+}
+
+// isRailwayAPIWorking();
 // saveDomainInServer('lemon-is-json-15.sbs');
-module.exports = { saveDomainInServer };
+module.exports = { saveDomainInServer, isRailwayAPIWorking };

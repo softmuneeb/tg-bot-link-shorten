@@ -38,24 +38,17 @@ const createCheckout = async (amount, reference, redirectPath) => {
   }
 };
 
-const getBusinessId = () => {
+const getBusinessId = async () => {
   const options = {
     method: 'GET',
-    url: `${process.env.FINCRA_ENDPOINT}/profile/business/me`,
+    url: `https://${process.env.FINCRA_ENDPOINT}/profile/business/me`,
     headers: {
       accept: 'application/json',
       'api-key': process.env.FINCRA_PRIVATE_KEY,
     },
   };
 
-  axios
-    .request(options)
-    .then(function (response) {
-      console.log(response.data);
-    })
-    .catch(function (error) {
-      console.error(error);
-    });
+  await axios.request(options);
 };
 
 // getBusinessId();
@@ -64,4 +57,4 @@ const getBusinessId = () => {
 // getBankDepositAddress('100', '55667788');
 // getAmountsPaid('64c95e7366ea9f0b4a98dc2e', '64c95e7316ea9f0b4a98dc2e');
 
-module.exports = { createCheckout };
+module.exports = { createCheckout, getBusinessId };
