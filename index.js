@@ -121,15 +121,35 @@ bot.on('message', async msg => {
       return;
     }
     state[chatId].action = 'choose-domain';
-    bot.sendMessage(chatId, 'Please provide the URL you want to shorten:');
+    bot.sendMessage(chatId, 'Please provide the URL you want to shorten:',
+      {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']]
+        },
+      });
   } else if (action === 'choose-domain') {
+
+    if (message === 'Back') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Back Button.`, options);
+      return;
+    }
+    if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      return;
+    }
     if (!isValidUrl(message)) {
-      bot.sendMessage(chatId, 'Please provide a valid URL');
+      bot.sendMessage(chatId, 'Please provide a valid URL', {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']]
+        },
+      });
       return;
     }
 
     const domains = getPurchasedDomains(chatId);
-    const keyboard = [domains];
+    const keyboard = [domains, ['Back', 'Cancel']];
     bot.sendMessage(
       chatId,
       `Please choose the domain you want to link with your short link`,
@@ -142,12 +162,29 @@ bot.on('message', async msg => {
     state[chatId].action = 'shorten';
     state[chatId].url = message;
   } else if (action === 'shorten') {
-    const domains = getPurchasedDomains(chatId);
-    if (!domains.includes(message)) {
-      bot.sendMessage(chatId, 'Please choose a valid domain');
+    if (message === 'Back') {
+      state[chatId].action = 'choose-domain';
+      bot.sendMessage(chatId, `Please Chose the URL to shorten.`, {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']]
+        },
+      });
       return;
     }
-
+    if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      return;
+    }
+    const domains = getPurchasedDomains(chatId);
+    if (!domains.includes(message)) {
+      bot.sendMessage(chatId, 'Please choose a valid domain', {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']]
+        },
+      });
+      return;
+    }
     const domain = message;
     const shortenedURL = shortenURLAndSave(chatId, domain, state[chatId].url);
     bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, options);
