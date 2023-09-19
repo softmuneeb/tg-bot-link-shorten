@@ -80,17 +80,32 @@ bot.on('message', async msg => {
       return;
     }
 
-    bot.sendMessage(chatId, 'Please provide the username of the user to kick:');
+    bot.sendMessage(chatId, 'Please provide the username of the user to kick:', {
+      reply_markup: {
+        keyboard: [['Back', 'Cancel']]
+      },
+    });
     state[chatId].action = 'kick-user';
   } else if (action === 'kick-user') {
+
+    if (message === 'Back') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Back Button.`, adminOptions);
+      return;
+    }
+    if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, adminOptions);
+      return;
+    }
     const userToKick = message;
     const kicked = kickUser(userToKick);
     if (kicked) {
-      bot.sendMessage(chatId, `User ${userToKick} has been kicked out.`);
+      bot.sendMessage(chatId, `User ${userToKick} has been kicked out.`, adminOptions);
     } else {
       bot.sendMessage(
         chatId,
-        `User ${userToKick} not found or unable to kick.`,
+        `User ${userToKick} not found or unable to kick.`, adminOptions
       );
     }
     delete state[chatId]?.action;
@@ -554,7 +569,9 @@ async function buyDomain(chatId, domain) {
 
   domainsOf[chatId] = (domainsOf[chatId] || []).concat(domain);
 
-  return await buyDomainOnline(domain);
+  return { success: true };
+
+  // return await buyDomainOnline(domain);
 }
 
 console.log('Bot is running...');
@@ -619,23 +636,23 @@ app.get('/bank-payment-for-domain', async (req, res) => {
     }
 
     bot.sendMessage(chatId, `Successfully saved domain in server`); // save railway in domain
-    const { error: saveServerInDomainError } = await saveServerInDomain(
-      domain,
-      server,
-    );
+    // const { error: saveServerInDomainError } = await saveServerInDomain(
+    //   domain,
+    //   server,
+    // );
 
-    if (saveServerInDomainError) {
-      bot.sendMessage(
-        chatId,
-        `Error saving server in domain ${saveServerInDomainError}`,
-        {
-          reply_markup: {
-            remove_keyboard: true,
-          },
-        },
-      );
-      return;
-    }
+    // if (saveServerInDomainError) {
+    //   bot.sendMessage(
+    //     chatId,
+    //     `Error saving server in domain ${saveServerInDomainError}`,
+    //     {
+    //       reply_markup: {
+    //         remove_keyboard: true,
+    //       },
+    //     },
+    //   );
+    //   return;
+    // }
 
     bot.sendMessage(
       chatId,

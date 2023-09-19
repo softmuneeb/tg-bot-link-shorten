@@ -20,8 +20,8 @@ bankCode: 035,
 reference: 54e3*****4d9`,
 };
 
-const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
-const paymentOptions = ['Crypto Transfer', 'Bank Transfer'];
+const subscriptionOptions = [['Back', 'Cancel'], ['Daily', 'Weekly', 'Monthly']];
+const paymentOptions = [['Back', 'Cancel'], ['Crypto Transfer', 'Bank Transfer']];
 const cryptoTransferOptions = [
   'btc',
   'eth',
@@ -39,7 +39,7 @@ const adminOptions = {
 
 const devOptions = {
   reply_markup: {
-    keyboard: [['Backup Data'], ['Restore Data']],
+    keyboard: [['Back', 'Cancel'], ['Backup Data'], ['Restore Data']],
   },
 };
 
