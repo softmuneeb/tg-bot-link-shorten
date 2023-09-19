@@ -29,7 +29,11 @@ const createCheckout = async (amount, reference, redirectPath) => {
     const response = await axios.request(options);
     return { url: response?.data?.data?.link };
   } catch (error) {
-    console.error(error?.message, error?.response?.data?.message);
+    console.error(
+      'Error in Create Checkout',
+      error?.message,
+      error?.response?.data?.message,
+    );
     return { error: error?.message + ' ' + error?.response?.data?.message };
   }
 };

@@ -14,7 +14,6 @@ async function checkDomainPriceOnline(domainName) {
 
     if (statusCode === 200) {
       const [domainId] = Object.keys(response.data.responseData);
-      console.log(domainId);
       const registrationPrice1Year = Number(
         response?.data?.responseData[domainId]
           ?.find(entry =>
@@ -34,21 +33,16 @@ async function checkDomainPriceOnline(domainName) {
     }
   } catch (error) {
     const message = `An error occurred while checking domain availability. Maybe IP Not Whitelisted. ${error.message}`;
-    console.error(JSON.stringify(response?.data, null, 2), message);
+    console.error(
+      'checkDomainPriceOnline',
+      JSON.stringify(response?.data, null, 2),
+      message,
+    );
     return {
       available: false,
       message,
     };
   }
 }
-
-// Example usage
-async function testDomainAvailability() {
-  const domainToCheck = 'softbluepink.live'; // Replace with the domain name you want to check
-  const result = await checkDomainPriceOnline(domainToCheck);
-  console.log(result);
-}
-
-// testDomainAvailability(); // Call the function to test domain availability
 
 module.exports = { checkDomainPriceOnline };

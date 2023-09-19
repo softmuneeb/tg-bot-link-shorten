@@ -28,6 +28,7 @@ const {
 } = require('./blockbee.js');
 const { saveDomainInServer } = require('./cr-rl-connect-domain-to-server.js');
 const { saveServerInDomain } = require('./cr-add-dns-record.js');
+const { buyDomainOnline } = require('./register-domain.test.js');
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const SELF_URL = process.env.SELF_URL;
@@ -547,13 +548,13 @@ function backupTheData() {
 async function buyDomain(chatId, domain) {
   // check dns records
   if (domainSold[domain]) {
-    return false;
+    return { error: 'Already registered' };
   }
   domainSold[domain] = true;
 
   domainsOf[chatId] = (domainsOf[chatId] || []).concat(domain);
 
-  return true;
+  return await buyDomainOnline(domain);
 }
 
 console.log('Bot is running...');
@@ -564,22 +565,10 @@ app.set('json spaces', 2);
 app.get('/', (req, res) => {
   res.json({ message: 'Assalamo Alaikum', from: req.hostname });
 });
-app.get('/:id', (req, res) => {
-  const { id } = req.params;
-  const url = fullUrlOf[`${req.hostname}/${id}`];
-  console.log(url);
-  if (url) {
-    res.redirect(url);
-  } else {
-    res.status(404).send('Link not found');
-  }
-});
 app.get('/bank-payment-for-subscription', (req, res) => {
   console.log(req.originalUrl);
   const reference = req.query.reference;
   const chatId = chatIdOf[reference];
-  console.log({ chatId });
-  console.log({ reference });
   if (state[chatId]?.chosenPlanForPayment) {
     const plan = state[chatId].chosenPlanForPayment;
     planEndingTime[chatId] = Date.now() + timeOf[plan];
@@ -598,15 +587,14 @@ app.get('/bank-payment-for-subscription', (req, res) => {
     res.send('Payment already processed or not found');
   }
 });
-const sleep = () => new Promise(resolve => setTimeout(resolve, 1000));
 app.get('/bank-payment-for-domain', async (req, res) => {
   console.log(req.originalUrl);
   const reference = req.query.reference;
   const chatId = chatIdOf[reference];
   if (state[chatId]?.chosenDomainForPayment) {
     const domain = state[chatId].chosenDomainForPayment;
-    const domainPurchaseSuccess = buyDomain(chatId, domain);
-    if (!domainPurchaseSuccess) {
+    const { error: buyDomainError } = await buyDomain(chatId, domain);
+    if (buyDomainError) {
       bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
         reply_markup: {
           remove_keyboard: true,
@@ -614,20 +602,45 @@ app.get('/bank-payment-for-domain', async (req, res) => {
       });
       return;
     }
-    // await connectServerToDomain(domain); // can do separately maybe or just send messages of progress to user
     bot.sendMessage(
       chatId,
       `Payment successful! You have bought ${domain}`,
       options,
     );
-    await sleep(1000);
-    bot.sendMessage(chatId, `Successfully connected server with domain`);
-    await sleep(1000);
+
+    const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
+    if (error) {
+      bot.sendMessage(chatId, `Error saving domain in server`, {
+        reply_markup: {
+          remove_keyboard: true,
+        },
+      });
+      return;
+    }
+
+    bot.sendMessage(chatId, `Successfully saved domain in server`); // save railway in domain
+    const { error: saveServerInDomainError } = await saveServerInDomain(
+      domain,
+      server,
+    );
+
+    if (saveServerInDomainError) {
+      bot.sendMessage(
+        chatId,
+        `Error saving server in domain ${saveServerInDomainError}`,
+        {
+          reply_markup: {
+            remove_keyboard: true,
+          },
+        },
+      );
+      return;
+    }
+
     bot.sendMessage(
       chatId,
-      `Successfully connected domain with server. You can now enjoy URL shortening with ${domain}`,
+      `Successfully saved server in domain. You can now enjoy URL shortening with ${domain}`,
     );
-    // await connectDomainToServer(domain); // try catch, happy flow first build
 
     delete chatIdOf[reference]; // Save Tx
     delete state[chatId]?.chosenDomainPrice; // Save Tx
@@ -673,11 +686,11 @@ app.get('/crypto-payment-for-subscription', (req, res) => {
       res.send('Payment data received and processed successfully');
     } else {
       console.log(req.originalUrl);
-      res.send('Payment already processed');
+      res.send('Wrong coin or wrong price');
     }
   } else {
     res.send('Payment issue, no crypto payment session found');
-    console.log('issue', state[chatId]);
+    console.log('No crypto payment session found ' + req.originalUrl);
   }
 });
 app.get('/crypto-payment-for-domain', async (req, res) => {
@@ -702,8 +715,8 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
     if (value_coin >= Number(priceCrypto) && coin === ticker) {
       if (state[chatId]?.chosenDomainForPayment) {
         const domain = state[chatId].chosenDomainForPayment;
-        const domainPurchaseSuccess = buyDomain(chatId, domain);
-        if (!domainPurchaseSuccess) {
+        const { error: buyDomainError } = await buyDomain(chatId, domain);
+        if (!buyDomainError) {
           bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
             reply_markup: {
               remove_keyboard: true,
@@ -760,7 +773,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
         res.send('Payment already processed or not found');
       }
     } else {
-      console.log(req.originalUrl);
+      console.log(`crypto payment session error ${req.originalUrl}`);
       res.send(
         'Payment invalid, either less value sent or coin sent is not correct',
       );
@@ -781,6 +794,20 @@ app.get('/get-json-data', (req, res) => {
     res.json(jsonData);
   });
 });
+app.get('/:id', (req, res) => {
+  const { id } = req.params;
+  if (id === '') {
+    res.json({ message: 'Salam', from: req.hostname });
+    return;
+  }
+  const url = fullUrlOf[`${req.hostname}/${id}`];
+  console.log(url);
+  if (url) {
+    res.redirect(url);
+  } else {
+    res.status(404).send('Link not found');
+  }
+});
 const startServer = () => {
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
@@ -798,3 +825,5 @@ startServer();
 //   bot.sendMessage('6687923716', 'Bot is running', options);
 //   bot.sendPhoto('6687923716', Buffer.from(a.qrCode.qr_code, 'base64'));
 // });
+
+// saveServerInDomain('gogasoftsbs.sbs', 'test.server');

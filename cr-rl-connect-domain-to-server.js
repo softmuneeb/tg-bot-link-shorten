@@ -29,7 +29,7 @@ async function saveDomainInServer(domain) {
   const error = response?.data?.errors?.[0]?.message;
 
   if (error) {
-    console.error('Error:', error);
+    console.error('Error saveDomainInServer', error);
     console.log('GraphQL Response:', JSON.stringify(response.data, null, 2));
     return { error };
   }

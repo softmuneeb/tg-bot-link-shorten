@@ -18,12 +18,12 @@ const saveServerInDomain = async (domainName, server) => {
       dnsZoneId = response?.data?.responseData?.dnszoneId;
     } else {
       let e = response?.data?.responseMsg?.message;
-      console.error(e);
+      console.error('Error saveServerInDomain 1', e);
       return { error: e };
     }
   } catch (error) {
     let e = `${error?.message} ${error?.data}`;
-    console.error(e);
+    console.error('Error saveServerInDomain 2', e);
     return { error: e };
   }
 
@@ -46,7 +46,12 @@ const saveServerInDomain = async (domainName, server) => {
     const success = 200 === response?.data?.responseData?.statusCode;
     return { success };
   } catch (error) {
-    console.error('Error:', error?.message, error?.data);
+    console.error(
+      error,
+      'Error saveServerInDomain 3',
+      error?.message,
+      error?.response?.data?.message,
+    );
     return { error: `${error?.message} ${error?.data}` };
   }
 };

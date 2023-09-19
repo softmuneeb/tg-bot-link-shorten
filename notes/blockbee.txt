@@ -99,7 +99,7 @@ BlockBee.getConvert 'btc', 10, 'usd'
 }
 
 Received payment data:
-/save-payment-blockbee?
+https://ourserver.com/save-payment-blockbee?
 uuid=ff7520b7-0ccc-4c36-a918-5b0f6bc0fca3&
 address_in=0xC9dDFC22c6D5D4aBa772E517b9621A5231ae6eb4&
 address_out=0x9a7221b5e32d5f99e8da95585835442e29afb38f&
