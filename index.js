@@ -157,7 +157,7 @@ bot.on('message', async msg => {
     }
 
     const domains = getPurchasedDomains(chatId);
-    const keyboard = [domains, ['Back', 'Cancel']];
+    const keyboard = [...domains.map(d => [d]), ['Back', 'Cancel']];
     bot.sendMessage(
       chatId,
       `Please choose the domain you want to link with your short link`,
@@ -866,7 +866,6 @@ app.get('/:id', (req, res) => {
     return;
   }
   const url = fullUrlOf[`${req.hostname}/${id}`];
-  console.log(url);
   if (url) {
     res.redirect(url);
   } else {
