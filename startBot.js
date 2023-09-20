@@ -16,7 +16,7 @@ const runBot = async () => {
 
     require('./index.js');
   } catch (error) {
-    console.error('Error:', error.message, error.response.data);
+    console.error('Error:', error?.message, error?.response?.data);
   }
 };
 
