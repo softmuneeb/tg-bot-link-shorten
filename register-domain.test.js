@@ -1,7 +1,7 @@
 const axios = require('axios');
 require('dotenv').config();
 
-const buyDomainOnline = async (domain) => {
+const buyDomainOnline = async domain => {
   try {
     const apiUrl =
       'https://api.connectreseller.com/ConnectReseller/ESHOP/Order';
@@ -12,8 +12,8 @@ const buyDomainOnline = async (domain) => {
       Duration: 1,
       IsWhoisProtection: false,
       Id: 150106, // Replace with the actual customer ID
-      // ns1: 'betty.ns.cloudflare.com',
-      // ns2: 'brett.ns.cloudflare.com',
+      ns1: '8307.dns1.managedns.org',
+      ns2: '8307.dns2.managedns.org',
       // couponCode: 'couponcode',
     };
 
@@ -26,14 +26,15 @@ const buyDomainOnline = async (domain) => {
       console.error(errorMessage);
       return { error: errorMessage };
     }
-
   } catch (error) {
-    const errorMessage = `Error buying domain ${error.message} ${error.data}`;
+    const errorMessage = `Error buying domain ${error.message} ${JSON.stringify(
+      error?.response?.data,
+    )}`;
     console.error(errorMessage);
     return { error: errorMessage };
   }
 };
 
-// buyDomainOnline();
+// buyDomainOnline("cakesandbakes.sbs");
 
 module.exports = { buyDomainOnline };

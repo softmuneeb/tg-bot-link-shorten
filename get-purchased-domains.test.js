@@ -10,5 +10,5 @@ async function getRegisteredDomainNames() {
   const domainNames = domainRecords.map(record => record.domainName);
   return domainNames;
 }
-
+// getRegisteredDomainNames().then(console.log);
 module.exports = { getRegisteredDomainNames };
