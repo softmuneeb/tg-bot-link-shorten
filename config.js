@@ -24,7 +24,7 @@ const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
 const paymentOptions = ['Crypto Transfer', 'Bank Transfer'];
 const chooseSubscription = {
   reply_markup: {
-    keyboard: subscriptionOptions.map(a => [a]),
+    keyboard: [...subscriptionOptions.map(a => [a]), ['Back', 'Cancel']],
   },
 };
 const cryptoTransferOptions = [
@@ -51,13 +51,13 @@ const devOptions = {
 const options = {
   reply_markup: {
     keyboard: [
-      ['Shorten a URL'],
-      ['See my shortened links'],
-      ['See My Analytics'],
-      ['Buy a domain name'],
-      ['See my domains'],
-      ['Subscribe to plans'],
-      ['See my subscribed plan'],
+  ['Shorten a URL'],
+  ['See my shortened links'],
+  ['See My Analytics'],
+  ['Buy a domain name'],
+  ['See my domains'],
+  ['Subscribe to plans'],
+  ['See my subscribed plan'],
     ],
   },
 };

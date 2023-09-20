@@ -350,6 +350,11 @@ bot.on('message', async msg => {
     state[chatId].action = 'choose-subscription';
     bot.sendMessage(chatId, 'Choose a subscription plan:', chooseSubscription);
   } else if (action === 'choose-subscription') {
+    if (message === 'Back' || message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has pressed ${message} Button.`, options);
+      return;
+    }
     const plan = message;
 
     if (!subscriptionOptions.includes(plan)) {
@@ -364,13 +369,26 @@ bot.on('message', async msg => {
       `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
       {
         reply_markup: {
-          keyboard: [paymentOptions],
+          keyboard: [paymentOptions, ['Back', 'Cancel']],
         },
       },
     );
 
     state[chatId].action = 'subscription-payment';
   } else if (action === 'subscription-payment') {
+    if (message === 'Back') {
+      state[chatId].action = 'choose-subscription';
+      bot.sendMessage(
+        chatId,
+        'Choose a subscription plan:',
+        chooseSubscription,
+      );
+      return;
+    } else if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      return;
+    }
     const plan = state[chatId].chosenPlanForPayment;
     const paymentOption = message;
 
@@ -384,7 +402,10 @@ bot.on('message', async msg => {
     if (paymentOption === 'Crypto Transfer') {
       bot.sendMessage(chatId, `Please choose a crypto currency`, {
         reply_markup: {
-          keyboard: cryptoTransferOptions.map(d => [d.toUpperCase()]),
+          keyboard: [
+            ...cryptoTransferOptions.map(d => [d.toUpperCase()]),
+            ['Back', 'Cancel'],
+          ],
         },
       });
       state[chatId].action = 'crypto-transfer-payment';
@@ -422,9 +443,29 @@ bot.on('message', async msg => {
         `Pay ${priceNGN} NGN and you will receive a payment confirmation here.`,
         inline_keyboard,
       );
+      bot.sendMessage(chatId, `Main Menu`, options);
       delete state[chatId]?.action;
     }
   } else if (action === 'crypto-transfer-payment') {
+    if (message === 'Back') {
+      const plan = state[chatId].chosenPlanForPayment;
+      bot.sendMessage(
+        chatId,
+        `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
+        {
+          reply_markup: {
+            keyboard: [paymentOptions, ['Back', 'Cancel']],
+          },
+        },
+      );
+
+      state[chatId].action = 'subscription-payment';
+      return;
+    } else if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      return;
+    }
     const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
     const plan = state[chatId].chosenPlanForPayment;
     const priceUSD = priceOf[plan];
@@ -449,7 +490,7 @@ bot.on('message', async msg => {
     };
     bot.sendMessage(
       chatId,
-      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address \`\`\`${address}\`\`\` to buy ${domain} and you will receive a payment confirmation here.`,
+      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address \`\`\`${address}\`\`\` to subscribe to ${plan} plan and you will receive a payment confirmation here.`,
       { ...options, parse_mode: 'markdown' },
     );
     bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'));
