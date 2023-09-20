@@ -334,8 +334,8 @@ bot.on('message', async msg => {
     };
     bot.sendMessage(
       chatId,
-      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address ${address} to buy ${domain} and you will receive a payment confirmation here.`,
-      options,
+      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address \`\`\`${address}\`\`\` to buy ${domain} and you will receive a payment confirmation here.`,
+      { ...options, parse_mode: 'markdown' },
     );
     bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'));
     delete state[chatId]?.action;
@@ -449,8 +449,8 @@ bot.on('message', async msg => {
     };
     bot.sendMessage(
       chatId,
-      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address ${address} and you will receive a payment confirmation here.`,
-      options,
+      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address \`\`\`${address}\`\`\` to buy ${domain} and you will receive a payment confirmation here.`,
+      { ...options, parse_mode: 'markdown' },
     );
     bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'));
     delete state[chatId]?.action;
@@ -839,7 +839,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   }
 });
 app.get('/get-json-data', (req, res) => {
-  backupTheData()
+  backupTheData();
   fs.readFile('backup.json', 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading JSON file:', err);
@@ -887,8 +887,13 @@ startServer();
 //   '6687923716',
 //   'https://softgreen.com',
 // ).then(async a => {
-//   bot.sendMessage('6687923716', 'Bot is running', options);
-//   bot.sendPhoto('6687923716', Buffer.from(a.qrCode.qr_code, 'base64'));
+// bot.sendMessage('6687923716', 'Bot is running', options);
+// bot.sendPhoto('6687923716', Buffer.from(a.qrCode, 'base64'));
+//   bot.sendMessage(
+//     '6687923716',
+//     `Deposit \`\`\`${a.address}\`\`\` to buy, you will receive a payment confirmation here.`,
+//     { ...options, parse_mode: 'markdown' },
+//   );
 // });
 
 // saveServerInDomain('gogasoftsbs.sbs', 'test.server');
