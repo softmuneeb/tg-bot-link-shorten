@@ -14,6 +14,7 @@ const {
   subscriptionOptions,
   cryptoTransferOptions,
   timeOf,
+  chooseSubscription,
 } = require('./config.js');
 const {
   isValidUrl,
@@ -341,12 +342,6 @@ bot.on('message', async msg => {
   }
   //
   else if (message === 'Subscribe to plans') {
-    const chooseSubscription = {
-      reply_markup: {
-        keyboard: subscriptionOptions.map(a => [a]),
-      },
-    };
-
     if (isSubscribed(chatId)) {
       bot.sendMessage(chatId, 'You are already subscribed to a plan', options);
       return;

@@ -22,6 +22,11 @@ reference: 54e3*****4d9`,
 
 const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
 const paymentOptions = ['Crypto Transfer', 'Bank Transfer'];
+const chooseSubscription = {
+  reply_markup: {
+    keyboard: subscriptionOptions.map(a => [a]),
+  },
+};
 const cryptoTransferOptions = [
   'btc',
   'eth',
@@ -58,6 +63,7 @@ const options = {
 };
 
 module.exports = {
+  chooseSubscription,
   cryptoTransferOptions,
   subscriptionOptions,
   priceOf,
