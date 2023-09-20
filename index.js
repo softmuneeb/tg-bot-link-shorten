@@ -62,7 +62,7 @@ bot.on('message', async msg => {
     if (isAdmin(chatId)) {
       bot.sendMessage(
         chatId,
-        'Welcome, Admin! Please select an option:',
+        'Hello, Admin! Please select an option:',
         adminOptions,
       );
     } else if (isDeveloper(chatId)) {
@@ -74,7 +74,7 @@ bot.on('message', async msg => {
     } else {
       bot.sendMessage(
         chatId,
-        'Welcome to the URL Shortener Bot! Please select an option:',
+        'Thank you for choosing the URL Shortener Bot! Please choose an option:',
         options,
       );
     }
@@ -82,13 +82,16 @@ bot.on('message', async msg => {
   //
   else if (message === 'Kick Out User') {
     if (!isAdmin(chatId)) {
-      bot.sendMessage(chatId, 'You are not authorized to kick out users.');
+      bot.sendMessage(
+        chatId,
+        'Apologies, but you do not have the authorization to access this content.',
+      );
       return;
     }
 
     bot.sendMessage(
       chatId,
-      'Please provide the username of the user to kick:',
+      'Please share the username of the user that needs to be kicked.',
       {
         reply_markup: {
           keyboard: [['Back', 'Cancel']],
@@ -135,11 +138,15 @@ bot.on('message', async msg => {
       return;
     }
     state[chatId].action = 'choose-domain';
-    bot.sendMessage(chatId, 'Please provide the URL you want to shorten:', {
-      reply_markup: {
-        keyboard: [['Back', 'Cancel']],
+    bot.sendMessage(
+      chatId,
+      'Kindly share the URL that you would like to have shortened.',
+      {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']],
+        },
       },
-    });
+    );
   } else if (action === 'choose-domain') {
     if (message === 'Back') {
       delete state[chatId]?.action;
@@ -164,7 +171,7 @@ bot.on('message', async msg => {
     const keyboard = [...domains.map(d => [d]), ['Back', 'Cancel']];
     bot.sendMessage(
       chatId,
-      `Please choose the domain you want to link with your short link`,
+      `Please select the domain you would like to connect with your shortened link.`,
       {
         reply_markup: {
           keyboard,
@@ -210,11 +217,15 @@ bot.on('message', async msg => {
       return;
     }
     state[chatId].action = 'choose-domain-to-buy';
-    bot.sendMessage(chatId, 'Please enter the desired domain name:', {
-      reply_markup: {
-        keyboard: [['Back', 'Cancel']],
+    bot.sendMessage(
+      chatId,
+      'Please provide the domain name you would like to purchase.',
+      {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']],
+        },
       },
-    });
+    );
   } else if (action === 'choose-domain-to-buy') {
     if (message === 'Back' || message === 'Cancel') {
       delete state[chatId]?.action;
@@ -268,11 +279,15 @@ bot.on('message', async msg => {
   } else if (action === 'domain-name-payment') {
     if (message === 'Back') {
       state[chatId].action = 'choose-domain-to-buy';
-      bot.sendMessage(chatId, 'Please enter the desired domain name:', {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
+      bot.sendMessage(
+        chatId,
+        'Please provide the domain name you would like to purchase.',
+        {
+          reply_markup: {
+            keyboard: [['Back', 'Cancel']],
+          },
         },
-      });
+      );
       return;
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
@@ -288,7 +303,7 @@ bot.on('message', async msg => {
       return;
     }
 
-    if (paymentOption === 'Crypto Transfer') {
+    if (paymentOption === 'Crypto') {
       bot.sendMessage(chatId, `Please choose a crypto currency`, {
         reply_markup: {
           keyboard: [
@@ -387,12 +402,20 @@ bot.on('message', async msg => {
   //
   else if (message === 'Subscribe to plans') {
     if (isSubscribed(chatId)) {
-      bot.sendMessage(chatId, 'You are already subscribed to a plan', options);
+      bot.sendMessage(
+        chatId,
+        'You are currently enrolled in a subscription plan.',
+        options,
+      );
       return;
     }
 
     state[chatId].action = 'choose-subscription';
-    bot.sendMessage(chatId, 'Choose a subscription plan:', chooseSubscription);
+    bot.sendMessage(
+      chatId,
+      'Select the perfect subscription plan for you:',
+      chooseSubscription,
+    );
   } else if (action === 'choose-subscription') {
     if (message === 'Back' || message === 'Cancel') {
       delete state[chatId]?.action;
@@ -424,7 +447,7 @@ bot.on('message', async msg => {
       state[chatId].action = 'choose-subscription';
       bot.sendMessage(
         chatId,
-        'Choose a subscription plan:',
+        'Select the perfect subscription plan for you:',
         chooseSubscription,
       );
       return;
@@ -443,7 +466,7 @@ bot.on('message', async msg => {
 
     // call payment apis and send instructions to user and save
     // the payment to make in db so we can verify the payment when its received
-    if (paymentOption === 'Crypto Transfer') {
+    if (paymentOption === 'Crypto') {
       bot.sendMessage(chatId, `Please choose a crypto currency`, {
         reply_markup: {
           keyboard: [
@@ -541,7 +564,7 @@ bot.on('message', async msg => {
     delete state[chatId]?.action;
   }
   //
-  else if (message === 'See my subscribed plan') {
+  else if (message === 'View my subscribed plan') {
     const subscribedPlan = state[chatId]?.subscription;
 
     if (subscribedPlan) {
@@ -565,7 +588,7 @@ bot.on('message', async msg => {
     }
 
     bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
-  } else if (message === 'See my shortened links') {
+  } else if (message === 'View my shortened links') {
     const shortenedLinks = getShortenedLinks(chatId);
     if (shortenedLinks.length > 0) {
       const linksText = shortenedLinks.join('\n');
@@ -573,7 +596,7 @@ bot.on('message', async msg => {
     } else {
       bot.sendMessage(chatId, 'You have no shortened links yet.');
     }
-  } else if (message === 'See my domains') {
+  } else if (message === 'View my domains') {
     const purchasedDomains = getPurchasedDomains(chatId);
     if (purchasedDomains.length > 0) {
       const domainsText = purchasedDomains.join('\n');
@@ -586,27 +609,36 @@ bot.on('message', async msg => {
     }
   } else if (message === 'Backup Data') {
     if (!isDeveloper(chatId)) {
-      bot.sendMessage(chatId, 'You are not authorized to perform this action.');
+      bot.sendMessage(
+        chatId,
+        'Apologies, but you do not have the authorization to access this content.',
+      );
       return;
     }
     backupTheData();
     bot.sendMessage(chatId, 'Backup created successfully.');
   } else if (message === 'Restore Data') {
     if (!isDeveloper(chatId)) {
-      bot.sendMessage(chatId, 'You are not authorized to perform this action.');
+      bot.sendMessage(
+        chatId,
+        'Apologies, but you do not have the authorization to access this content.',
+      );
       return;
     }
     restoreData();
     bot.sendMessage(chatId, 'Data restored successfully.');
   } else if (message === 'See All Analytics') {
     if (!isAdmin(chatId)) {
-      bot.sendMessage(chatId, 'You are not authorized to view analytics.');
+      bot.sendMessage(
+        chatId,
+        'Apologies, but you do not have the authorization to access this content.',
+      );
       return;
     }
 
     const analyticsData = getAnalyticsData();
     bot.sendMessage(chatId, `Analytics Data:\n${analyticsData}`);
-  } else if (message === 'See My Analytics') {
+  } else if (message === 'View My Analytics') {
     bot.sendMessage(chatId, 'Here are your analytics data...');
   }
   // else {
@@ -719,7 +751,7 @@ app.get('/bank-payment-for-subscription', (req, res) => {
 
     bot.sendMessage(
       chatId,
-      `Payment received successfully! You are now subscribed to the ${plan} plan. Enjoy URL shortening by purchasing your own domain names.`,
+      `Payment received successfully! You are now subscribed to the ${plan} plan. Experience the joy of URL shortening using your own purchased domain names.`,
       options,
     );
     res.send('Payment processed successfully');
@@ -735,7 +767,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
     const domain = state[chatId].chosenDomainForPayment;
     const { error: buyDomainError } = await buyDomain(chatId, domain);
     if (buyDomainError) {
-      bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
+      bot.sendMessage(chatId, 'Domain purchase fails, try another name.', {
         reply_markup: {
           remove_keyboard: true,
         },
@@ -744,7 +776,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
     }
     bot.sendMessage(
       chatId,
-      `Payment successful! You have bought ${domain}`,
+      `Payment successful! You have bought ${domain} Experience the joy of URL shortening using your own purchased domain names.`,
       options,
     );
 
@@ -817,7 +849,7 @@ app.get('/crypto-payment-for-subscription', (req, res) => {
       state[chatId].subscription = plan;
       bot.sendMessage(
         chatId,
-        `${value_coin.toUpperCase()} ${coin} received successfully! You are now subscribed to the ${plan} plan. Enjoy URL shortening by purchasing your own domain names.`,
+        `${value_coin.toUpperCase()} ${coin} received successfully! You are now subscribed to the ${plan} plan. Experience the joy of URL shortening using your own purchased domain names.`,
         options,
       );
 
@@ -857,7 +889,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
         const domain = state[chatId].chosenDomainForPayment;
         const { error: buyDomainError } = await buyDomain(chatId, domain);
         if (!buyDomainError) {
-          bot.sendMessage(chatId, 'Domain purchase fail, try another name', {
+          bot.sendMessage(chatId, 'Domain purchase fails, try another name.', {
             reply_markup: {
               remove_keyboard: true,
             },
@@ -866,7 +898,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
         }
         bot.sendMessage(
           chatId,
-          `Payment successful! You have bought ${domain}`,
+          `Payment successful! You have bought ${domain} Experience the joy of URL shortening using your own purchased domain names.`,
           options,
         );
 

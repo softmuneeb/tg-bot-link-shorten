@@ -11,8 +11,8 @@ const timeOf = {
 };
 
 const instructionsOfDomainPayment = {
-  'Crypto Transfer': `Deposit crypto at this address 0x12340*******8312 and you will receive a payment confirmation here.`,
-  'Bank Transfer': `Deposit USD at this bank account and you will receive a payment confirmation here.
+  Crypto: `Deposit crypto at this address 0x12340*******8312 and you will receive a payment confirmation here.`,
+  'Bank or Card': `Deposit USD at this bank account and you will receive a payment confirmation here.
 accountNumber: 794****519,
 accountName: FIN-Bl****LTD,
 bankName: wema,
@@ -21,7 +21,7 @@ reference: 54e3*****4d9`,
 };
 
 const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
-const paymentOptions = ['Crypto Transfer', 'Bank Transfer'];
+const paymentOptions = ['Crypto', 'Bank or Card'];
 const chooseSubscription = {
   reply_markup: {
     keyboard: [...subscriptionOptions.map(a => [a]), ['Back', 'Cancel']],
@@ -51,13 +51,13 @@ const devOptions = {
 const options = {
   reply_markup: {
     keyboard: [
-  ['Shorten a URL'],
-  ['See my shortened links'],
-  ['See My Analytics'],
-  ['Buy a domain name'],
-  ['See my domains'],
-  ['Subscribe to plans'],
-  ['See my subscribed plan'],
+      ['Shorten a URL'],
+      ['View my shortened links'],
+      // ['View My Analytics'],
+      ['Buy a domain name'],
+      ['View my domains'],
+      ['Subscribe to plans'],
+      ['View my subscribed plan'],
     ],
   },
 };
