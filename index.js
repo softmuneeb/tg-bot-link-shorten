@@ -21,6 +21,7 @@ const {
   isAdmin,
   checkDomainAvailability,
   convertUSDToNaira,
+  getLocalIpAddress,
 } = require('./utils.js');
 const {
   getCryptoDepositAddress,
@@ -854,6 +855,15 @@ app.get('/get-json-data', (req, res) => {
     res.json(jsonData);
   });
 });
+app.get('/ip', (req, res) => {
+  const localIpAddress = getLocalIpAddress();
+
+  if (localIpAddress) {
+    res.send(`Your local IPv4 address is: ${localIpAddress}`);
+  } else {
+    res.status(500).send('Unable to retrieve local IPv4 address.');
+  }
+});
 app.get('/:id', (req, res) => {
   const { id } = req.params;
   if (id === '') {
@@ -871,7 +881,7 @@ app.get('/:id', (req, res) => {
 const startServer = () => {
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    console.log(`Server is running on port http://localhost:${port}`);
   });
 };
 startServer();
