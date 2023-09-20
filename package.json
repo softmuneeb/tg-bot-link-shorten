@@ -4,7 +4,7 @@
   "description": "Telegram link shortener bot that sells domain names",
   "main": "index.js",
   "scripts": {
-    "start": "node startBot.js",
+    "start": "node .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
