@@ -208,10 +208,15 @@ bot.on('message', async msg => {
     state[chatId].action = 'choose-domain-to-buy';
     bot.sendMessage(chatId, 'Please enter the desired domain name:', {
       reply_markup: {
-        remove_keyboard: true,
+        keyboard: [['Back', 'Cancel']],
       },
     });
   } else if (action === 'choose-domain-to-buy') {
+    if (message === 'Back' || message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has pressed ${message} Button.`, options);
+      return;
+    }
     const domain = message.toLowerCase();
     const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/;
 
@@ -248,7 +253,7 @@ bot.on('message', async msg => {
       `Price of ${domain} is ${sellingPrice} USD. Choose payment method.`,
       {
         reply_markup: {
-          keyboard: [paymentOptions],
+          keyboard: [paymentOptions, ['Back', 'Cancel']],
         },
       },
     );
@@ -257,6 +262,19 @@ bot.on('message', async msg => {
     state[chatId].chosenDomainPrice = sellingPrice;
     state[chatId].action = 'domain-name-payment';
   } else if (action === 'domain-name-payment') {
+    if (message === 'Back') {
+      state[chatId].action = 'choose-domain-to-buy';
+      bot.sendMessage(chatId, 'Please enter the desired domain name:', {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']],
+        },
+      });
+      return;
+    } else if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      return;
+    }
     const domain = state[chatId].chosenDomainForPayment;
     const price = state[chatId].chosenDomainPrice;
     const paymentOption = message;
@@ -269,7 +287,10 @@ bot.on('message', async msg => {
     if (paymentOption === 'Crypto Transfer') {
       bot.sendMessage(chatId, `Please choose a crypto currency`, {
         reply_markup: {
-          keyboard: cryptoTransferOptions.map(d => [d.toUpperCase()]),
+          keyboard: [
+            ...cryptoTransferOptions.map(d => [d.toUpperCase()]),
+            ['Back', 'Cancel'],
+          ],
         },
       });
       state[chatId].action = 'crypto-transfer-payment-domain';
@@ -307,6 +328,7 @@ bot.on('message', async msg => {
         `Pay ${priceNGN} NGN for ${domain} and you will receive a payment confirmation here.`,
         inline_keyboard,
       );
+      bot.sendMessage(chatId, `Main Menu`, options);
       delete state[chatId]?.action;
     }
   } else if (action === 'crypto-transfer-payment-domain') {
@@ -314,6 +336,24 @@ bot.on('message', async msg => {
     const priceUSD = state[chatId].chosenDomainPrice;
     const domain = state[chatId].chosenDomainForPayment;
     const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
+    if (message === 'Back') {
+      bot.sendMessage(
+        chatId,
+        `Price of ${domain} subscription is ${priceOf[domain]} USD. Choose payment method.`,
+        {
+          reply_markup: {
+            keyboard: [paymentOptions, ['Back', 'Cancel']],
+          },
+        },
+      );
+
+      state[chatId].action = 'domain-name-payment';
+      return;
+    } else if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      return;
+    }
     if (!cryptoTransferOptions.includes(ticker)) {
       bot.sendMessage(chatId, 'Please choose a valid crypto currency', options);
       return;
@@ -649,8 +689,8 @@ async function buyDomain(chatId, domain) {
 
   domainsOf[chatId] = (domainsOf[chatId] || []).concat(domain);
 
-  // return { success: true };
-  return await buyDomainOnline(domain);
+  return { success: true };
+  // return await buyDomainOnline(domain);
 }
 
 console.log('Bot is running...');
@@ -704,34 +744,34 @@ app.get('/bank-payment-for-domain', async (req, res) => {
       options,
     );
 
-    const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
-    if (error) {
-      bot.sendMessage(chatId, `Error saving domain in server`, {
-        reply_markup: {
-          remove_keyboard: true,
-        },
-      });
-      return;
-    }
+    // const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
+    // if (error) {
+    //   bot.sendMessage(chatId, `Error saving domain in server`, {
+    //     reply_markup: {
+    //       remove_keyboard: true,
+    //     },
+    //   });
+    //   return;
+    // }
 
     bot.sendMessage(chatId, `Successfully saved domain in server`); // save railway in domain
-    const { error: saveServerInDomainError } = await saveServerInDomain(
-      domain,
-      server,
-    );
+    // const { error: saveServerInDomainError } = await saveServerInDomain(
+    //   domain,
+    //   server,
+    // );
 
-    if (saveServerInDomainError) {
-      bot.sendMessage(
-        chatId,
-        `Error saving server in domain ${saveServerInDomainError}`,
-        {
-          reply_markup: {
-            remove_keyboard: true,
-          },
-        },
-      );
-      return;
-    }
+    // if (saveServerInDomainError) {
+    //   bot.sendMessage(
+    //     chatId,
+    //     `Error saving server in domain ${saveServerInDomainError}`,
+    //     {
+    //       reply_markup: {
+    //         remove_keyboard: true,
+    //       },
+    //     },
+    //   );
+    //   return;
+    // }
 
     bot.sendMessage(
       chatId,
