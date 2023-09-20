@@ -54,7 +54,8 @@ async function convertUSDToNaira(amountInUSD) {
     const response = await axios.get(apiUrl);
     const usdToNairaRate = response.data.rates['NGN']; // Get the exchange rate for USD to Naira
 
-    const nairaAmount = amountInUSD * usdToNairaRate;
+    const nairaAmount = amountInUSD * usdToNairaRate * 1.15;
+    // increase 15% as per client requirement
     // console.log(`Equivalent amount in Naira: ${nairaAmount.toFixed(2)}`);
     return nairaAmount.toFixed(2);
   } catch (error) {
