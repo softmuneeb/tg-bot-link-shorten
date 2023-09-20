@@ -5,6 +5,36 @@ const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
 
 const saveServerInDomain = async (domainName, server) => {
   let dnsZoneId;
+  let websiteId;
+
+  try {
+    const url = `https://api.connectreseller.com/ConnectReseller/ESHOP/ViewDomain`;
+    const params = {
+      APIKey: API_KEY,
+      websiteName: domainName,
+    };
+    const response = await axios.get(url, { params });
+    if (response?.status === 200) {
+      websiteId = response?.data?.responseData?.websiteId;
+    } else {
+      let e = response?.data?.responseMsg?.message;
+      console.error('Error saveServerInDomain 1', e);
+      return { error: e };
+    }
+  } catch (error) {
+    let e = `${error?.message} ${JSON.stringify(error?.response?.data)}`;
+    console.error('Error saveServerInDomain 2', e);
+    return { error: e };
+  }
+
+  {
+    const params = {
+      APIKey: API_KEY,
+      WebsiteId: websiteId,
+    };
+    const url = `https://api.connectreseller.com/ConnectReseller/ESHOP/ManageDNSRecords`;
+    await axios.get(url, { params }); // Enable DNS Management
+  }
 
   try {
     const url = `https://api.connectreseller.com/ConnectReseller/ESHOP/ViewDomain`;
@@ -22,7 +52,7 @@ const saveServerInDomain = async (domainName, server) => {
       return { error: e };
     }
   } catch (error) {
-    let e = `${error?.message} ${error?.data}`;
+    let e = `${error?.message} ${JSON.stringify(error?.response?.data)}`;
     console.error('Error saveServerInDomain 2', e);
     return { error: e };
   }
@@ -47,15 +77,14 @@ const saveServerInDomain = async (domainName, server) => {
     return { success };
   } catch (error) {
     console.error(
-      error,
       'Error saveServerInDomain 3',
       error?.message,
-      error?.response?.data?.message,
+      error?.response?.data,
     );
-    return { error: `${error?.message} ${error?.data}` };
+    return { error: `${error?.message} ${error?.response?.data}` };
   }
 };
 
-// saveServerInDomain('softlemon.sbs', 'server.of.softlemon.sbs');
+// saveServerInDomain('cakesandbakes.sbs', 'server.sbs').then(console.log);
 
 module.exports = { saveServerInDomain };
