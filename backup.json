@@ -1,3 +1,40 @@
 {
-  
+  "state": {
+    "6687923716": {
+      "subscription": "Monthly"
+    },
+    "5729797630": {}
+  },
+  "linksOf": {
+    "6687923716": [
+      {
+        "url": "https://web.telegram.org/k/#@lemon_one_bot",
+        "shortenedURL": "softberry.sbs/WkXhc1NH5"
+      },
+      {
+        "url": "https://web.telegram.org/k/#@lemon_one_bot",
+        "shortenedURL": "localhost/Vrlq-omir"
+      }
+    ]
+  },
+  "chatIdOf": {
+    "kDB0Uue0D": 6687923716,
+    "TvIud8UnR": 6687923716,
+    "BcG2v0P4C": 6687923716
+  },
+  "fullUrlOf": {
+    "localhost/Vrlq-omir": "https://web.telegram.org/k/#@lemon_one_bot",
+    "softiphone.sbs/Uu_NIe1Rg": "https://web.telegram.org/k/#@lemon_one_bot"
+  },
+  "domainsOf": {
+    "6687923716": ["softberry.sbs", "softlink.sbs", "localhost"]
+  },
+  "domainSold": {
+    "softberry.sbs": true,
+    "softlink.sbs": true,
+    "softiphone.sbs": true
+  },
+  "planEndingTime": {
+    "6687923716": 1697269321089
+  }
 }
