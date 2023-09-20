@@ -80,14 +80,17 @@ bot.on('message', async msg => {
       return;
     }
 
-    bot.sendMessage(chatId, 'Please provide the username of the user to kick:', {
-      reply_markup: {
-        keyboard: [['Back', 'Cancel']]
+    bot.sendMessage(
+      chatId,
+      'Please provide the username of the user to kick:',
+      {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']],
+        },
       },
-    });
+    );
     state[chatId].action = 'kick-user';
   } else if (action === 'kick-user') {
-
     if (message === 'Back') {
       delete state[chatId]?.action;
       bot.sendMessage(chatId, `User has Pressed Back Button.`, adminOptions);
@@ -101,11 +104,16 @@ bot.on('message', async msg => {
     const userToKick = message;
     const kicked = kickUser(userToKick);
     if (kicked) {
-      bot.sendMessage(chatId, `User ${userToKick} has been kicked out.`, adminOptions);
+      bot.sendMessage(
+        chatId,
+        `User ${userToKick} has been kicked out.`,
+        adminOptions,
+      );
     } else {
       bot.sendMessage(
         chatId,
-        `User ${userToKick} not found or unable to kick.`, adminOptions
+        `User ${userToKick} not found or unable to kick.`,
+        adminOptions,
       );
     }
     delete state[chatId]?.action;
@@ -121,14 +129,12 @@ bot.on('message', async msg => {
       return;
     }
     state[chatId].action = 'choose-domain';
-    bot.sendMessage(chatId, 'Please provide the URL you want to shorten:',
-      {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']]
-        },
-      });
+    bot.sendMessage(chatId, 'Please provide the URL you want to shorten:', {
+      reply_markup: {
+        keyboard: [['Back', 'Cancel']],
+      },
+    });
   } else if (action === 'choose-domain') {
-
     if (message === 'Back') {
       delete state[chatId]?.action;
       bot.sendMessage(chatId, `User has Pressed Back Button.`, options);
@@ -142,7 +148,7 @@ bot.on('message', async msg => {
     if (!isValidUrl(message)) {
       bot.sendMessage(chatId, 'Please provide a valid URL', {
         reply_markup: {
-          keyboard: [['Back', 'Cancel']]
+          keyboard: [['Back', 'Cancel']],
         },
       });
       return;
@@ -166,7 +172,7 @@ bot.on('message', async msg => {
       state[chatId].action = 'choose-domain';
       bot.sendMessage(chatId, `Please Chose the URL to shorten.`, {
         reply_markup: {
-          keyboard: [['Back', 'Cancel']]
+          keyboard: [['Back', 'Cancel']],
         },
       });
       return;
@@ -180,7 +186,7 @@ bot.on('message', async msg => {
     if (!domains.includes(message)) {
       bot.sendMessage(chatId, 'Please choose a valid domain', {
         reply_markup: {
-          keyboard: [['Back', 'Cancel']]
+          keyboard: [['Back', 'Cancel']],
         },
       });
       return;
