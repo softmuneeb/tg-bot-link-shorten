@@ -1,6 +1,6 @@
-const { createCheckout } = require('./fincra.js');
 const TelegramBot = require('node-telegram-bot-api');
-const shortid = require('shortid');
+const { createCheckout } = require('./fincra.js');
+const { customAlphabet } = require('nanoid');
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -32,6 +32,10 @@ const { saveDomainInServer } = require('./cr-rl-connect-domain-to-server.js');
 const { saveServerInDomain } = require('./cr-add-dns-record.js');
 const { buyDomainOnline } = require('./register-domain.test.js');
 
+const nanoid = customAlphabet(
+  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+  5,
+);
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const SELF_URL = process.env.SELF_URL;
 
@@ -275,7 +279,7 @@ bot.on('message', async msg => {
       state[chatId].action = 'crypto-transfer-payment-domain';
     } else {
       const priceNGN = Number(await convertUSDToNaira(price));
-      const reference = shortid.generate();
+      const reference = nanoid();
       chatIdOf[reference] = chatId;
       const { url, error } = await createCheckout(
         priceNGN,
@@ -411,7 +415,7 @@ bot.on('message', async msg => {
       state[chatId].action = 'crypto-transfer-payment';
     } else {
       const priceNGN = Number(await convertUSDToNaira(priceOf[plan]));
-      const reference = shortid.generate();
+      const reference = nanoid();
       chatIdOf[reference] = chatId;
       const { url, error } = await createCheckout(
         priceNGN,
@@ -590,7 +594,7 @@ function isSubscribed(chatId) {
 
 // its not pure function // may need to refactor
 function shortenURLAndSave(chatId, domain, url) {
-  const shortenedURL = domain + '/' + shortid.generate();
+  const shortenedURL = domain + '/' + nanoid();
   const data = { url, shortenedURL };
   linksOf[chatId] = linksOf[chatId] ? linksOf[chatId].concat(data) : [data];
   fullUrlOf[shortenedURL] = url;
