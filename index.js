@@ -612,9 +612,8 @@ async function buyDomain(chatId, domain) {
 
   domainsOf[chatId] = (domainsOf[chatId] || []).concat(domain);
 
-  return { success: true };
-
-  // return await buyDomainOnline(domain);
+  // return { success: true };
+  return await buyDomainOnline(domain);
 }
 
 console.log('Bot is running...');
@@ -679,23 +678,23 @@ app.get('/bank-payment-for-domain', async (req, res) => {
     }
 
     bot.sendMessage(chatId, `Successfully saved domain in server`); // save railway in domain
-    // const { error: saveServerInDomainError } = await saveServerInDomain(
-    //   domain,
-    //   server,
-    // );
+    const { error: saveServerInDomainError } = await saveServerInDomain(
+      domain,
+      server,
+    );
 
-    // if (saveServerInDomainError) {
-    //   bot.sendMessage(
-    //     chatId,
-    //     `Error saving server in domain ${saveServerInDomainError}`,
-    //     {
-    //       reply_markup: {
-    //         remove_keyboard: true,
-    //       },
-    //     },
-    //   );
-    //   return;
-    // }
+    if (saveServerInDomainError) {
+      bot.sendMessage(
+        chatId,
+        `Error saving server in domain ${saveServerInDomainError}`,
+        {
+          reply_markup: {
+            remove_keyboard: true,
+          },
+        },
+      );
+      return;
+    }
 
     bot.sendMessage(
       chatId,
@@ -844,6 +843,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   }
 });
 app.get('/get-json-data', (req, res) => {
+  backupTheData()
   fs.readFile('backup.json', 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading JSON file:', err);
