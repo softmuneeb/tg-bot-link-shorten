@@ -13,17 +13,34 @@ Welcome to the Telegram Link Shortener Bot project! This bot allows users to sho
 
 ## Commands
 
-- `/start`: Get a friendly greeting and command list.
-- `/shorten [url]`: Shorten a URL.
-- `/mylinks`: View your shortened links.
-- `/deleteallmylinks`: Delete all your shortened links.
+Commands for Admins:
+1. Block User
+2. Unblock User
+3. View Users
+4. View Analytics
+
+Commands for Normal Users:
+1. Shorten a URL
+2. Buy a domain name
+3. Subscribe to plans
+4. View my subscribed plan
+5. View my shortened links
+6. View my domains
 
 ## Technology Stack
 
-- Node.js
-- MongoDB
-- Telegram Bot API
-- Shortid library
+- JavaScript: Serves as the foundational development language.
+- Telegram Bot API: Enables the creation of a bot and facilitates message reception.
+- Node.js: Empowers the development of both server-side logic and the bot itself in JavaScript.
+- MongoDB: Used for persistently storing user data, ensuring it remains intact over time.
+- GraphQL API: Employed to store domain-related data in Railway Hosting.
+- npm: Facilitates the seamless installation of packages and dependencies.
+- Blockbee API: Empowers the creation of crypto payments.
+- Axios: Enables the invocation of various APIs.
+- dotenv: Safely loads and manages environment variables.
+- Express: Facilitates the establishment of endpoints for communication with payment gateways through webhooks.
+- Fincra API: Used for the creation of bank payments.
+- nanoid: Generates concise 5-digit unique identifiers.
 
 ## Contributing
 
