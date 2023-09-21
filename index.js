@@ -47,6 +47,7 @@ const chatIdOf = {};
 const fullUrlOf = {};
 const domainsOf = {};
 const domainSold = {};
+const chatIdBlocked = {};
 const planEndingTime = {};
 
 // variables to view system information
@@ -58,6 +59,20 @@ restoreData();
 
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
+
+  if (chatIdBlocked[chatId]) {
+    bot.sendMessage(
+      chatId,
+      'You are currently blocked from using the bot. Please contact @sport_chocolate',
+      {
+        reply_markup: {
+          remove_keyboard: true,
+        },
+      },
+    );
+    return;
+  }
+
   const message = msg.text;
   const username = msg.from.username || nanoid();
 
@@ -122,20 +137,24 @@ bot.on('message', async msg => {
       return;
     }
     const userToKick = message;
-    const kicked = kickUser(userToKick);
-    if (kicked) {
-      bot.sendMessage(
-        chatId,
-        `User ${userToKick} has been kicked out.`,
-        adminOptions,
-      );
-    } else {
-      bot.sendMessage(
-        chatId,
-        `User ${userToKick} not found or unable to kick.`,
-        adminOptions,
-      );
+
+    const chatIdToBlock = chatIdOfName[userToKick];
+
+    if (!chatIdToBlock) {
+      bot.sendMessage(chatId, `User ${userToKick} not found`, {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']],
+        },
+      });
+      return;
     }
+
+    chatIdBlocked[chatIdToBlock] = true;
+    bot.sendMessage(
+      chatId,
+      `User ${userToKick} has been kicked out.`,
+      adminOptions,
+    );
     delete state[chatId]?.action;
   }
   //
@@ -698,24 +717,21 @@ function getAnalyticsData() {
   return 'Analytics data will be shown here.';
 }
 
-function kickUser(username) {
-  return true;
-}
-
 function restoreData() {
   try {
     const backupJSON = fs.readFileSync('backup.json', 'utf-8');
     const restoredData = JSON.parse(backupJSON);
 
+    Object.assign(users, restoredData.users);
     Object.assign(state, restoredData.state);
     Object.assign(linksOf, restoredData.linksOf);
     Object.assign(chatIdOf, restoredData.chatIdOf);
     Object.assign(fullUrlOf, restoredData.fullUrlOf);
-    Object.assign(users, restoredData.users);
-    Object.assign(nameOfChatId, restoredData.nameOfChatId);
-    Object.assign(chatIdOfName, restoredData.chatIdOfName);
     Object.assign(domainsOf, restoredData.domainsOf);
     Object.assign(domainSold, restoredData.domainSold);
+    Object.assign(nameOfChatId, restoredData.nameOfChatId);
+    Object.assign(chatIdOfName, restoredData.chatIdOfName);
+    Object.assign(chatIdBlocked, restoredData.chatIdBlocked);
     Object.assign(planEndingTime, restoredData.planEndingTime);
 
     console.log('Data restored.');
@@ -727,14 +743,15 @@ function restoreData() {
 function backupTheData() {
   const backupData = {
     state,
+    users,
     linksOf,
     chatIdOf,
-    users,
-    nameOfChatId,
-    chatIdOfName,
     fullUrlOf,
     domainsOf,
     domainSold,
+    chatIdBlocked,
+    nameOfChatId,
+    chatIdOfName,
     planEndingTime,
   };
 
