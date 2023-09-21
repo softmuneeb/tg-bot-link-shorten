@@ -649,7 +649,7 @@ bot.on('message', async msg => {
 function getShortenedLinks(chatId) {
   return !linksOf[chatId]
     ? []
-    : linksOf[chatId].map(d => `${d.shortenedURL} -> ${d.url}`);
+    : linksOf[chatId].map(d => `${d.shortenedURL} → ${d.url}\n`);
 }
 
 function getPurchasedDomains(chatId) {
