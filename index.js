@@ -40,7 +40,7 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const SELF_URL = process.env.SELF_URL;
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
-
+// variables to implement core functionality
 const state = {};
 const linksOf = {};
 const chatIdOf = {};
@@ -49,12 +49,24 @@ const domainsOf = {};
 const domainSold = {};
 const planEndingTime = {};
 
+// variables to view system information
+const nameOfChatId = {};
+const chatIdOfName = {};
+const users = [];
+
 restoreData();
 
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
   const message = msg.text;
-  if (!state[chatId]) state[chatId] = {};
+  const username = msg.from.username || nanoid();
+
+  if (!state[chatId]) {
+    state[chatId] = {};
+    nameOfChatId[chatId] = username;
+    chatIdOfName[username] = chatId;
+    users.push(username);
+  }
 
   const action = state[chatId]?.action;
 
@@ -104,8 +116,7 @@ bot.on('message', async msg => {
       delete state[chatId]?.action;
       bot.sendMessage(chatId, `User has Pressed Back Button.`, adminOptions);
       return;
-    }
-    if (message === 'Cancel') {
+    } else if (message === 'Cancel') {
       delete state[chatId]?.action;
       bot.sendMessage(chatId, `User has Pressed Cancel Button.`, adminOptions);
       return;
@@ -627,7 +638,17 @@ bot.on('message', async msg => {
     }
     restoreData();
     bot.sendMessage(chatId, 'Data restored successfully.');
-  } else if (message === 'See All Analytics') {
+  } else if (message === 'View Users') {
+    if (!isAdmin(chatId)) {
+      bot.sendMessage(
+        chatId,
+        'Apologies, but you do not have the authorization to access this content.',
+      );
+      return;
+    }
+
+    bot.sendMessage(chatId, `Users:\n${users.join('\n')}`);
+  } else if (message === 'View Analytics') {
     if (!isAdmin(chatId)) {
       bot.sendMessage(
         chatId,
@@ -690,6 +711,9 @@ function restoreData() {
     Object.assign(linksOf, restoredData.linksOf);
     Object.assign(chatIdOf, restoredData.chatIdOf);
     Object.assign(fullUrlOf, restoredData.fullUrlOf);
+    Object.assign(users, restoredData.users);
+    Object.assign(nameOfChatId, restoredData.nameOfChatId);
+    Object.assign(chatIdOfName, restoredData.chatIdOfName);
     Object.assign(domainsOf, restoredData.domainsOf);
     Object.assign(domainSold, restoredData.domainSold);
     Object.assign(planEndingTime, restoredData.planEndingTime);
@@ -705,6 +729,9 @@ function backupTheData() {
     state,
     linksOf,
     chatIdOf,
+    users,
+    nameOfChatId,
+    chatIdOfName,
     fullUrlOf,
     domainsOf,
     domainSold,

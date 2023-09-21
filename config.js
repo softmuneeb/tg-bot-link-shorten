@@ -38,7 +38,7 @@ const cryptoTransferOptions = [
 
 const adminOptions = {
   reply_markup: {
-    keyboard: [['See All Analytics'], ['Kick Out User']],
+    keyboard: [['View Analytics'], ['View Users'], ['Kick Out User']],
   },
 };
 

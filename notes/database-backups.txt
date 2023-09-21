@@ -105,7 +105,6 @@
     "6687923716": 1697269321089
   }
 }
-
 {
   "state": {
     "6687923716": {
@@ -135,11 +134,7 @@
     "softiphone.sbs/Uu_NIe1Rg": "https://web.telegram.org/k/#@lemon_one_bot"
   },
   "domainsOf": {
-    "6687923716": [
-      "softberry.sbs",
-      "softlink.sbs",
-      "localhost"
-    ]
+    "6687923716": ["softberry.sbs", "softlink.sbs", "localhost"]
   },
   "domainSold": {
     "softberry.sbs": true,
