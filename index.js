@@ -43,12 +43,12 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 // variables to implement core functionality
 const state = {};
 const linksOf = {};
-const chatIdOf = {};
 const fullUrlOf = {};
 const domainsOf = {};
 const domainSold = {};
 const chatIdBlocked = {};
 const planEndingTime = {};
+const chatIdOfPayment = {};
 
 // variables to view system information
 const nameOfChatId = {};
@@ -107,7 +107,7 @@ bot.on('message', async msg => {
     }
   }
   //
-  else if (message === 'Kick Out User') {
+  else if (message === 'Block User') {
     if (!isAdmin(chatId)) {
       bot.sendMessage(
         chatId,
@@ -118,15 +118,15 @@ bot.on('message', async msg => {
 
     bot.sendMessage(
       chatId,
-      'Please share the username of the user that needs to be kicked.',
+      'Please share the username of the user that needs to be blocked.',
       {
         reply_markup: {
           keyboard: [['Back', 'Cancel']],
         },
       },
     );
-    state[chatId].action = 'kick-user';
-  } else if (action === 'kick-user') {
+    state[chatId].action = 'block-user';
+  } else if (action === 'block-user') {
     if (message === 'Back') {
       delete state[chatId]?.action;
       bot.sendMessage(chatId, `User has Pressed Back Button.`, adminOptions);
@@ -136,12 +136,12 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, `User has Pressed Cancel Button.`, adminOptions);
       return;
     }
-    const userToKick = message;
+    const userToBlock = message;
 
-    const chatIdToBlock = chatIdOfName[userToKick];
+    const chatIdToBlock = chatIdOfName[userToBlock];
 
     if (!chatIdToBlock) {
-      bot.sendMessage(chatId, `User ${userToKick} not found`, {
+      bot.sendMessage(chatId, `User ${userToBlock} not found`, {
         reply_markup: {
           keyboard: [['Back', 'Cancel']],
         },
@@ -152,7 +152,7 @@ bot.on('message', async msg => {
     chatIdBlocked[chatIdToBlock] = true;
     bot.sendMessage(
       chatId,
-      `User ${userToKick} has been kicked out.`,
+      `User ${userToBlock} has been blocked.`,
       adminOptions,
     );
     delete state[chatId]?.action;
@@ -346,7 +346,7 @@ bot.on('message', async msg => {
     } else {
       const priceNGN = Number(await convertUSDToNaira(price));
       const reference = nanoid();
-      chatIdOf[reference] = chatId;
+      chatIdOfPayment[reference] = chatId;
       const { url, error } = await createCheckout(
         priceNGN,
         reference,
@@ -416,7 +416,7 @@ bot.on('message', async msg => {
       '/crypto-payment-for-domain',
     );
 
-    chatIdOf[address] = chatId;
+    chatIdOfPayment[address] = chatId;
     state[chatId].cryptoPaymentSession = {
       priceCrypto,
       ticker,
@@ -509,7 +509,7 @@ bot.on('message', async msg => {
     } else {
       const priceNGN = Number(await convertUSDToNaira(priceOf[plan]));
       const reference = nanoid();
-      chatIdOf[reference] = chatId;
+      chatIdOfPayment[reference] = chatId;
       const { url, error } = await createCheckout(
         priceNGN,
         reference,
@@ -580,7 +580,7 @@ bot.on('message', async msg => {
       '/crypto-payment-for-subscription',
     );
 
-    chatIdOf[address] = chatId;
+    chatIdOfPayment[address] = chatId;
     state[chatId].cryptoPaymentSession = {
       priceCrypto,
       ticker,
@@ -725,7 +725,7 @@ function restoreData() {
     Object.assign(users, restoredData.users);
     Object.assign(state, restoredData.state);
     Object.assign(linksOf, restoredData.linksOf);
-    Object.assign(chatIdOf, restoredData.chatIdOf);
+    Object.assign(chatIdOfPayment, restoredData.chatIdOfPayment);
     Object.assign(fullUrlOf, restoredData.fullUrlOf);
     Object.assign(domainsOf, restoredData.domainsOf);
     Object.assign(domainSold, restoredData.domainSold);
@@ -745,14 +745,14 @@ function backupTheData() {
     state,
     users,
     linksOf,
-    chatIdOf,
     fullUrlOf,
     domainsOf,
     domainSold,
-    chatIdBlocked,
     nameOfChatId,
     chatIdOfName,
+    chatIdBlocked,
     planEndingTime,
+    chatIdOfPayment,
   };
 
   const backupJSON = JSON.stringify(backupData, null, 2);
@@ -784,13 +784,13 @@ app.get('/', (req, res) => {
 app.get('/bank-payment-for-subscription', (req, res) => {
   console.log(req.originalUrl);
   const reference = req.query.reference;
-  const chatId = chatIdOf[reference];
+  const chatId = chatIdOfPayment[reference];
   if (state[chatId]?.chosenPlanForPayment) {
     const plan = state[chatId].chosenPlanForPayment;
     planEndingTime[chatId] = Date.now() + timeOf[plan];
     state[chatId].subscription = plan;
 
-    delete chatIdOf[reference]; // Save Tx
+    delete chatIdOfPayment[reference]; // Save Tx
     delete state[chatId]?.chosenPlanForPayment; // Save Tx
 
     bot.sendMessage(
@@ -806,7 +806,7 @@ app.get('/bank-payment-for-subscription', (req, res) => {
 app.get('/bank-payment-for-domain', async (req, res) => {
   console.log(req.originalUrl);
   const reference = req.query.reference;
-  const chatId = chatIdOf[reference];
+  const chatId = chatIdOfPayment[reference];
   if (state[chatId]?.chosenDomainForPayment) {
     const domain = state[chatId].chosenDomainForPayment;
     const { error: buyDomainError } = await buyDomain(chatId, domain);
@@ -858,7 +858,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
       `Successfully saved server in domain. You can now enjoy URL shortening with ${domain}`,
     );
 
-    delete chatIdOf[reference]; // Save Tx
+    delete chatIdOfPayment[reference]; // Save Tx
     delete state[chatId]?.chosenDomainPrice; // Save Tx
     delete state[chatId]?.chosenDomainForPayment; // Save Tx
 
@@ -882,7 +882,7 @@ app.get('/crypto-payment-for-subscription', (req, res) => {
     return;
   }
 
-  const chatId = chatIdOf[address_in];
+  const chatId = chatIdOfPayment[address_in];
 
   if (state[chatId]?.cryptoPaymentSession) {
     const { priceCrypto, ticker } = state[chatId].cryptoPaymentSession;
@@ -923,7 +923,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
     return;
   }
 
-  const chatId = chatIdOf[address_in];
+  const chatId = chatIdOfPayment[address_in];
 
   if (state[chatId]?.cryptoPaymentSession) {
     const { priceCrypto, ticker } = state[chatId].cryptoPaymentSession;
