@@ -836,8 +836,8 @@ async function buyDomain(chatId, domain) {
 
   domainsOf[chatId] = (domainsOf[chatId] || []).concat(domain);
 
-  return { success: true };
-  // return await buyDomainOnline(domain);
+  // return { success: true };
+  return await buyDomainOnline(domain);
 }
 
 console.log('Bot is running...');
@@ -891,34 +891,34 @@ app.get('/bank-payment-for-domain', async (req, res) => {
       options,
     );
 
-    // const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
-    // if (error) {
-    //   bot.sendMessage(chatId, `Error saving domain in server`, {
-    //     reply_markup: {
-    //       remove_keyboard: true,
-    //     },
-    //   });
-    //   return;
-    // }
+    const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
+    if (error) {
+      bot.sendMessage(chatId, `Error saving domain in server`, {
+        reply_markup: {
+          remove_keyboard: true,
+        },
+      });
+      return;
+    }
 
     bot.sendMessage(chatId, `Successfully saved domain in server`); // save railway in domain
-    // const { error: saveServerInDomainError } = await saveServerInDomain(
-    //   domain,
-    //   server,
-    // );
+    const { error: saveServerInDomainError } = await saveServerInDomain(
+      domain,
+      server,
+    );
 
-    // if (saveServerInDomainError) {
-    //   bot.sendMessage(
-    //     chatId,
-    //     `Error saving server in domain ${saveServerInDomainError}`,
-    //     {
-    //       reply_markup: {
-    //         remove_keyboard: true,
-    //       },
-    //     },
-    //   );
-    //   return;
-    // }
+    if (saveServerInDomainError) {
+      bot.sendMessage(
+        chatId,
+        `Error saving server in domain ${saveServerInDomainError}`,
+        {
+          reply_markup: {
+            remove_keyboard: true,
+          },
+        },
+      );
+      return;
+    }
 
     bot.sendMessage(
       chatId,
@@ -1107,20 +1107,3 @@ const startServer = () => {
   });
 };
 startServer();
-
-// getCryptoDepositAddress(
-//   '0.55',
-//   'polygon_matic',
-//   '6687923716',
-//   'https://softgreen.com',
-// ).then(async a => {
-// bot.sendMessage('6687923716', 'Bot is running', options);
-// bot.sendPhoto('6687923716', Buffer.from(a.qrCode, 'base64'));
-//   bot.sendMessage(
-//     '6687923716',
-//     `Deposit \`\`\`${a.address}\`\`\` to buy, you will receive a payment confirmation here.`,
-//     { ...options, parse_mode: 'markdown' },
-//   );
-// });
-
-// saveServerInDomain('gogasoftsbs.sbs', 'test.server');
