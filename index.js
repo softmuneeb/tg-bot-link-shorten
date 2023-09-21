@@ -158,6 +158,55 @@ bot.on('message', async msg => {
     delete state[chatId]?.action;
   }
   //
+  else if (message === 'Unblock User') {
+    if (!isAdmin(chatId)) {
+      bot.sendMessage(
+        chatId,
+        'Apologies, but you do not have the authorization to access this content.',
+      );
+      return;
+    }
+
+    bot.sendMessage(
+      chatId,
+      'Please share the username of the user that needs to be unblocked.',
+      {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']],
+        },
+      },
+    );
+    state[chatId].action = 'unblock-user';
+  } else if (action === 'unblock-user') {
+    if (message === 'Back') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Back Button.`, adminOptions);
+      return;
+    } else if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, adminOptions);
+      return;
+    }
+    const userToUnblock = message;
+    const chatIdToUnblock = chatIdOfName[userToUnblock];
+
+    if (!chatIdToUnblock) {
+      bot.sendMessage(chatId, `User ${userToUnblock} not found`, {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']],
+        },
+      });
+      return;
+    }
+    chatIdBlocked[chatIdToUnblock] = false;
+    bot.sendMessage(
+      chatId,
+      `User ${userToUnblock} has been unblocked.`,
+      adminOptions,
+    );
+    delete state[chatId]?.action;
+  }
+  //
   else if (message === 'Shorten a URL') {
     if (!isSubscribed(chatId)) {
       bot.sendMessage(chatId, 'Subscribe to plans first');

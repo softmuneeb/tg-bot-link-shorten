@@ -38,7 +38,12 @@ const cryptoTransferOptions = [
 
 const adminOptions = {
   reply_markup: {
-    keyboard: [['View Analytics'], ['View Users'], ['Block User']],
+    keyboard: [
+      ['View Analytics'],
+      ['View Users'],
+      ['Block User'],
+      ['Unblock User'],
+    ],
   },
 };
 
