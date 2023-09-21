@@ -80,8 +80,39 @@ function getLocalIpAddress() {
 
   return ipAddress;
 }
+function today() {
+  const currentDate = new Date();
+  const day = currentDate.getDate();
+  const month = currentDate.getMonth() + 1; // Note: Months are 0-indexed
+  const year = currentDate.getFullYear();
+
+  const formattedDate = `${day}-${month}-${year}`;
+  return formattedDate;
+}
+function week() {
+  const currentDate = new Date();
+  const startDate = new Date(currentDate.getFullYear(), 0, 1);
+  const days = Math.floor((currentDate - startDate) / (24 * 60 * 60 * 1000));
+  const weekNumber = Math.ceil(days / 7);
+
+  return year() + ' Week ' + weekNumber;
+}
+
+function month() {
+  const currentDate = new Date();
+  return year() + ' Month ' + (currentDate.getMonth() + 1);
+}
+function year() {
+  const currentDate = new Date();
+  return 'Year ' + currentDate.getFullYear();
+}
+
 // convertUSDToNaira(1)
 module.exports = {
+  today,
+  week,
+  month,
+  year,
   getLocalIpAddress,
   convertUSDToNaira,
   getPrice,

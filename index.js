@@ -25,6 +25,10 @@ const {
   checkDomainAvailability,
   convertUSDToNaira,
   getLocalIpAddress,
+  today,
+  week,
+  month,
+  year,
 } = require('./utils.js');
 const {
   getCryptoDepositAddress,
@@ -45,12 +49,14 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 // variables to implement core functionality
 const state = {};
 const linksOf = {};
+const clicksOf = {};
 const fullUrlOf = {};
 const domainsOf = {};
 const domainSold = {};
 const chatIdBlocked = {};
 const planEndingTime = {};
 const chatIdOfPayment = {};
+let totalShortLinks = 0;
 
 // variables to view system information
 const nameOfChatId = {};
@@ -93,9 +99,12 @@ bot.on('message', async msg => {
 
   const message = msg.text;
   const username = msg.from.username || nanoid();
+  console.log({ chatId, username, message });
 
   if (!state[chatId]) {
     state[chatId] = {};
+  }
+  if (!nameOfChatId[chatId]) {
     nameOfChatId[chatId] = username;
     chatIdOfName[username] = chatId;
     users.push(username);
@@ -303,6 +312,7 @@ bot.on('message', async msg => {
     }
     const domain = message;
     const shortenedURL = shortenURLAndSave(chatId, domain, state[chatId].url);
+    totalShortLinks++;
     bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, options);
     delete state[chatId]?.url;
     delete state[chatId]?.action;
@@ -781,7 +791,12 @@ function shortenURLAndSave(chatId, domain, url) {
 }
 
 function getAnalyticsData() {
-  return 'Analytics data will be shown here.';
+  let res = `Total short links: ${totalShortLinks}\n`;
+  for (const key in clicksOf) {
+    res += `Clicks in ${key}: ${clicksOf[key]}\n`;
+  }
+
+  return res;
 }
 
 function restoreData() {
@@ -792,7 +807,7 @@ function restoreData() {
     Object.assign(users, restoredData.users);
     Object.assign(state, restoredData.state);
     Object.assign(linksOf, restoredData.linksOf);
-    Object.assign(chatIdOfPayment, restoredData.chatIdOfPayment);
+    Object.assign(clicksOf, restoredData.clicksOf);
     Object.assign(fullUrlOf, restoredData.fullUrlOf);
     Object.assign(domainsOf, restoredData.domainsOf);
     Object.assign(domainSold, restoredData.domainSold);
@@ -800,6 +815,8 @@ function restoreData() {
     Object.assign(chatIdOfName, restoredData.chatIdOfName);
     Object.assign(chatIdBlocked, restoredData.chatIdBlocked);
     Object.assign(planEndingTime, restoredData.planEndingTime);
+    Object.assign(chatIdOfPayment, restoredData.chatIdOfPayment);
+    Object.assign(totalShortLinks, restoredData.totalShortLinks);
 
     console.log('Data restored.');
   } catch (error) {
@@ -812,6 +829,7 @@ function backupTheData() {
     state,
     users,
     linksOf,
+    clicksOf,
     fullUrlOf,
     domainsOf,
     domainSold,
@@ -820,6 +838,7 @@ function backupTheData() {
     chatIdBlocked,
     planEndingTime,
     chatIdOfPayment,
+    totalShortLinks,
   };
 
   const backupJSON = JSON.stringify(backupData, null, 2);
@@ -1095,6 +1114,12 @@ app.get('/:id', (req, res) => {
   }
   const url = fullUrlOf[`${req.hostname}/${id}`];
   if (url) {
+    clicksOf['total'] = (clicksOf['total'] || 0) + 1;
+    clicksOf[today()] = (clicksOf[today()] || 0) + 1;
+    clicksOf[week()] = (clicksOf[week()] || 0) + 1;
+    clicksOf[month()] = (clicksOf[month()] || 0) + 1;
+    clicksOf[year()] = (clicksOf[year()] || 0) + 1;
+
     res.redirect(url);
   } else {
     res.status(404).send('Link not found');
