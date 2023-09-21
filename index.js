@@ -1,7 +1,9 @@
+const { getRegisteredDomainNames } = require('./get-purchased-domains.test.js');
 const TelegramBot = require('node-telegram-bot-api');
 const { createCheckout } = require('./fincra.js');
 const { customAlphabet } = require('nanoid');
 const express = require('express');
+const axios = require('axios');
 const cors = require('cors');
 require('dotenv').config();
 const fs = require('fs');
@@ -55,10 +57,26 @@ const nameOfChatId = {};
 const chatIdOfName = {};
 const users = [];
 
+let connect_reseller_working = false;
 restoreData();
 
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
+
+  if (!connect_reseller_working) {
+    try {
+      await getRegisteredDomainNames();
+      connect_reseller_working = true;
+    } catch (error) {
+      const ip = await axios.get('https://api.ipify.org/');
+      bot.sendMessage(
+        chatId,
+        `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`,
+        { parse_mode: 'markdown' },
+      );
+      return;
+    }
+  }
 
   if (chatIdBlocked[chatId]) {
     bot.sendMessage(
