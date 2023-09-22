@@ -29,6 +29,8 @@ const {
   week,
   month,
   year,
+  getShortenedLinks,
+  shortenURLAndSave,
 } = require('./utils.js');
 const {
   getCryptoDepositAddress,
@@ -49,7 +51,6 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 // variables to implement core functionality
 const state = {};
 const linksOf = {};
-const clicksOf = {};
 const fullUrlOf = {};
 const domainsOf = {};
 const domainSold = {};
@@ -59,9 +60,10 @@ const chatIdOfPayment = {};
 let totalShortLinks = 0;
 
 // variables to view system information
+const users = [];
+const clicksOf = {};
 const nameOfChatId = {};
 const chatIdOfName = {};
-const users = [];
 
 let connect_reseller_working = false;
 restoreData();
@@ -311,7 +313,7 @@ bot.on('message', async msg => {
       return;
     }
     const domain = message;
-    const shortenedURL = shortenURLAndSave(chatId, domain, state[chatId].url);
+    const shortenedURL = shortenURLAndSave(chatId, domain, state[chatId].url, linksOf, fullUrlOf);
     totalShortLinks++;
     bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, options);
     delete state[chatId]?.url;
@@ -696,7 +698,7 @@ bot.on('message', async msg => {
 
     bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
   } else if (message === 'View my shortened links') {
-    const shortenedLinks = getShortenedLinks(chatId);
+    const shortenedLinks = getShortenedLinks(chatId, linksOf);
     if (shortenedLinks.length > 0) {
       const linksText = shortenedLinks.join('\n');
       bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
@@ -763,11 +765,6 @@ bot.on('message', async msg => {
   // }
 });
 
-function getShortenedLinks(chatId) {
-  return !linksOf[chatId]
-    ? []
-    : linksOf[chatId].map(d => `${d.shortenedURL} → ${d.url}\n`);
-}
 
 function getPurchasedDomains(chatId) {
   return domainsOf[chatId] || [];
@@ -781,14 +778,6 @@ function isSubscribed(chatId) {
   return planEndingTime[chatId] && planEndingTime[chatId] > Date.now();
 }
 
-// its not pure function // may need to refactor
-function shortenURLAndSave(chatId, domain, url) {
-  const shortenedURL = domain + '/' + nanoid();
-  const data = { url, shortenedURL };
-  linksOf[chatId] = linksOf[chatId] ? linksOf[chatId].concat(data) : [data];
-  fullUrlOf[shortenedURL] = url;
-  return shortenedURL;
-}
 
 function getAnalyticsData() {
   let res = `Total short links: ${totalShortLinks}\n`;

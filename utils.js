@@ -107,8 +107,23 @@ function year() {
   return 'Year ' + currentDate.getFullYear();
 }
 
+function getShortenedLinks(chatId, linksOf) {
+  return !linksOf[chatId]
+    ? []
+    : linksOf[chatId].map(d => `${d.shortenedURL} → ${d.url}\n`);
+}
+function shortenURLAndSave(chatId, domain, url, linksOf, fullUrlOf) {
+  const shortenedURL = domain + '/' + nanoid();
+  const data = { url, shortenedURL };
+  linksOf[chatId] = linksOf[chatId] ? linksOf[chatId].concat(data) : [data];
+  fullUrlOf[shortenedURL] = url;
+  return shortenedURL;
+}
+
 // convertUSDToNaira(1)
 module.exports = {
+  shortenURLAndSave,
+  getShortenedLinks,
   today,
   week,
   month,
