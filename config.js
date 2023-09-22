@@ -56,13 +56,13 @@ const devOptions = {
 const options = {
   reply_markup: {
     keyboard: [
-      ['Shorten a URL'],
-      ['View my shortened links'],
-      // ['View My Analytics'],
-      ['Buy a domain name'],
-      ['View my domains'],
-      ['Subscribe to plans'],
-      ['View my subscribed plan'],
+      ['🔗 Shorten a URL'],
+      ['🔍 View my shortened links'],
+      ['🌐 Buy a domain name'],
+      ['👀 View my domains'],
+      ['📋 Subscribe to plans'],
+      ['🔍 View my subscribed plan'],
+      ['🛠️ Support'],
     ],
   },
 };

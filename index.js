@@ -237,13 +237,13 @@ bot.on('message', async msg => {
     delete state[chatId]?.action;
   }
   //
-  else if (message === 'Shorten a URL') {
+  else if (message === '🔗 Shorten a URL') {
     if (!isSubscribed(chatId)) {
-      bot.sendMessage(chatId, 'Subscribe to plans first');
+      bot.sendMessage(chatId, '📋 Subscribe to plans first');
       return;
     }
     if (!ownsDomainName(chatId)) {
-      bot.sendMessage(chatId, 'Buy a domain first');
+      bot.sendMessage(chatId, '🌐 Buy a domain name first');
       return;
     }
     state[chatId].action = 'choose-domain';
@@ -327,9 +327,9 @@ bot.on('message', async msg => {
     delete state[chatId]?.action;
   }
   //
-  else if (message === 'Buy a domain name') {
+  else if (message === '🌐 Buy a domain name') {
     if (!isSubscribed(chatId)) {
-      bot.sendMessage(chatId, 'Subscribe to plans first');
+      bot.sendMessage(chatId, '📋 Subscribe to plans first');
       return;
     }
     state[chatId].action = 'choose-domain-to-buy';
@@ -516,7 +516,7 @@ bot.on('message', async msg => {
     delete state[chatId]?.action;
   }
   //
-  else if (message === 'Subscribe to plans') {
+  else if (message === '📋 Subscribe to plans') {
     if (isSubscribed(chatId)) {
       bot.sendMessage(
         chatId,
@@ -680,7 +680,7 @@ bot.on('message', async msg => {
     delete state[chatId]?.action;
   }
   //
-  else if (message === 'View my subscribed plan') {
+  else if (message === '🔍 View my subscribed plan') {
     const subscribedPlan = state[chatId]?.subscription;
 
     if (subscribedPlan) {
@@ -704,7 +704,7 @@ bot.on('message', async msg => {
     }
 
     bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
-  } else if (message === 'View my shortened links') {
+  } else if (message === '🔍 View my shortened links') {
     const shortenedLinks = getShortenedLinks(chatId, linksOf, clicksOn);
     if (shortenedLinks.length > 0) {
       const linksText = shortenedLinks.join('\n');
@@ -712,7 +712,7 @@ bot.on('message', async msg => {
     } else {
       bot.sendMessage(chatId, 'You have no shortened links yet.');
     }
-  } else if (message === 'View my domains') {
+  } else if (message === '👀 View my domains') {
     const purchasedDomains = getPurchasedDomains(chatId);
     if (purchasedDomains.length > 0) {
       const domainsText = purchasedDomains.join('\n');
@@ -764,8 +764,8 @@ bot.on('message', async msg => {
 
     const analyticsData = getAnalyticsData();
     bot.sendMessage(chatId, `Analytics Data:\n${analyticsData}`);
-  } else if (message === 'View My Analytics') {
-    bot.sendMessage(chatId, 'Here are your analytics data...');
+  } else if (message === '🛠️ Support') {
+    bot.sendMessage(chatId, 'Please contact @sport_chocolate');
   }
   // else {
   //   bot.sendMessage(chatId, "I'm sorry, I didn't understand that command.");
