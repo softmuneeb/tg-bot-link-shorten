@@ -773,7 +773,9 @@ bot.on('message', async msg => {
       `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address \`\`\`${address}\`\`\` to subscribe to ${plan} plan and you will receive a payment confirmation here.`,
       { ...options, parse_mode: 'markdown' },
     );
-    bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'));
+    bot
+      .sendPhoto(chatId, Buffer.from(qrCode, 'base64'))
+      .catch(e => console.log(e));
     delete state[chatId]?.action;
   }
   //
