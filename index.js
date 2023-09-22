@@ -915,7 +915,7 @@ function restoreData() {
   }
 }
 
-function backupTheData() {
+async function backupTheData() {
   const backupData = {
     state,
     users,
@@ -1177,17 +1177,12 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
     res.send('Payment session not found, please try again or contact support');
   }
 });
-app.get('/get-json-data', (req, res) => {
-  backupTheData();
-  fs.readFile('backup.json', 'utf8', (err, data) => {
-    if (err) {
-      console.error('Error reading JSON file:', err);
-      res.status(500).json({ error: 'Internal Server Error' });
-      return;
-    }
-    const jsonData = JSON.parse(data);
-    res.json(jsonData);
-  });
+app.get('/get-json-data', async (req, res) => {
+  await backupTheData();
+  const fileName = 'backup.json';
+  res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+  res.setHeader('Content-Type', 'application/json');
+  fs.createReadStream(fileName).pipe(res);
 });
 app.get('/ip', (req, res) => {
   const localIpAddress = getLocalIpAddress();
@@ -1227,3 +1222,19 @@ const startServer = () => {
   });
 };
 startServer();
+
+getRegisteredDomainNames()
+  .then(() => {
+    connect_reseller_working = true;
+  })
+  .catch(() => {
+    //
+    axios.get('https://api.ipify.org/').then(ip => {
+      bot.sendMessage(
+        process.env.TELEGRAM_ADMIN_CHAT_ID,
+        `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`,
+        { parse_mode: 'markdown' },
+      );
+    });
+    //
+  });
