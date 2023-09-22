@@ -48,6 +48,8 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const SELF_URL = process.env.SELF_URL;
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
+console.log('Bot is running...');
+
 // variables to implement core functionality
 const state = {};
 const linksOf = {};
@@ -71,6 +73,9 @@ restoreData();
 
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
+  const message = msg.text;
+  const username = msg.from.username || nanoid();
+  console.log(chatId + '\t' + username + '\t' + message);
 
   if (!connect_reseller_working) {
     try {
@@ -99,10 +104,6 @@ bot.on('message', async msg => {
     );
     return;
   }
-
-  const message = msg.text;
-  const username = msg.from.username || nanoid();
-  console.log(chatId + '\t' + username + '\t' + message);
 
   if (!state[chatId]) {
     state[chatId] = {};
@@ -951,8 +952,6 @@ async function buyDomain(chatId, domain) {
   return await buyDomainOnline(domain);
 }
 
-console.log('Bot is running...');
-
 const app = express();
 app.use(cors());
 app.set('json spaces', 2);
@@ -1230,11 +1229,11 @@ getRegisteredDomainNames()
   .catch(() => {
     //
     axios.get('https://api.ipify.org/').then(ip => {
-      bot.sendMessage(
-        process.env.TELEGRAM_ADMIN_CHAT_ID,
-        `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`,
-        { parse_mode: 'markdown' },
-      );
+      const message = `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
+      console.log(message);
+      bot.sendMessage(process.env.TELEGRAM_ADMIN_CHAT_ID, message, {
+        parse_mode: 'markdown',
+      });
     });
     //
   });
