@@ -102,7 +102,7 @@ bot.on('message', async msg => {
 
   const message = msg.text;
   const username = msg.from.username || nanoid();
-  console.log({ chatId, username, message });
+  console.log(chatId + '\t' + username + '\t' + message);
 
   if (!state[chatId]) {
     state[chatId] = {};
@@ -292,14 +292,13 @@ bot.on('message', async msg => {
   } else if (action === 'shorten') {
     if (message === 'Back') {
       state[chatId].action = 'choose-domain';
-      bot.sendMessage(chatId, `Please Chose the URL to shorten.`, {
+      bot.sendMessage(chatId, `Please choose the URL to shorten.`, {
         reply_markup: {
           keyboard: [['Back', 'Cancel']],
         },
       });
       return;
-    }
-    if (message === 'Cancel') {
+    } else if (message === 'Cancel') {
       delete state[chatId]?.action;
       bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
       return;
@@ -313,19 +312,116 @@ bot.on('message', async msg => {
       });
       return;
     }
-    const domain = message;
-    const shortenedURL = shortenURLAndSave(
-      chatId,
-      domain,
-      state[chatId].url,
-      linksOf,
-      fullUrlOf,
-    );
+    state[chatId].selectedDomain = message;
+
+    bot.sendMessage(chatId, `Choose link type:`, {
+      reply_markup: {
+        keyboard: [
+          ['Random Link', 'Custom Link'],
+          ['Back', 'Cancel'],
+        ],
+      },
+    });
+    state[chatId].action = 'choose-link-type';
+  }
+
+  //
+  else if (action === 'choose-link-type') {
+    if (message === 'Back') {
+      const domains = getPurchasedDomains(chatId);
+      const keyboard = [...domains.map(d => [d]), ['Back', 'Cancel']];
+      bot.sendMessage(
+        chatId,
+        `Please select the domain you would like to connect with your shortened link.`,
+        {
+          reply_markup: {
+            keyboard,
+          },
+        },
+      );
+      state[chatId].action = 'shorten';
+    } else if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+    } else if (message === 'Random Link') {
+      const url = state[chatId].url;
+      const domain = state[chatId].selectedDomain;
+      const shortenedURL = domain + '/' + nanoid();
+      if (fullUrlOf[shortenedURL]) {
+        bot.sendMessage(
+          chatId,
+          `Link already exists. Please send 'ok' to try another.`,
+        );
+        return;
+      }
+      fullUrlOf[shortenedURL] = url;
+
+      linksOf[chatId] = (linksOf[chatId] || []).concat({ url, shortenedURL });
+
+      totalShortLinks++;
+      bot.sendMessage(
+        chatId,
+        `Your shortened URL is: ${shortenedURL}`,
+        options,
+      );
+      delete state[chatId]?.url;
+      delete state[chatId]?.action;
+      delete state[chatId]?.selectedDomain;
+    } else if (message === 'Custom Link') {
+      state[chatId].action = 'shorten-custom';
+      bot.sendMessage(chatId, `Please provide your custom link.`, {
+        reply_markup: {
+          keyboard: [['Back', 'Cancel']],
+        },
+      });
+      return;
+    } else {
+      bot.sendMessage(chatId, `?`);
+    }
+  }
+  //
+  else if (action === 'shorten-custom') {
+    if (message === 'Back') {
+      bot.sendMessage(chatId, `Choose link type:`, {
+        reply_markup: {
+          keyboard: [
+            ['Random Link', 'Custom Link'],
+            ['Back', 'Cancel'],
+          ],
+        },
+      });
+      state[chatId].action = 'choose-link-type';
+    } else if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      return;
+    }
+
+    const url = state[chatId].url;
+    const domain = state[chatId].selectedDomain;
+    const shortenedURL = domain + '/' + message;
+
+    if (!isValidUrl('https://' + shortenedURL)) {
+      bot.sendMessage(chatId, 'Please provide a valid URL');
+      return;
+    }
+
+    if (fullUrlOf[shortenedURL]) {
+      bot.sendMessage(chatId, `Link already exists. Please try another.`);
+      return;
+    }
+
+    fullUrlOf[shortenedURL] = url;
+
+    linksOf[chatId] = (linksOf[chatId] || []).concat({ url, shortenedURL });
+
     totalShortLinks++;
     bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, options);
     delete state[chatId]?.url;
     delete state[chatId]?.action;
+    delete state[chatId]?.selectedDomain;
   }
+
   //
   else if (message === '🌐 Buy a domain name') {
     if (!isSubscribed(chatId)) {
@@ -1108,7 +1204,7 @@ app.get('/:id', (req, res) => {
     res.json({ message: 'Salam', from: req.hostname });
     return;
   }
-  const shortUrl = `${req.hostname}/${id}`
+  const shortUrl = `${req.hostname}/${id}`;
   const url = fullUrlOf[shortUrl];
   if (url) {
     clicksOf['total'] = (clicksOf['total'] || 0) + 1;
@@ -1116,7 +1212,7 @@ app.get('/:id', (req, res) => {
     clicksOf[week()] = (clicksOf[week()] || 0) + 1;
     clicksOf[month()] = (clicksOf[month()] || 0) + 1;
     clicksOf[year()] = (clicksOf[year()] || 0) + 1;
-    
+
     clicksOn[shortUrl] = (clicksOn[shortUrl] || 0) + 1;
 
     res.redirect(url);

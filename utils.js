@@ -7,8 +7,7 @@ const { checkDomainPriceOnline } = require('./cr-get-domain-price');
 
 const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE;
 
-const DEVELOPER_CHAT_ID = 5729797630;
-const ADMIN_CHAT_ID = 5729797630;
+const DEVELOPER_CHAT_ID = 572979763;
 
 function isValidUrl(url) {
   const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
@@ -30,7 +29,7 @@ function isDeveloper(chatId) {
 function isAdmin(chatId) {
   // Implement logic to determine if the user is the admin
   // Return true if the user is the admin, false otherwise
-  return chatId === ADMIN_CHAT_ID; // Replace with the actual admin's chat ID
+  return chatId === Number(process.env.TELEGRAM_ADMIN_CHAT_ID); // Replace with the actual admin's chat ID
 }
 
 async function checkDomainAvailability(domain, domainSold) {
