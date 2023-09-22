@@ -40,6 +40,6 @@ const getCryptoDepositAddress = async (
   return { address, qrCode: qrCode?.qr_code };
 };
 
-// getCryptoDepositAddress('0.55', 'polygon_matic',  '6687923716', 'https://softgreen.com' ); // chatid
+// getCryptoDepositAddress('0.55', 'polygon_matic',  '6687923716', 'https://softgreen.com', "/crypto" ).then(a=> console.log(JSON.stringify(a)))
 
 module.exports = { getCryptoDepositAddress, convertUSDToCrypto };
