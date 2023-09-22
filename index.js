@@ -313,7 +313,13 @@ bot.on('message', async msg => {
       return;
     }
     const domain = message;
-    const shortenedURL = shortenURLAndSave(chatId, domain, state[chatId].url, linksOf, fullUrlOf);
+    const shortenedURL = shortenURLAndSave(
+      chatId,
+      domain,
+      state[chatId].url,
+      linksOf,
+      fullUrlOf,
+    );
     totalShortLinks++;
     bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, options);
     delete state[chatId]?.url;
@@ -765,7 +771,6 @@ bot.on('message', async msg => {
   // }
 });
 
-
 function getPurchasedDomains(chatId) {
   return domainsOf[chatId] || [];
 }
@@ -777,7 +782,6 @@ function ownsDomainName(chatId) {
 function isSubscribed(chatId) {
   return planEndingTime[chatId] && planEndingTime[chatId] > Date.now();
 }
-
 
 function getAnalyticsData() {
   let res = `Total short links: ${totalShortLinks}\n`;
