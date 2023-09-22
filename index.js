@@ -79,7 +79,7 @@ bot.on('message', async msg => {
     } catch (error) {
       const ip = await axios.get('https://api.ipify.org/');
       bot.sendMessage(
-        chatId,
+        process.env.TELEGRAM_ADMIN_CHAT_ID,
         `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`,
         { parse_mode: 'markdown' },
       );
