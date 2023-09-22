@@ -107,10 +107,15 @@ function year() {
   return 'Year ' + currentDate.getFullYear();
 }
 
-function getShortenedLinks(chatId, linksOf) {
+function getShortenedLinks(chatId, linksOf, clicksOn) {
   return !linksOf[chatId]
     ? []
-    : linksOf[chatId].map(d => `${d.shortenedURL} → ${d.url}\n`);
+    : linksOf[chatId].map(
+        d =>
+          `${clicksOn[d.shortenedURL] || 0} ${
+            clicksOn[d.shortenedURL] === 1 ? 'click' : 'clicks'
+          } → ${d.shortenedURL} → ${d.url}\n`,
+      );
 }
 function shortenURLAndSave(chatId, domain, url, linksOf, fullUrlOf) {
   const shortenedURL = domain + '/' + nanoid();

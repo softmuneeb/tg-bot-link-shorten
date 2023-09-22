@@ -62,6 +62,7 @@ let totalShortLinks = 0;
 // variables to view system information
 const users = [];
 const clicksOf = {};
+const clicksOn = {};
 const nameOfChatId = {};
 const chatIdOfName = {};
 
@@ -704,7 +705,7 @@ bot.on('message', async msg => {
 
     bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
   } else if (message === 'View my shortened links') {
-    const shortenedLinks = getShortenedLinks(chatId, linksOf);
+    const shortenedLinks = getShortenedLinks(chatId, linksOf, clicksOn);
     if (shortenedLinks.length > 0) {
       const linksText = shortenedLinks.join('\n');
       bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
@@ -801,6 +802,7 @@ function restoreData() {
     Object.assign(state, restoredData.state);
     Object.assign(linksOf, restoredData.linksOf);
     Object.assign(clicksOf, restoredData.clicksOf);
+    Object.assign(clicksOn, restoredData.clicksOn);
     Object.assign(fullUrlOf, restoredData.fullUrlOf);
     Object.assign(domainsOf, restoredData.domainsOf);
     Object.assign(domainSold, restoredData.domainSold);
@@ -823,6 +825,7 @@ function backupTheData() {
     users,
     linksOf,
     clicksOf,
+    clicksOn,
     fullUrlOf,
     domainsOf,
     domainSold,
@@ -1105,13 +1108,16 @@ app.get('/:id', (req, res) => {
     res.json({ message: 'Salam', from: req.hostname });
     return;
   }
-  const url = fullUrlOf[`${req.hostname}/${id}`];
+  const shortUrl = `${req.hostname}/${id}`
+  const url = fullUrlOf[shortUrl];
   if (url) {
     clicksOf['total'] = (clicksOf['total'] || 0) + 1;
     clicksOf[today()] = (clicksOf[today()] || 0) + 1;
     clicksOf[week()] = (clicksOf[week()] || 0) + 1;
     clicksOf[month()] = (clicksOf[month()] || 0) + 1;
     clicksOf[year()] = (clicksOf[year()] || 0) + 1;
+    
+    clicksOn[shortUrl] = (clicksOn[shortUrl] || 0) + 1;
 
     res.redirect(url);
   } else {
