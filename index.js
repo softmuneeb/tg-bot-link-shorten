@@ -1269,7 +1269,7 @@ getRegisteredDomainNames()
     axios.get('https://api.ipify.org/').then(ip => {
       const message = `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
       console.log(message);
-      bot.sendMessage(process.env.TELEGRAM_ADMIN_CHAT_ID, message, {
+      bot.sendMessage(process.env.TELEGRAM_DEV_CHAT_ID, message, {
         parse_mode: 'markdown',
       });
     });
