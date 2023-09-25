@@ -621,14 +621,14 @@ Nomadly Bot`,
       ref,
     };
 
-    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
+    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to <code>${address}</code>Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`;
 
     bot.sendMessage(chatId, text, {
       ...options,
-      parse_mode: 'markdown',
+      parse_mode: 'HTML',
     });
     delete state[chatId]?.action;
 
@@ -804,14 +804,14 @@ Nomadly Bot`,
       ref,
     };
 
-    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to <code>${address}</code>Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`;
 
     bot.sendMessage(chatId, text, {
       ...options,
-      parse_mode: 'markdown',
+      parse_mode: 'HTML',
     });
     delete state[chatId]?.action;
 
