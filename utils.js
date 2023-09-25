@@ -7,8 +7,6 @@ const { checkDomainPriceOnline } = require('./cr-get-domain-price');
 
 const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE;
 
-const DEVELOPER_CHAT_ID = 572979763;
-
 function isValidUrl(url) {
   const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
   return urlRegex.test(url);
@@ -23,7 +21,7 @@ function isNormalUser(chatId) {
 function isDeveloper(chatId) {
   // Implement logic to determine if the user is a developer
   // Return true if the user is a developer, false otherwise
-  return chatId === DEVELOPER_CHAT_ID; // Replace with the actual developer's chat ID
+  return chatId === process.env.TELEGRAM_DEVELOPER_CHAT_ID; // Replace with the actual developer's chat ID
 }
 
 function isAdmin(chatId) {

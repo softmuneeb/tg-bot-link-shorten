@@ -606,28 +606,32 @@ Nomadly Bot`,
       return;
     }
 
+    const ref = nanoid();
     const { address, qrCode } = await getCryptoDepositAddress(
       priceCrypto,
       ticker,
       chatId,
       SELF_URL,
-      '/crypto-payment-for-domain',
+      `/crypto-payment-for-domain?a=b&ref=${ref}`,
     );
 
     chatIdOfPayment[address] = chatId;
     state[chatId].cryptoPaymentSession = {
       priceCrypto,
       ticker,
+      ref,
     };
-    bot.sendMessage(
-      chatId,
-      `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+
+    const caption = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
 
 Best regards,
-Nomadly Bot`,
-      { ...options, parse_mode: 'markdown' },
-    );
-    bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'));
+Nomadly Bot`;
+
+    bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'), {
+      caption,
+      ...options,
+      parse_mode: 'markdown',
+    });
     delete state[chatId]?.action;
   }
   //
@@ -776,30 +780,31 @@ Nomadly Bot`,
       return;
     }
 
+    const ref = nanoid();
     const { address, qrCode } = await getCryptoDepositAddress(
       priceCrypto,
       ticker,
       chatId,
       SELF_URL,
-      '/crypto-payment-for-subscription',
+      `/crypto-payment-for-subscription?a=b&ref=${ref}`,
     );
 
     chatIdOfPayment[address] = chatId;
     state[chatId].cryptoPaymentSession = {
+      ref,
       priceCrypto,
       ticker,
     };
-    bot.sendMessage(
-      chatId,
-      `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+    const caption = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
 
 Best regards,
-Nomadly Bot`,
-      { ...options, parse_mode: 'markdown' },
-    );
-    bot
-      .sendPhoto(chatId, Buffer.from(qrCode, 'base64'))
-      .catch(e => console.log(e));
+Nomadly Bot`;
+
+    bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'), {
+      caption,
+      ...options,
+      parse_mode: 'markdown',
+    });
     delete state[chatId]?.action;
   }
   //
@@ -962,7 +967,6 @@ async function backupTheData() {
 
   const backupJSON = JSON.stringify(backupData, null, 2);
   fs.writeFileSync('backup.json', backupJSON, 'utf-8');
-  console.log('Backup created. ', backupJSON);
 }
 
 async function buyDomain(chatId, domain) {
@@ -1083,6 +1087,7 @@ app.get('/crypto-payment-for-subscription', (req, res) => {
   const address_in = urlParams.get('address_in');
   const coin = urlParams.get('coin');
   const price = urlParams.get('price');
+  const refReceived = urlParams.get('ref');
   const value_coin = Number(urlParams.get('value_coin'));
 
   if (!coin || !price || !address_in || !value_coin) {
@@ -1094,9 +1099,10 @@ app.get('/crypto-payment-for-subscription', (req, res) => {
   const chatId = chatIdOfPayment[address_in];
 
   if (state[chatId]?.cryptoPaymentSession) {
-    const { priceCrypto, ticker } = state[chatId].cryptoPaymentSession;
-
-    if (value_coin >= Number(priceCrypto) && coin === ticker) {
+    const { priceCrypto, ticker, ref } = state[chatId].cryptoPaymentSession;
+    const price = Number(priceCrypto) + Number(priceCrypto) * 0.06;
+    console.log({ value_coin, priceCrypto, price });
+    if (value_coin >= price && coin === ticker && ref === refReceived) {
       const plan = state[chatId].chosenPlanForPayment;
       planEndingTime[chatId] = Date.now() + timeOf[plan];
       state[chatId].subscription = plan;
@@ -1127,6 +1133,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   const urlParams = new URLSearchParams(req.originalUrl);
   const coin = urlParams.get('coin');
   const address_in = urlParams.get('address_in');
+  const refReceived = urlParams.get('ref');
   const value_coin = Number(urlParams.get('value_coin'));
 
   if (!coin || !address_in || !value_coin) {
@@ -1138,9 +1145,10 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   const chatId = chatIdOfPayment[address_in];
 
   if (state[chatId]?.cryptoPaymentSession) {
-    const { priceCrypto, ticker } = state[chatId].cryptoPaymentSession;
-
-    if (value_coin >= Number(priceCrypto) && coin === ticker) {
+    const { priceCrypto, ticker, ref } = state[chatId].cryptoPaymentSession;
+    const price = Number(priceCrypto) + Number(priceCrypto) * 0.06;
+    console.log({ value_coin, priceCrypto, price });
+    if (value_coin >= price && coin === ticker && ref === refReceived) {
       if (state[chatId]?.chosenDomainForPayment) {
         const domain = state[chatId].chosenDomainForPayment;
         const { error: buyDomainError } = await buyDomain(chatId, domain);
