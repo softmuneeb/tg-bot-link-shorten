@@ -14,7 +14,6 @@ const convertUSDToCrypto = async (value, coin) => {
 // convertUSDToCrypto('10', 'btc').then(console.log);
 
 const getCryptoDepositAddress = async (
-  priceCrypto,
   ticker,
   webhookParams,
   backendServer,
@@ -34,12 +33,10 @@ const getCryptoDepositAddress = async (
   );
 
   const address = await bb.getAddress();
-  const qrCode = await bb.getQrcode(priceCrypto);
 
-  // const data = await bb.checkLogs();
-  return { address, qrCode: qrCode?.qr_code };
+  return { address, bb};
 };
 
-// getCryptoDepositAddress('0.55', 'polygon_matic',  '6687923716', 'https://softgreen.com', "/crypto" ).then(a=> console.log(JSON.stringify(a)))
+// getCryptoDepositAddress('polygon_matic',  '6687923716', 'https://softgreen.com', "/crypto" ).then(a=> console.log(JSON.stringify(a)))
 
 module.exports = { getCryptoDepositAddress, convertUSDToCrypto };

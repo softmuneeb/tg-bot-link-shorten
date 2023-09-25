@@ -607,8 +607,7 @@ Nomadly Bot`,
     }
 
     const ref = nanoid();
-    const { address, qrCode } = await getCryptoDepositAddress(
-      priceCrypto,
+    const { address, bb } = await getCryptoDepositAddress(
       ticker,
       chatId,
       SELF_URL,
@@ -622,17 +621,27 @@ Nomadly Bot`,
       ref,
     };
 
-    const caption = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`;
 
-    bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'), {
-      caption,
+    bot.sendMessage(chatId, text, {
       ...options,
       parse_mode: 'markdown',
     });
     delete state[chatId]?.action;
+
+    // send QR Code Image
+    const qrCode = await bb.getQrcode(priceCrypto);
+    const buffer = Buffer.from(qrCode?.qr_code, 'base64');
+    fs.writeFileSync('image.png', buffer);
+    bot
+      .sendPhoto(chatId, 'image.png', {
+        caption: 'Here is your QR code!',
+      })
+      .then(() => fs.unlinkSync('image.png'))
+      .catch(console.error);
   }
   //
   else if (message === '📋 Subscribe to plans') {
@@ -781,8 +790,7 @@ Nomadly Bot`,
     }
 
     const ref = nanoid();
-    const { address, qrCode } = await getCryptoDepositAddress(
-      priceCrypto,
+    const { address, bb } = await getCryptoDepositAddress(
       ticker,
       chatId,
       SELF_URL,
@@ -791,21 +799,32 @@ Nomadly Bot`,
 
     chatIdOfPayment[address] = chatId;
     state[chatId].cryptoPaymentSession = {
-      ref,
       priceCrypto,
       ticker,
+      ref,
     };
-    const caption = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+
+    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`;
 
-    bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'), {
-      caption,
+    bot.sendMessage(chatId, text, {
       ...options,
       parse_mode: 'markdown',
     });
     delete state[chatId]?.action;
+
+    // send QR Code Image
+    const qrCode = await bb.getQrcode(priceCrypto);
+    const buffer = Buffer.from(qrCode?.qr_code, 'base64');
+    fs.writeFileSync('image.png', buffer);
+    bot
+      .sendPhoto(chatId, 'image.png', {
+        caption: 'Here is your QR code!',
+      })
+      .then(() => fs.unlinkSync('image.png'))
+      .catch(console.error);
   }
   //
   else if (message === '🔍 View my subscribed plan') {
