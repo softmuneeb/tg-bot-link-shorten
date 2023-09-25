@@ -14,6 +14,8 @@ const saveServerInDomain = async (domainName, server) => {
       websiteName: domainName,
     };
     const response = await axios.get(url, { params });
+    console.log('1 - ' + response?.data?.responseMsg?.statusCode);
+    console.log('1 - ' + response?.data?.responseData?.statusCode);
     if (response?.status === 200) {
       websiteId = response?.data?.responseData?.websiteId;
     } else {
@@ -43,7 +45,8 @@ const saveServerInDomain = async (domainName, server) => {
       websiteName: domainName,
     };
     const response = await axios.get(url, { params });
-
+    console.log('2 - ' + response?.data?.responseMsg?.statusCode);
+    console.log('2 - ' + response?.data?.responseData?.statusCode);
     if (response?.status === 200) {
       dnsZoneId = response?.data?.responseData?.dnszoneId;
     } else {
@@ -85,6 +88,6 @@ const saveServerInDomain = async (domainName, server) => {
   }
 };
 
-// saveServerInDomain('cakesandbakes.sbs', 'server.sbs').then(console.log);
+// saveServerInDomain('cakes-and-bakes.sbs', 'server.sbs').then(console.log);
 
 module.exports = { saveServerInDomain };

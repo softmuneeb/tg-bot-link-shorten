@@ -10,16 +10,6 @@ const timeOf = {
   Monthly: 30 * 86400 * 1000,
 };
 
-const instructionsOfDomainPayment = {
-  Crypto: `Deposit crypto at this address 0x12340*******8312 and you will receive a payment confirmation here.`,
-  'Bank or Card': `Deposit USD at this bank account and you will receive a payment confirmation here.
-accountNumber: 794****519,
-accountName: FIN-Bl****LTD,
-bankName: wema,
-bankCode: 035,
-reference: 54e3*****4d9`,
-};
-
 const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
 const paymentOptions = ['Crypto', 'Bank or Card'];
 const chooseSubscription = {
@@ -57,7 +47,7 @@ const options = {
   reply_markup: {
     keyboard: [
       ['🔗 Shorten a URL'],
-      ['🔍 View my shortened links'],
+      ['🔍 View URL analytics'],
       ['🌐 Buy a domain name'],
       ['👀 View my domains'],
       ['📋 Subscribe to plans'],
@@ -73,7 +63,6 @@ module.exports = {
   subscriptionOptions,
   priceOf,
   paymentOptions,
-  instructionsOfDomainPayment,
   adminOptions,
   devOptions,
   options,

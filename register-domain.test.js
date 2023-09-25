@@ -14,11 +14,13 @@ const buyDomainOnline = async domain => {
       Id: 150106, // Replace with the actual customer ID
       ns1: '8307.dns1.managedns.org',
       ns2: '8307.dns2.managedns.org',
-      // couponCode: 'couponcode',
     };
 
     const response = await axios.get(apiUrl, { params: requestData });
     console.log('Response:', JSON.stringify(response.data, null, 2));
+    console.log('4 - ' + response?.data?.responseMsg?.statusCode);
+    console.log('4 - ' + response?.data?.responseData?.statusCode);
+
     if (response?.status === 200) {
       return { success: true };
     } else {
@@ -35,6 +37,6 @@ const buyDomainOnline = async domain => {
   }
 };
 
-// buyDomainOnline("cakesandbakes.sbs");
+// buyDomainOnline("cakes-and-bakes.sbs");
 
 module.exports = { buyDomainOnline };

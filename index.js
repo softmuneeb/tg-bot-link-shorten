@@ -44,6 +44,7 @@ const nanoid = customAlphabet(
   'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
   5,
 );
+process.env['NTBA_FIX_350'] = 1;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const SELF_URL = process.env.SELF_URL;
 
@@ -84,7 +85,7 @@ bot.on('message', async msg => {
     } catch (error) {
       const ip = await axios.get('https://api.ipify.org/');
       bot.sendMessage(
-        process.env.TELEGRAM_ADMIN_CHAT_ID,
+        process.env.TELEGRAM_DEV_CHAT_ID, // when all okay project okay then put admin other wise admin may irritate of many messages
         `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`,
         { parse_mode: 'markdown' },
       );
@@ -269,11 +270,15 @@ bot.on('message', async msg => {
       return;
     }
     if (!isValidUrl(message)) {
-      bot.sendMessage(chatId, 'Please provide a valid URL', {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
+      bot.sendMessage(
+        chatId,
+        'Please provide a valid URL. e.g https://google.com',
+        {
+          reply_markup: {
+            keyboard: [['Back', 'Cancel']],
+          },
         },
-      });
+      );
       return;
     }
 
@@ -370,11 +375,15 @@ bot.on('message', async msg => {
       delete state[chatId]?.selectedDomain;
     } else if (message === 'Custom Link') {
       state[chatId].action = 'shorten-custom';
-      bot.sendMessage(chatId, `Please provide your custom link.`, {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
+      bot.sendMessage(
+        chatId,
+        `Please tell your us preferred short link extension: e.g payer`,
+        {
+          reply_markup: {
+            keyboard: [['Back', 'Cancel']],
+          },
         },
-      });
+      );
       return;
     } else {
       bot.sendMessage(chatId, `?`);
@@ -403,7 +412,10 @@ bot.on('message', async msg => {
     const shortenedURL = domain + '/' + message;
 
     if (!isValidUrl('https://' + shortenedURL)) {
-      bot.sendMessage(chatId, 'Please provide a valid URL');
+      bot.sendMessage(
+        chatId,
+        'Please provide a valid URL. e.g https://google.com',
+      );
       return;
     }
 
@@ -557,10 +569,13 @@ bot.on('message', async msg => {
 
       bot.sendMessage(
         chatId,
-        `Pay ${priceNGN} NGN for ${domain} and you will receive a payment confirmation here.`,
+        `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
+
+Best regards,
+Nomadly Bot`,
         inline_keyboard,
       );
-      bot.sendMessage(chatId, `Main Menu`, options);
+      bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, options);
       delete state[chatId]?.action;
     }
   } else if (action === 'crypto-transfer-payment-domain') {
@@ -606,7 +621,10 @@ bot.on('message', async msg => {
     };
     bot.sendMessage(
       chatId,
-      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address \`\`\`${address}\`\`\` to buy ${domain} and you will receive a payment confirmation here.`,
+      `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+
+Best regards,
+Nomadly Bot`,
       { ...options, parse_mode: 'markdown' },
     );
     bot.sendPhoto(chatId, Buffer.from(qrCode, 'base64'));
@@ -720,7 +738,10 @@ bot.on('message', async msg => {
 
       bot.sendMessage(
         chatId,
-        `Pay ${priceNGN} NGN and you will receive a payment confirmation here.`,
+        `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+
+Best regards,
+Nomadly Bot`,
         inline_keyboard,
       );
       bot.sendMessage(chatId, `Main Menu`, options);
@@ -770,7 +791,10 @@ bot.on('message', async msg => {
     };
     bot.sendMessage(
       chatId,
-      `Deposit ${priceCrypto} ${ticker.toUpperCase()} at this address \`\`\`${address}\`\`\` to subscribe to ${plan} plan and you will receive a payment confirmation here.`,
+      `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \`\`\`${address}\`\`\`. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+
+Best regards,
+Nomadly Bot`,
       { ...options, parse_mode: 'markdown' },
     );
     bot
@@ -803,7 +827,7 @@ bot.on('message', async msg => {
     }
 
     bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
-  } else if (message === '🔍 View my shortened links') {
+  } else if (message === '🔍 View URL analytics') {
     const shortenedLinks = getShortenedLinks(chatId, linksOf, clicksOn);
     if (shortenedLinks.length > 0) {
       const linksText = shortenedLinks.join('\n');
@@ -974,7 +998,10 @@ app.get('/bank-payment-for-subscription', (req, res) => {
 
     bot.sendMessage(
       chatId,
-      `Payment received successfully! You are now subscribed to the ${plan} plan. Experience the joy of URL shortening using your own purchased domain names.`,
+      `Your payment was successful, and you're now subscribed to our ${plan} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
+
+Best,
+Nomadly Bot`,
       options,
     );
     res.send('Payment processed successfully');
@@ -999,7 +1026,10 @@ app.get('/bank-payment-for-domain', async (req, res) => {
     }
     bot.sendMessage(
       chatId,
-      `Payment successful! You have bought ${domain} Experience the joy of URL shortening using your own purchased domain names.`,
+      `Your payment is processed and domain ${domain} is now yours. Enjoy URL shortening with your new domain. Thanks for choosing us.
+
+Best,
+Nomadly Bot`,
       options,
     );
 
@@ -1013,7 +1043,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
       return;
     }
 
-    bot.sendMessage(chatId, `Successfully saved domain in server`); // save railway in domain
+    bot.sendMessage(chatId, `Linking domain with your account...`); // save railway in domain
     const { error: saveServerInDomainError } = await saveServerInDomain(
       domain,
       server,
@@ -1034,7 +1064,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
 
     bot.sendMessage(
       chatId,
-      `Successfully saved server in domain. You can now enjoy URL shortening with ${domain}`,
+      `Your domain ${domain} is now linked to your account. Please note that DNS update might take up to 1hr. Enjoy URL shortening. 😇`,
     );
 
     delete chatIdOfPayment[reference]; // Save Tx
@@ -1072,7 +1102,10 @@ app.get('/crypto-payment-for-subscription', (req, res) => {
       state[chatId].subscription = plan;
       bot.sendMessage(
         chatId,
-        `${value_coin.toUpperCase()} ${coin} received successfully! You are now subscribed to the ${plan} plan. Experience the joy of URL shortening using your own purchased domain names.`,
+        `Your payment was successful, and you're now subscribed to our ${plan} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
+
+Best,
+Nomadly Bot`,
         options,
       );
 
@@ -1121,7 +1154,10 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
         }
         bot.sendMessage(
           chatId,
-          `Payment successful! You have bought ${domain} Experience the joy of URL shortening using your own purchased domain names.`,
+          `Your payment is processed and domain ${domain} is now yours. Enjoy URL shortening with your new domain. Thanks for choosing us.
+
+Best,
+Nomadly Bot`,
           options,
         );
 
@@ -1135,7 +1171,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
           return;
         }
 
-        bot.sendMessage(chatId, `Successfully saved domain in server`); // save railway in domain
+        bot.sendMessage(chatId, `Linking domain with your account...`); // save railway in domain
         const { error: saveServerInDomainError } = await saveServerInDomain(
           domain,
           server,
@@ -1156,7 +1192,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
 
         bot.sendMessage(
           chatId,
-          `Successfully saved server in domain. You can now enjoy URL shortening with ${domain}`,
+          `Your domain ${domain} is now linked to your account. Please note that DNS update might take up to 1hr. Enjoy URL shortening. 😇`,
         );
 
         delete state[chatId]?.chosenDomainPrice; // Save Tx

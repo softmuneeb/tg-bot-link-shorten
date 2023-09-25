@@ -11,6 +11,8 @@ async function checkDomainPriceOnline(domainName) {
   try {
     response = await axios.get(apiUrl);
     const { statusCode } = response.data.responseMsg;
+    console.log('3 - ' + response?.data?.responseMsg?.statusCode);
+    console.log('3 - ' + response?.data?.responseData?.statusCode);
 
     if (statusCode === 200) {
       const [domainId] = Object.keys(response.data.responseData);
