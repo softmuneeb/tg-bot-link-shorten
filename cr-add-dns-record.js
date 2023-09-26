@@ -61,8 +61,7 @@ const saveServerInDomain = async (domainName, server) => {
   const RECORD_TTL = 30;
 
   try {
-    const url =
-      'https://api.connectreseller.com/ConnectReseller/ESHOP/AddDNSRecord';
+    const url = 'https://api.connectreseller.com/ConnectReseller/ESHOP/AddDNSRecord';
     const params = {
       APIKey: API_KEY,
       DNSZoneID: dnsZoneId,
@@ -75,11 +74,7 @@ const saveServerInDomain = async (domainName, server) => {
     const success = 200 === response?.data?.responseData?.statusCode;
     return { success };
   } catch (error) {
-    console.error(
-      'Error saveServerInDomain 3',
-      error?.message,
-      error?.response?.data,
-    );
+    console.error('Error saveServerInDomain 3', error?.message, error?.response?.data);
     return { error: `${error?.message} ${error?.response?.data}` };
   }
 };

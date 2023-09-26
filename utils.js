@@ -109,9 +109,9 @@ function getShortenedLinks(chatId, linksOf, clicksOn) {
     ? []
     : linksOf[chatId].map(
         d =>
-          `${clicksOn[d.shortenedURL] || 0} ${
-            clicksOn[d.shortenedURL] === 1 ? 'click' : 'clicks'
-          } → ${d.shortenedURL} → ${d.url}\n`,
+          `${clicksOn[d.shortenedURL] || 0} ${clicksOn[d.shortenedURL] === 1 ? 'click' : 'clicks'} → ${
+            d.shortenedURL
+          } → ${d.url}\n`,
       );
 }
 

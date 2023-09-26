@@ -16,9 +16,7 @@ async function checkDomainPriceOnline(domainName) {
       const [domainId] = Object.keys(response.data.responseData);
       const price1Year = Number(
         response?.data?.responseData[domainId]
-          ?.find(entry =>
-            entry.description.includes('Registration Price for 1 Year'),
-          )
+          ?.find(entry => entry.description.includes('Registration Price for 1 Year'))
           .description.split('is ')[1],
       );
 
@@ -34,11 +32,7 @@ async function checkDomainPriceOnline(domainName) {
     }
   } catch (error) {
     const message = `An error occurred while checking domain availability. Maybe IP Not Whitelisted. ${error.message}`;
-    console.error(
-      'checkDomainPriceOnline',
-      JSON.stringify(response?.data, null, 2),
-      message,
-    );
+    console.error('checkDomainPriceOnline', JSON.stringify(response?.data, null, 2), message);
     return {
       available: false,
       message,

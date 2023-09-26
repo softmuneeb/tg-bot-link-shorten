@@ -34,9 +34,7 @@ async function saveDomainInServer(domain) {
     return { error };
   }
 
-  const server =
-    response?.data?.data?.customDomainCreate?.status?.dnsRecords[0]
-      ?.requiredValue;
+  const server = response?.data?.data?.customDomainCreate?.status?.dnsRecords[0]?.requiredValue;
 
   return { server };
 }

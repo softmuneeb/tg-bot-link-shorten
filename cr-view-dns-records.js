@@ -2,8 +2,7 @@ require('dotenv').config();
 const axios = require('axios');
 
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
-const URL =
-  'https://api.connectreseller.com/ConnectReseller/ESHOP/ViewDNSRecord';
+const URL = 'https://api.connectreseller.com/ConnectReseller/ESHOP/ViewDNSRecord';
 
 async function viewDNSRecord(websiteId) {
   try {
@@ -17,9 +16,7 @@ async function viewDNSRecord(websiteId) {
     if (response.status === 200) {
       return response.data;
     } else {
-      throw new Error(
-        `Error fetching DNS records. Status Code: ${response.status}`,
-      );
+      throw new Error(`Error fetching DNS records. Status Code: ${response.status}`);
     }
   } catch (error) {
     throw new Error(`Error: ${error.message}`);

@@ -3,8 +3,7 @@ require('dotenv').config();
 
 const buyDomainOnline = async domain => {
   try {
-    const apiUrl =
-      'https://api.connectreseller.com/ConnectReseller/ESHOP/Order';
+    const apiUrl = 'https://api.connectreseller.com/ConnectReseller/ESHOP/Order';
     const requestData = {
       APIKey: process.env.API_KEY_CONNECT_RESELLER,
       ProductType: 1,
@@ -27,9 +26,7 @@ const buyDomainOnline = async domain => {
       return { error: errorMessage };
     }
   } catch (error) {
-    const errorMessage = `Error buying domain ${error.message} ${JSON.stringify(
-      error?.response?.data,
-    )}`;
+    const errorMessage = `Error buying domain ${error.message} ${JSON.stringify(error?.response?.data)}`;
     console.error(errorMessage);
     return { error: errorMessage };
   }
