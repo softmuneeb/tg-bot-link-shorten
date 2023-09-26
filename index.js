@@ -9,14 +9,18 @@ require('dotenv').config();
 const fs = require('fs');
 const {
   priceOf,
-  adminOptions,
-  devOptions,
-  options,
+  aO,
+  dO,
+  o,
   paymentOptions,
   subscriptionOptions,
   cryptoTransferOptions,
   timeOf,
   chooseSubscription,
+  rem,
+  pay,
+  bc,
+  linkType,
 } = require('./config.js');
 const {
   isValidUrl,
@@ -96,12 +100,8 @@ bot.on('message', async msg => {
   if (chatIdBlocked[chatId]) {
     bot.sendMessage(
       chatId,
-      'You are currently blocked from using the bot. Please contact @sport_chocolate',
-      {
-        reply_markup: {
-          remove_keyboard: true,
-        },
-      },
+      'You are currently blocked from using the bot. Please contact @Nomadly_support',
+      rem,
     );
     return;
   }
@@ -119,22 +119,14 @@ bot.on('message', async msg => {
 
   if (message === '/start') {
     if (isAdmin(chatId)) {
-      bot.sendMessage(
-        chatId,
-        'Hello, Admin! Please select an option:',
-        adminOptions,
-      );
+      bot.sendMessage(chatId, 'Hello, Admin! Please select an option:', aO);
     } else if (isDeveloper(chatId)) {
-      bot.sendMessage(
-        chatId,
-        'Welcome, Developer! Choose an option:',
-        devOptions,
-      );
+      bot.sendMessage(chatId, 'Welcome, Developer! Choose an option:', dO);
     } else {
       bot.sendMessage(
         chatId,
         'Thank you for choosing the URL Shortener Bot! Please choose an option:',
-        options,
+        o,
       );
     }
   }
@@ -151,21 +143,18 @@ bot.on('message', async msg => {
     bot.sendMessage(
       chatId,
       'Please share the username of the user that needs to be blocked.',
-      {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
-        },
-      },
+      bc,
     );
+
     state[chatId].action = 'block-user';
   } else if (action === 'block-user') {
     if (message === 'Back') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Back Button.`, adminOptions);
+      bot.sendMessage(chatId, `User has Pressed Back Button.`, aO);
       return;
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, adminOptions);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, aO);
       return;
     }
     const userToBlock = message;
@@ -173,20 +162,12 @@ bot.on('message', async msg => {
     const chatIdToBlock = chatIdOfName[userToBlock];
 
     if (!chatIdToBlock) {
-      bot.sendMessage(chatId, `User ${userToBlock} not found`, {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
-        },
-      });
+      bot.sendMessage(chatId, `User ${userToBlock} not found`, bc);
       return;
     }
 
     chatIdBlocked[chatIdToBlock] = true;
-    bot.sendMessage(
-      chatId,
-      `User ${userToBlock} has been blocked.`,
-      adminOptions,
-    );
+    bot.sendMessage(chatId, `User ${userToBlock} has been blocked.`, aO);
     delete state[chatId]?.action;
   }
   //
@@ -202,40 +183,28 @@ bot.on('message', async msg => {
     bot.sendMessage(
       chatId,
       'Please share the username of the user that needs to be unblocked.',
-      {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
-        },
-      },
+      bc,
     );
     state[chatId].action = 'unblock-user';
   } else if (action === 'unblock-user') {
     if (message === 'Back') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Back Button.`, adminOptions);
+      bot.sendMessage(chatId, `User has Pressed Back Button.`, aO);
       return;
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, adminOptions);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, aO);
       return;
     }
     const userToUnblock = message;
     const chatIdToUnblock = chatIdOfName[userToUnblock];
 
     if (!chatIdToUnblock) {
-      bot.sendMessage(chatId, `User ${userToUnblock} not found`, {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
-        },
-      });
+      bot.sendMessage(chatId, `User ${userToUnblock} not found`, bc);
       return;
     }
     chatIdBlocked[chatIdToUnblock] = false;
-    bot.sendMessage(
-      chatId,
-      `User ${userToUnblock} has been unblocked.`,
-      adminOptions,
-    );
+    bot.sendMessage(chatId, `User ${userToUnblock} has been unblocked.`, aO);
     delete state[chatId]?.action;
   }
   //
@@ -252,32 +221,24 @@ bot.on('message', async msg => {
     bot.sendMessage(
       chatId,
       'Kindly share the URL that you would like to have shortened.',
-      {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
-        },
-      },
+      bc,
     );
   } else if (action === 'choose-domain') {
     if (message === 'Back') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Back Button.`, options);
+      bot.sendMessage(chatId, `User has Pressed Back Button.`, o);
       return;
     }
     if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
     if (!isValidUrl(message)) {
       bot.sendMessage(
         chatId,
         'Please provide a valid URL. e.g https://google.com',
-        {
-          reply_markup: {
-            keyboard: [['Back', 'Cancel']],
-          },
-        },
+        bc,
       );
       return;
     }
@@ -298,36 +259,21 @@ bot.on('message', async msg => {
   } else if (action === 'shorten') {
     if (message === 'Back') {
       state[chatId].action = 'choose-domain';
-      bot.sendMessage(chatId, `Please choose the URL to shorten.`, {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
-        },
-      });
+      bot.sendMessage(chatId, `Please choose the URL to shorten.`, bc);
       return;
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
     const domains = getPurchasedDomains(chatId);
     if (!domains.includes(message)) {
-      bot.sendMessage(chatId, 'Please choose a valid domain', {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
-        },
-      });
+      bot.sendMessage(chatId, 'Please choose a valid domain', bc);
       return;
     }
     state[chatId].selectedDomain = message;
 
-    bot.sendMessage(chatId, `Choose link type:`, {
-      reply_markup: {
-        keyboard: [
-          ['Random Link', 'Custom Link'],
-          ['Back', 'Cancel'],
-        ],
-      },
-    });
+    bot.sendMessage(chatId, `Choose link type:`, linkType);
     state[chatId].action = 'choose-link-type';
   } else if (action === 'choose-link-type') {
     if (message === 'Back') {
@@ -345,7 +291,7 @@ bot.on('message', async msg => {
       state[chatId].action = 'shorten';
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
     } else if (message === 'Random Link') {
       const url = state[chatId].url;
       const domain = state[chatId].selectedDomain;
@@ -362,11 +308,7 @@ bot.on('message', async msg => {
       linksOf[chatId] = (linksOf[chatId] || []).concat({ url, shortenedURL });
 
       totalShortLinks++;
-      bot.sendMessage(
-        chatId,
-        `Your shortened URL is: ${shortenedURL}`,
-        options,
-      );
+      bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
       delete state[chatId]?.url;
       delete state[chatId]?.action;
       delete state[chatId]?.selectedDomain;
@@ -375,11 +317,7 @@ bot.on('message', async msg => {
       bot.sendMessage(
         chatId,
         `Please tell your us preferred short link extension: e.g payer`,
-        {
-          reply_markup: {
-            keyboard: [['Back', 'Cancel']],
-          },
-        },
+        bc,
       );
       return;
     } else {
@@ -387,18 +325,11 @@ bot.on('message', async msg => {
     }
   } else if (action === 'shorten-custom') {
     if (message === 'Back') {
-      bot.sendMessage(chatId, `Choose link type:`, {
-        reply_markup: {
-          keyboard: [
-            ['Random Link', 'Custom Link'],
-            ['Back', 'Cancel'],
-          ],
-        },
-      });
+      bot.sendMessage(chatId, `Choose link type:`, linkType);
       state[chatId].action = 'choose-link-type';
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
 
@@ -424,7 +355,7 @@ bot.on('message', async msg => {
     linksOf[chatId] = (linksOf[chatId] || []).concat({ url, shortenedURL });
 
     totalShortLinks++;
-    bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, options);
+    bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
     delete state[chatId]?.url;
     delete state[chatId]?.action;
     delete state[chatId]?.selectedDomain;
@@ -439,16 +370,12 @@ bot.on('message', async msg => {
     bot.sendMessage(
       chatId,
       'Please provide the domain name you would like to purchase.',
-      {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
-        },
-      },
+      bc,
     );
   } else if (action === 'choose-domain-to-buy') {
     if (message === 'Back' || message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has pressed ${message} Button.`, options);
+      bot.sendMessage(chatId, `User has pressed ${message} Button.`, o);
       return;
     }
     const domain = message.toLowerCase();
@@ -471,11 +398,7 @@ bot.on('message', async msg => {
       bot.sendMessage(
         chatId,
         'Domain is not available. Please try another domain name.',
-        {
-          reply_markup: {
-            remove_keyboard: true,
-          },
-        },
+        rem,
       );
       return;
     }
@@ -483,11 +406,7 @@ bot.on('message', async msg => {
     bot.sendMessage(
       chatId,
       `Price of ${domain} is ${price} USD. Choose payment method.`,
-      {
-        reply_markup: {
-          keyboard: [paymentOptions, ['Back', 'Cancel']],
-        },
-      },
+      pay,
     );
 
     state[chatId].chosenDomainForPayment = domain;
@@ -499,23 +418,19 @@ bot.on('message', async msg => {
       bot.sendMessage(
         chatId,
         'Please provide the domain name you would like to purchase.',
-        {
-          reply_markup: {
-            keyboard: [['Back', 'Cancel']],
-          },
-        },
+        bc,
       );
       return;
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
 
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
-      bot.sendMessage(chatId, 'Please choose a valid payment option', options);
+      bot.sendMessage(chatId, 'Please choose a valid payment option', o);
       return;
     }
 
@@ -535,11 +450,7 @@ bot.on('message', async msg => {
     bot.sendMessage(
       chatId,
       `Please provide your email for bank payment reference:`,
-      {
-        reply_markup: {
-          keyboard: [['Back', 'Cancel']],
-        },
-      },
+      bc,
     );
     state[chatId].action = 'bank-transfer-payment-domain';
   } else if (action === 'bank-transfer-payment-domain') {
@@ -549,18 +460,14 @@ bot.on('message', async msg => {
       bot.sendMessage(
         chatId,
         `Price of ${domain} is ${price} USD. Choose payment method.`,
-        {
-          reply_markup: {
-            keyboard: [paymentOptions, ['Back', 'Cancel']],
-          },
-        },
+        pay,
       );
 
       state[chatId].action = 'domain-name-payment';
       return;
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
     const email = message;
@@ -582,7 +489,7 @@ bot.on('message', async msg => {
     );
 
     if (error) {
-      bot.sendMessage(chatId, error, options);
+      bot.sendMessage(chatId, error, o);
       delete state[chatId]?.action;
       return;
     }
@@ -610,7 +517,7 @@ Best regards,
 Nomadly Bot`,
       inline_keyboard,
     );
-    bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, options);
+    bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, o);
     delete state[chatId]?.action;
   } else if (action === 'crypto-transfer-payment-domain') {
     const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
@@ -621,22 +528,18 @@ Nomadly Bot`,
       bot.sendMessage(
         chatId,
         `Price of ${domain} subscription is ${priceOf[domain]} USD. Choose payment method.`,
-        {
-          reply_markup: {
-            keyboard: [paymentOptions, ['Back', 'Cancel']],
-          },
-        },
+        pay,
       );
 
       state[chatId].action = 'domain-name-payment';
       return;
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
     if (!cryptoTransferOptions.includes(ticker)) {
-      bot.sendMessage(chatId, 'Please choose a valid crypto currency', options);
+      bot.sendMessage(chatId, 'Please choose a valid crypto currency', o);
       return;
     }
 
@@ -661,13 +564,13 @@ Best regards,
 Nomadly Bot`;
 
     bot.sendMessage(chatId, text, {
-      ...options,
+      ...o,
       parse_mode: 'HTML',
     });
     delete state[chatId]?.action;
 
     // send QR Code Image
-    const qrCode = await bb.getQrcode(priceCrypto);
+    const qrCode = await bb.getQrcode(null, 256);
     const buffer = Buffer.from(qrCode?.qr_code, 'base64');
     fs.writeFileSync('image.png', buffer);
     bot
@@ -683,7 +586,7 @@ Nomadly Bot`;
       bot.sendMessage(
         chatId,
         'You are currently enrolled in a subscription plan.',
-        options,
+        o,
       );
       return;
     }
@@ -697,7 +600,7 @@ Nomadly Bot`;
   } else if (action === 'choose-subscription') {
     if (message === 'Back' || message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has pressed ${message} Button.`, options);
+      bot.sendMessage(chatId, `User has pressed ${message} Button.`, o);
       return;
     }
     const plan = message;
@@ -712,11 +615,7 @@ Nomadly Bot`;
     bot.sendMessage(
       chatId,
       `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
-      {
-        reply_markup: {
-          keyboard: [paymentOptions, ['Back', 'Cancel']],
-        },
-      },
+      pay,
     );
 
     state[chatId].action = 'subscription-payment';
@@ -731,14 +630,14 @@ Nomadly Bot`;
       return;
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
 
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
-      bot.sendMessage(chatId, 'Please choose a valid payment option', options);
+      bot.sendMessage(chatId, 'Please choose a valid payment option', o);
       return;
     }
 
@@ -758,11 +657,7 @@ Nomadly Bot`;
       bot.sendMessage(
         chatId,
         `Please provide your email for bank payment reference:`,
-        {
-          reply_markup: {
-            keyboard: [['Back', 'Cancel']],
-          },
-        },
+        bc,
       );
       state[chatId].action = 'bank-transfer-payment';
     }
@@ -772,18 +667,14 @@ Nomadly Bot`;
       bot.sendMessage(
         chatId,
         `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
-        {
-          reply_markup: {
-            keyboard: [paymentOptions, ['Back', 'Cancel']],
-          },
-        },
+        pay,
       );
 
       state[chatId].action = 'subscription-payment';
       return;
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
     const email = message;
@@ -806,7 +697,7 @@ Nomadly Bot`;
     );
 
     if (error) {
-      bot.sendMessage(chatId, error, options);
+      bot.sendMessage(chatId, error, o);
       delete state[chatId]?.action;
       return;
     }
@@ -834,7 +725,7 @@ Best regards,
 Nomadly Bot`,
       inline_keyboard,
     );
-    bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, options);
+    bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, o);
     delete state[chatId]?.action;
   } else if (action === 'crypto-transfer-payment') {
     if (message === 'Back') {
@@ -842,18 +733,14 @@ Nomadly Bot`,
       bot.sendMessage(
         chatId,
         `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
-        {
-          reply_markup: {
-            keyboard: [paymentOptions, ['Back', 'Cancel']],
-          },
-        },
+        pay,
       );
 
       state[chatId].action = 'subscription-payment';
       return;
     } else if (message === 'Cancel') {
       delete state[chatId]?.action;
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
     const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
@@ -861,7 +748,7 @@ Nomadly Bot`,
     const priceUSD = priceOf[plan];
     const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
     if (!cryptoTransferOptions.includes(ticker)) {
-      bot.sendMessage(chatId, 'Please choose a valid crypto currency', options);
+      bot.sendMessage(chatId, 'Please choose a valid crypto currency', o);
       return;
     }
 
@@ -886,13 +773,13 @@ Best regards,
 Nomadly Bot`;
 
     bot.sendMessage(chatId, text, {
-      ...options,
+      ...o,
       parse_mode: 'HTML',
     });
     delete state[chatId]?.action;
 
     // send QR Code Image
-    const qrCode = await bb.getQrcode(priceCrypto);
+    const qrCode = await bb.getQrcode(null, 256);
     const buffer = Buffer.from(qrCode?.qr_code, 'base64');
     fs.writeFileSync('image.png', buffer);
     bot
@@ -903,7 +790,7 @@ Nomadly Bot`;
       .catch(console.error);
   }
   //
-  else if (message === '🔍 Vew subscription plan') {
+  else if (message === '🔍 View subscription plan') {
     const subscribedPlan = state[chatId]?.subscription;
 
     if (subscribedPlan) {
@@ -988,7 +875,7 @@ Nomadly Bot`;
     const analyticsData = getAnalyticsData();
     bot.sendMessage(chatId, `Analytics Data:\n${analyticsData}`);
   } else if (message === '🛠️ Get support') {
-    bot.sendMessage(chatId, 'Please contact @sport_chocolate');
+    bot.sendMessage(chatId, 'Please contact @Nomadly_support');
   }
   // else {
   //   bot.sendMessage(chatId, "I'm sorry, I didn't understand that command.");
@@ -1101,7 +988,7 @@ app.get('/bank-payment-for-subscription', (req, res) => {
 
 Best,
 Nomadly Bot`,
-      options,
+      o,
     );
     res.send('Payment processed successfully, You can now close this window');
   } else {
@@ -1116,11 +1003,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
     const domain = state[chatId].chosenDomainForPayment;
     const { error: buyDomainError } = await buyDomain(chatId, domain);
     if (buyDomainError) {
-      bot.sendMessage(chatId, 'Domain purchase fails, try another name.', {
-        reply_markup: {
-          remove_keyboard: true,
-        },
-      });
+      bot.sendMessage(chatId, 'Domain purchase fails, try another name.', rem);
       return;
     }
     bot.sendMessage(
@@ -1129,16 +1012,12 @@ app.get('/bank-payment-for-domain', async (req, res) => {
 
 Best,
 Nomadly Bot`,
-      options,
+      o,
     );
 
     const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
     if (error) {
-      bot.sendMessage(chatId, `Error saving domain in server`, {
-        reply_markup: {
-          remove_keyboard: true,
-        },
-      });
+      bot.sendMessage(chatId, `Error saving domain in server`, o);
       return;
     }
 
@@ -1152,11 +1031,7 @@ Nomadly Bot`,
       bot.sendMessage(
         chatId,
         `Error saving server in domain ${saveServerInDomainError}`,
-        {
-          reply_markup: {
-            remove_keyboard: true,
-          },
-        },
+        o,
       );
       return;
     }
@@ -1207,7 +1082,7 @@ app.get('/crypto-payment-for-subscription', (req, res) => {
 
 Best,
 Nomadly Bot`,
-        options,
+        o,
       );
 
       delete state[chatId]?.chosenPlanForPayment; // Save Tx
@@ -1248,11 +1123,11 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
         const domain = state[chatId].chosenDomainForPayment;
         const { error: buyDomainError } = await buyDomain(chatId, domain);
         if (!buyDomainError) {
-          bot.sendMessage(chatId, 'Domain purchase fails, try another name.', {
-            reply_markup: {
-              remove_keyboard: true,
-            },
-          });
+          bot.sendMessage(
+            chatId,
+            'Domain purchase fails, try another name.',
+            rem,
+          );
           return;
         }
         bot.sendMessage(
@@ -1261,16 +1136,16 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
 
 Best,
 Nomadly Bot`,
-          options,
+          o,
         );
 
         const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
         if (error) {
-          bot.sendMessage(chatId, `Error saving domain in server`, {
-            reply_markup: {
-              remove_keyboard: true,
-            },
-          });
+          bot.sendMessage(
+            chatId,
+            `Error saving domain in server, contact support`,
+            o,
+          );
           return;
         }
 
@@ -1284,11 +1159,7 @@ Nomadly Bot`,
           bot.sendMessage(
             chatId,
             `Error saving server in domain ${saveServerInDomainError}`,
-            {
-              reply_markup: {
-                remove_keyboard: true,
-              },
-            },
+            o,
           );
           return;
         }

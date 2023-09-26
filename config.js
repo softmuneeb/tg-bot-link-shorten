@@ -26,7 +26,7 @@ const cryptoTransferOptions = [
   'polygon_matic',
 ];
 
-const adminOptions = {
+const aO = {
   reply_markup: {
     keyboard: [
       ['View Analytics'],
@@ -37,13 +37,13 @@ const adminOptions = {
   },
 };
 
-const devOptions = {
+const dO = {
   reply_markup: {
     keyboard: [['Back', 'Cancel'], ['Backup Data'], ['Restore Data']],
   },
 };
 
-const options = {
+const o = {
   reply_markup: {
     keyboard: [
       ['🔗 URL Shortener'],
@@ -51,20 +51,49 @@ const options = {
       ['🌐 Buy domain names'],
       ['👀 View domain names'],
       ['📋 Subscribe here'],
-      ['🔍 Vew subscription plan'],
+      ['🔍 View subscription plan'],
       ['🛠️ Get support'],
     ],
   },
 };
 
+const rem = {
+  reply_markup: {
+    remove_keyboard: true,
+  },
+};
+
+const bc = {
+  reply_markup: {
+    keyboard: [['Back', 'Cancel']],
+  },
+};
+
+const pay = {
+  reply_markup: {
+    keyboard: [paymentOptions, ['Back', 'Cancel']],
+  },
+};
+const linkType = {
+  reply_markup: {
+    keyboard: [
+      ['Random Link', 'Custom Link'],
+      ['Back', 'Cancel'],
+    ],
+  },
+};
 module.exports = {
+  linkType,
+  pay,
+  bc,
+  rem,
   chooseSubscription,
   cryptoTransferOptions,
   subscriptionOptions,
   priceOf,
   paymentOptions,
-  adminOptions,
-  devOptions,
-  options,
+  aO,
+  dO,
+  o,
   timeOf,
 };
