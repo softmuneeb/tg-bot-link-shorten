@@ -70,7 +70,24 @@ const linkType = {
     ],
   },
 };
+
+const payBank = {
+  reply_markup: {
+    inline_keyboard: [
+      [
+        {
+          text: 'Make Payment',
+          web_app: {
+            url,
+          },
+        },
+      ],
+    ],
+  },
+};
+
 module.exports = {
+  payBank,
   linkType,
   pay,
   bc,

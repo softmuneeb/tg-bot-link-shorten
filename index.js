@@ -21,6 +21,7 @@ const {
   pay,
   bc,
   linkType,
+  payBank,
 } = require('./config.js');
 const {
   isValidUrl,
@@ -401,28 +402,13 @@ bot.on('message', async msg => {
       return;
     }
 
-    const inline_keyboard = {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: 'Make Payment',
-              web_app: {
-                url,
-              },
-            },
-          ],
-        ],
-      },
-    };
-
     bot.sendMessage(
       chatId,
       `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`,
-      inline_keyboard,
+      payBank,
     );
     bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, o);
     delete state[chatId]?.action;
@@ -572,28 +558,13 @@ Nomadly Bot`;
       return;
     }
 
-    const inline_keyboard = {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: 'Make Payment',
-              web_app: {
-                url,
-              },
-            },
-          ],
-        ],
-      },
-    };
-
     bot.sendMessage(
       chatId,
       `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`,
-      inline_keyboard,
+      payBank,
     );
     bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, o);
     delete state[chatId]?.action;
