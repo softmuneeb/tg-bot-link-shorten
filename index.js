@@ -30,7 +30,7 @@ const {
   month,
   year,
   getShortenedLinks,
-  shortenURLAndSave,
+  isValidEmail,
 } = require('./utils.js');
 const {
   getCryptoDepositAddress,
@@ -75,7 +75,7 @@ restoreData();
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
   const message = msg.text;
-  const username = msg.from.username || nanoid();
+  const username = nameOfChatId[chatId] || msg.from.username || nanoid();
   console.log(chatId + '\t' + username + '\t' + message);
 
   if (!connect_reseller_working) {
@@ -329,10 +329,7 @@ bot.on('message', async msg => {
       },
     });
     state[chatId].action = 'choose-link-type';
-  }
-
-  //
-  else if (action === 'choose-link-type') {
+  } else if (action === 'choose-link-type') {
     if (message === 'Back') {
       const domains = getPurchasedDomains(chatId);
       const keyboard = [...domains.map(d => [d]), ['Back', 'Cancel']];
@@ -388,9 +385,7 @@ bot.on('message', async msg => {
     } else {
       bot.sendMessage(chatId, `?`);
     }
-  }
-  //
-  else if (action === 'shorten-custom') {
+  } else if (action === 'shorten-custom') {
     if (message === 'Back') {
       bot.sendMessage(chatId, `Choose link type:`, {
         reply_markup: {
@@ -434,7 +429,6 @@ bot.on('message', async msg => {
     delete state[chatId]?.action;
     delete state[chatId]?.selectedDomain;
   }
-
   //
   else if (message === '🌐 Buy domain names') {
     if (!isSubscribed(chatId)) {
@@ -486,11 +480,9 @@ bot.on('message', async msg => {
       return;
     }
 
-    const sellingPrice = Math.ceil(price + price * 0.11); // 11% profit
-
     bot.sendMessage(
       chatId,
-      `Price of ${domain} is ${sellingPrice} USD. Choose payment method.`,
+      `Price of ${domain} is ${price} USD. Choose payment method.`,
       {
         reply_markup: {
           keyboard: [paymentOptions, ['Back', 'Cancel']],
@@ -499,7 +491,7 @@ bot.on('message', async msg => {
     );
 
     state[chatId].chosenDomainForPayment = domain;
-    state[chatId].chosenDomainPrice = sellingPrice;
+    state[chatId].chosenDomainPrice = price;
     state[chatId].action = 'domain-name-payment';
   } else if (action === 'domain-name-payment') {
     if (message === 'Back') {
@@ -519,8 +511,7 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
       return;
     }
-    const domain = state[chatId].chosenDomainForPayment;
-    const price = state[chatId].chosenDomainPrice;
+
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
@@ -538,46 +529,89 @@ bot.on('message', async msg => {
         },
       });
       state[chatId].action = 'crypto-transfer-payment-domain';
-    } else {
-      const priceNGN = Number(await convertUSDToNaira(price));
-      const reference = nanoid();
-      chatIdOfPayment[reference] = chatId;
-      const { url, error } = await createCheckout(
-        priceNGN,
-        reference,
-        '/bank-payment-for-domain',
-      );
+      return;
+    }
 
-      if (error) {
-        bot.sendMessage(chatId, error, options);
-        delete state[chatId]?.action;
-        return;
-      }
-
-      const inline_keyboard = {
+    bot.sendMessage(
+      chatId,
+      `Please provide your email for bank payment reference:`,
+      {
         reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: 'Make Payment',
-                url,
-              },
-            ],
-          ],
+          keyboard: [['Back', 'Cancel']],
         },
-      };
-
+      },
+    );
+    state[chatId].action = 'bank-transfer-payment-domain';
+  } else if (action === 'bank-transfer-payment-domain') {
+    const domain = state[chatId].chosenDomainForPayment;
+    const price = state[chatId].chosenDomainPrice;
+    if (message === 'Back') {
       bot.sendMessage(
         chatId,
-        `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
+        `Price of ${domain} is ${price} USD. Choose payment method.`,
+        {
+          reply_markup: {
+            keyboard: [paymentOptions, ['Back', 'Cancel']],
+          },
+        },
+      );
+
+      state[chatId].action = 'domain-name-payment';
+      return;
+    } else if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      return;
+    }
+    const email = message;
+
+    if (!isValidEmail(email)) {
+      bot.sendMessage(chatId, 'Please provide a valid email');
+      return;
+    }
+
+    const priceNGN = Number(await convertUSDToNaira(price));
+    const reference = nanoid();
+    chatIdOfPayment[reference] = chatId;
+    const { url, error } = await createCheckout(
+      priceNGN,
+      reference,
+      '/bank-payment-for-domain',
+      email,
+      username,
+    );
+
+    if (error) {
+      bot.sendMessage(chatId, error, options);
+      delete state[chatId]?.action;
+      return;
+    }
+
+    const inline_keyboard = {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: 'Make Payment',
+              web_app: {
+                url,
+              },
+            },
+          ],
+        ],
+      },
+    };
+
+    bot.sendMessage(
+      chatId,
+      `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`,
-        inline_keyboard,
-      );
-      bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, options);
-      delete state[chatId]?.action;
-    }
+      inline_keyboard,
+    );
+    bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, options);
+    delete state[chatId]?.action;
   } else if (action === 'crypto-transfer-payment-domain') {
     const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
     const priceUSD = state[chatId].chosenDomainPrice;
@@ -700,7 +734,7 @@ Nomadly Bot`;
       bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
       return;
     }
-    const plan = state[chatId].chosenPlanForPayment;
+
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
@@ -721,47 +755,87 @@ Nomadly Bot`;
       });
       state[chatId].action = 'crypto-transfer-payment';
     } else {
-      const priceNGN = Number(await convertUSDToNaira(priceOf[plan]));
-      const reference = nanoid();
-      chatIdOfPayment[reference] = chatId;
-      const { url, error } = await createCheckout(
-        priceNGN,
-        reference,
-        '/bank-payment-for-subscription',
-      );
-
-      if (error) {
-        bot.sendMessage(chatId, error, options);
-        delete state[chatId]?.action;
-        return;
-      }
-
-      const inline_keyboard = {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: 'Make Payment',
-                web_app: {
-                  url,
-                },
-              },
-            ],
-          ],
-        },
-      };
-
       bot.sendMessage(
         chatId,
-        `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+        `Please provide your email for bank payment reference:`,
+        {
+          reply_markup: {
+            keyboard: [['Back', 'Cancel']],
+          },
+        },
+      );
+      state[chatId].action = 'bank-transfer-payment';
+    }
+  } else if (action === 'bank-transfer-payment') {
+    if (message === 'Back') {
+      const plan = state[chatId].chosenPlanForPayment;
+      bot.sendMessage(
+        chatId,
+        `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`,
+        {
+          reply_markup: {
+            keyboard: [paymentOptions, ['Back', 'Cancel']],
+          },
+        },
+      );
+
+      state[chatId].action = 'subscription-payment';
+      return;
+    } else if (message === 'Cancel') {
+      delete state[chatId]?.action;
+      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, options);
+      return;
+    }
+    const email = message;
+
+    if (!isValidEmail(email)) {
+      bot.sendMessage(chatId, 'Please provide a valid email');
+      return;
+    }
+
+    const plan = state[chatId].chosenPlanForPayment;
+    const priceNGN = Number(await convertUSDToNaira(priceOf[plan]));
+    const reference = nanoid();
+    chatIdOfPayment[reference] = chatId;
+    const { url, error } = await createCheckout(
+      priceNGN,
+      reference,
+      '/bank-payment-for-subscription',
+      email,
+      username,
+    );
+
+    if (error) {
+      bot.sendMessage(chatId, error, options);
+      delete state[chatId]?.action;
+      return;
+    }
+
+    const inline_keyboard = {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: 'Make Payment',
+              web_app: {
+                url,
+              },
+            },
+          ],
+        ],
+      },
+    };
+
+    bot.sendMessage(
+      chatId,
+      `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`,
-        inline_keyboard,
-      );
-      bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, options);
-      delete state[chatId]?.action;
-    }
+      inline_keyboard,
+    );
+    bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, options);
+    delete state[chatId]?.action;
   } else if (action === 'crypto-transfer-payment') {
     if (message === 'Back') {
       const plan = state[chatId].chosenPlanForPayment;
@@ -1029,7 +1103,7 @@ Best,
 Nomadly Bot`,
       options,
     );
-    res.send('Payment processed successfully');
+    res.send('Payment processed successfully, You can now close this window');
   } else {
     res.send('Payment already processed or not found');
   }
@@ -1096,7 +1170,7 @@ Nomadly Bot`,
     delete state[chatId]?.chosenDomainPrice; // Save Tx
     delete state[chatId]?.chosenDomainForPayment; // Save Tx
 
-    res.send('Payment processed successfully');
+    res.send('Payment processed successfully, You can now close this window');
   } else {
     res.send('Payment already processed or not found');
   }
@@ -1138,7 +1212,7 @@ Nomadly Bot`,
 
       delete state[chatId]?.chosenPlanForPayment; // Save Tx
       delete state[chatId]?.cryptoPaymentSession; // Save Tx
-      res.send('Payment data received and processed successfully');
+      res.send('Payment processed successfully, You can now close this window');
     } else {
       console.log(req.originalUrl);
       res.send('Wrong coin or wrong price');
@@ -1228,7 +1302,9 @@ Nomadly Bot`,
         delete state[chatId]?.cryptoPaymentSession; // Save Tx
         delete state[chatId]?.chosenDomainForPayment; // Save Tx
 
-        res.send('Payment processed successfully');
+        res.send(
+          'Payment processed successfully, You can now close this window',
+        );
       } else {
         res.send('Payment already processed or not found');
       }
@@ -1243,7 +1319,7 @@ Nomadly Bot`,
     res.send('Payment session not found, please try again or contact support');
   }
 });
-app.get('/get-json-data', async (req, res) => {
+app.get('/json', async (req, res) => {
   await backupTheData();
   const fileName = 'backup.json';
   res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);

@@ -18,10 +18,8 @@ const buyDomainOnline = async domain => {
 
     const response = await axios.get(apiUrl, { params: requestData });
     console.log('Response:', JSON.stringify(response.data, null, 2));
-    console.log('4 - ' + response?.data?.responseMsg?.statusCode);
-    console.log('4 - ' + response?.data?.responseData?.statusCode);
 
-    if (response?.status === 200) {
+    if (response?.data?.responseMsg?.statusCode === 200) {
       return { success: true };
     } else {
       let errorMessage = `Issue in buying domain ${response?.data?.responseMsg?.message}`;

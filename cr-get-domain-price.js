@@ -14,7 +14,7 @@ async function checkDomainPriceOnline(domainName) {
 
     if (statusCode === 200) {
       const [domainId] = Object.keys(response.data.responseData);
-      const registrationPrice1Year = Number(
+      const price1Year = Number(
         response?.data?.responseData[domainId]
           ?.find(entry =>
             entry.description.includes('Registration Price for 1 Year'),
@@ -22,7 +22,8 @@ async function checkDomainPriceOnline(domainName) {
           .description.split('is ')[1],
       );
 
-      return { available: true, price: registrationPrice1Year };
+      const price = Math.ceil(price1Year + price1Year * 1.2); //20% profit
+      return { available: true, price };
     } else if (statusCode === 400) {
       return {
         available: false,

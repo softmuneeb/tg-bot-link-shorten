@@ -1,7 +1,7 @@
 const axios = require('axios');
 require('dotenv').config();
 
-const createCheckout = async (amount, reference, redirectPath) => {
+const createCheckout = async (amount, reference, redirectPath, email, name) => {
   const options = {
     method: 'POST',
     url: `https://${process.env.FINCRA_ENDPOINT}/checkout/payments`,
@@ -14,7 +14,7 @@ const createCheckout = async (amount, reference, redirectPath) => {
     },
     data: {
       currency: 'NGN',
-      customer: { name: 'NGN NGN', email: 'NGN@fincra.com' },
+      customer: { name: name + ' test name', email },
       paymentMethods: ['bank_transfer', 'card'],
       amount,
       redirectUrl: `${process.env.SELF_URL}${redirectPath}`,

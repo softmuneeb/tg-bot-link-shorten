@@ -14,9 +14,7 @@ const saveServerInDomain = async (domainName, server) => {
       websiteName: domainName,
     };
     const response = await axios.get(url, { params });
-    console.log('1 - ' + response?.data?.responseMsg?.statusCode);
-    console.log('1 - ' + response?.data?.responseData?.statusCode);
-    if (response?.status === 200) {
+    if (response?.data?.responseMsg?.statusCode === 200) {
       websiteId = response?.data?.responseData?.websiteId;
     } else {
       let e = response?.data?.responseMsg?.message;
@@ -45,9 +43,7 @@ const saveServerInDomain = async (domainName, server) => {
       websiteName: domainName,
     };
     const response = await axios.get(url, { params });
-    console.log('2 - ' + response?.data?.responseMsg?.statusCode);
-    console.log('2 - ' + response?.data?.responseData?.statusCode);
-    if (response?.status === 200) {
+    if (response?.data?.responseMsg?.statusCode === 200) {
       dnsZoneId = response?.data?.responseData?.dnszoneId;
     } else {
       let e = response?.data?.responseMsg?.message;

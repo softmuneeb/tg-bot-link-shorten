@@ -21,9 +21,18 @@
         "priceCrypto": "0.049996",
         "ticker": "trc20_usdt"
       }
+    },
+    "6687923716": {
+      "subscription": "Daily"
     }
   },
-  "users": ["softmuneeb", "onarrival1", "onarrival4", "platinumboi"],
+  "users": [
+    "softmuneeb",
+    "onarrival1",
+    "onarrival4",
+    "platinumboi",
+    "sport_chocolate"
+  ],
   "linksOf": {
     "1531772316": [
       {
@@ -85,26 +94,31 @@
     "rodogu.sbs/VqbOd": "https://bank-cooprative.login-online-now.online"
   },
   "domainsOf": {
-    "1531772316": ["rodogu.sbs"]
+    "1531772316": ["rodogu.sbs"],
+    "6687923716": ["14promax.sbs"]
   },
   "domainSold": {
-    "rodogu.sbs": true
+    "rodogu.sbs": true,
+    "14promax.sbs": true
   },
   "nameOfChatId": {
     "1531772316": "onarrival4",
     "5729797630": "softmuneeb",
     "5590563715": "onarrival1",
-    "5554833182": "platinumboi"
+    "5554833182": "platinumboi",
+    "6687923716": "sport_chocolate"
   },
   "chatIdOfName": {
     "softmuneeb": 5729797630,
     "onarrival1": 5590563715,
     "onarrival4": 1531772316,
-    "platinumboi": 5554833182
+    "platinumboi": 5554833182,
+    "sport_chocolate": 6687923716
   },
   "chatIdBlocked": {},
   "planEndingTime": {
-    "1531772316": 1696003168436
+    "1531772316": 1696003168436,
+    "6687923716": 1695812940629
   },
   "chatIdOfPayment": {
     "0xc0aCF76C2ed09d03E23B6C9FA25F5503e5583a56": 5729797630,

@@ -114,17 +114,15 @@ function getShortenedLinks(chatId, linksOf, clicksOn) {
           } → ${d.shortenedURL} → ${d.url}\n`,
       );
 }
-function shortenURLAndSave(chatId, domain, url, linksOf, fullUrlOf) {
-  const shortenedURL = domain + '/' + nanoid();
-  const data = { url, shortenedURL };
-  linksOf[chatId] = linksOf[chatId] ? linksOf[chatId].concat(data) : [data];
-  fullUrlOf[shortenedURL] = url;
-  return shortenedURL;
+
+function isValidEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
 }
 
 // convertUSDToNaira(1)
 module.exports = {
-  shortenURLAndSave,
+  isValidEmail,
   getShortenedLinks,
   today,
   week,
