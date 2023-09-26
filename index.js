@@ -239,13 +239,13 @@ bot.on('message', async msg => {
     delete state[chatId]?.action;
   }
   //
-  else if (message === '🔗 Shorten a URL') {
+  else if (message === '🔗 URL Shortener') {
     if (!isSubscribed(chatId)) {
-      bot.sendMessage(chatId, '📋 Subscribe to plans first');
+      bot.sendMessage(chatId, '📋 Subscribe first');
       return;
     }
     if (!ownsDomainName(chatId)) {
-      bot.sendMessage(chatId, '🌐 Buy a domain name first');
+      bot.sendMessage(chatId, '🌐 Buy domain names first');
       return;
     }
     state[chatId].action = 'choose-domain';
@@ -436,9 +436,9 @@ bot.on('message', async msg => {
   }
 
   //
-  else if (message === '🌐 Buy a domain name') {
+  else if (message === '🌐 Buy domain names') {
     if (!isSubscribed(chatId)) {
-      bot.sendMessage(chatId, '📋 Subscribe to plans first');
+      bot.sendMessage(chatId, '📋 Subscribe first');
       return;
     }
     state[chatId].action = 'choose-domain-to-buy';
@@ -621,7 +621,7 @@ Nomadly Bot`,
       ref,
     };
 
-    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to <code>${address}</code>Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
+    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to\n\n<code>${address}</code>\n\nOnce the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`;
@@ -644,7 +644,7 @@ Nomadly Bot`;
       .catch(console.error);
   }
   //
-  else if (message === '📋 Subscribe to plans') {
+  else if (message === '📋 Subscribe here') {
     if (isSubscribed(chatId)) {
       bot.sendMessage(
         chatId,
@@ -742,7 +742,9 @@ Nomadly Bot`;
             [
               {
                 text: 'Make Payment',
-                url,
+                web_app: {
+                  url,
+                },
               },
             ],
           ],
@@ -757,7 +759,7 @@ Best regards,
 Nomadly Bot`,
         inline_keyboard,
       );
-      bot.sendMessage(chatId, `Main Menu`, options);
+      bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, options);
       delete state[chatId]?.action;
     }
   } else if (action === 'crypto-transfer-payment') {
@@ -804,7 +806,7 @@ Nomadly Bot`,
       ref,
     };
 
-    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to <code>${address}</code>Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \n\n<code>${address}</code>\n\nOnce the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`;
@@ -827,7 +829,7 @@ Nomadly Bot`;
       .catch(console.error);
   }
   //
-  else if (message === '🔍 View my subscribed plan') {
+  else if (message === '🔍 Vew subscription plan') {
     const subscribedPlan = state[chatId]?.subscription;
 
     if (subscribedPlan) {
@@ -851,7 +853,7 @@ Nomadly Bot`;
     }
 
     bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
-  } else if (message === '🔍 View URL analytics') {
+  } else if (message === '🔍 View shortened links') {
     const shortenedLinks = getShortenedLinks(chatId, linksOf, clicksOn);
     if (shortenedLinks.length > 0) {
       const linksText = shortenedLinks.join('\n');
@@ -859,7 +861,7 @@ Nomadly Bot`;
     } else {
       bot.sendMessage(chatId, 'You have no shortened links yet.');
     }
-  } else if (message === '👀 View my domains') {
+  } else if (message === '👀 View domain names') {
     const purchasedDomains = getPurchasedDomains(chatId);
     if (purchasedDomains.length > 0) {
       const domainsText = purchasedDomains.join('\n');
@@ -911,7 +913,7 @@ Nomadly Bot`;
 
     const analyticsData = getAnalyticsData();
     bot.sendMessage(chatId, `Analytics Data:\n${analyticsData}`);
-  } else if (message === '🛠️ Support') {
+  } else if (message === '🛠️ Get support') {
     bot.sendMessage(chatId, 'Please contact @sport_chocolate');
   }
   // else {

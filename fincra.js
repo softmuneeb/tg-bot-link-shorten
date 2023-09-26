@@ -14,7 +14,7 @@ const createCheckout = async (amount, reference, redirectPath) => {
     },
     data: {
       currency: 'NGN',
-      customer: { name: 'customer name', email: 'someemail@gmail.com' },
+      customer: { name: 'NGN NGN', email: 'NGN@fincra.com' },
       paymentMethods: ['bank_transfer', 'card'],
       amount,
       redirectUrl: `${process.env.SELF_URL}${redirectPath}`,
@@ -52,7 +52,7 @@ const getBusinessId = async () => {
 };
 
 // getBusinessId();
-// createCheckout('1', 'txId7');
+// createCheckout('1', 'txId12', '/success').then(console.log);
 // getBankDepositAddress('100', '1234567');
 // getBankDepositAddress('100', '55667788');
 // getAmountsPaid('64c95e7366ea9f0b4a98dc2e', '64c95e7316ea9f0b4a98dc2e');

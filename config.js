@@ -11,7 +11,7 @@ const timeOf = {
 };
 
 const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
-const paymentOptions = ['Crypto', 'Bank or Card'];
+const paymentOptions = ['Crypto', 'Bank ₦aira + Card🌐︎'];
 const chooseSubscription = {
   reply_markup: {
     keyboard: [...subscriptionOptions.map(a => [a]), ['Back', 'Cancel']],
@@ -46,13 +46,13 @@ const devOptions = {
 const options = {
   reply_markup: {
     keyboard: [
-      ['🔗 Shorten a URL'],
-      ['🔍 View URL analytics'],
-      ['🌐 Buy a domain name'],
-      ['👀 View my domains'],
-      ['📋 Subscribe to plans'],
-      ['🔍 View my subscribed plan'],
-      ['🛠️ Support'],
+      ['🔗 URL Shortener'],
+      ['🔍 View shortened links'],
+      ['🌐 Buy domain names'],
+      ['👀 View domain names'],
+      ['📋 Subscribe here'],
+      ['🔍 Vew subscription plan'],
+      ['🛠️ Get support'],
     ],
   },
 };
