@@ -19,7 +19,7 @@
     "fincra-node-sdk": "^0.2.3",
     "graphql": "^16.8.0",
     "graphql-request": "^6.1.0",
-    "mongodb": "^5.8.0",
+    "mongodb": "^5.9.0",
     "nanoid": "^3.0.0",
     "node": "18.13.0",
     "node-telegram-bot-api": "^0.61.0",
