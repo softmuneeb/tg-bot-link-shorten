@@ -34,13 +34,13 @@ const {
   week,
   month,
   year,
-  getShortenedLinks,
   isValidEmail,
 } = require('./utils.js');
 const { getCryptoDepositAddress, convertUSDToCrypto } = require('./blockbee.js');
 const { saveDomainInServer } = require('./cr-rl-connect-domain-to-server.js');
 const { saveServerInDomain } = require('./cr-add-dns-record.js');
 const { buyDomainOnline } = require('./register-domain.test.js');
+const { updateLinksOf, getShortenedLinks } = require('./db.js');
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);
 process.env['NTBA_FIX_350'] = 1;
@@ -258,11 +258,11 @@ bot.on('message', async msg => {
         return;
       }
       fullUrlOf[shortenedURL] = url;
+      bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
 
-      linksOf[chatId] = (linksOf[chatId] || []).concat({ url, shortenedURL });
+      await updateLinksOf(linksOf, chatId, { url, shortenedURL });
 
       totalShortLinks++;
-      bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
       delete state[chatId]?.url;
       delete state[chatId]?.action;
       delete state[chatId]?.selectedDomain;
@@ -299,10 +299,11 @@ bot.on('message', async msg => {
 
     fullUrlOf[shortenedURL] = url;
 
-    linksOf[chatId] = (linksOf[chatId] || []).concat({ url, shortenedURL });
+    bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
+
+    await updateLinksOf(linksOf, chatId, { url, shortenedURL });
 
     totalShortLinks++;
-    bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
     delete state[chatId]?.url;
     delete state[chatId]?.action;
     delete state[chatId]?.selectedDomain;
@@ -408,7 +409,7 @@ bot.on('message', async msg => {
 
 Best regards,
 Nomadly Bot`,
-      payBank,
+      payBank(url),
     );
     bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, o);
     delete state[chatId]?.action;
@@ -564,7 +565,7 @@ Nomadly Bot`;
 
 Best regards,
 Nomadly Bot`,
-      payBank,
+      payBank(url),
     );
     bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, o);
     delete state[chatId]?.action;
@@ -650,7 +651,7 @@ Nomadly Bot`;
 
     bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
   } else if (message === '🔍 View shortened links') {
-    const shortenedLinks = getShortenedLinks(chatId, linksOf, clicksOn);
+    const shortenedLinks = await getShortenedLinks(linksOf, chatId, clicksOn);
     if (shortenedLinks.length > 0) {
       const linksText = shortenedLinks.join('\n');
       bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);

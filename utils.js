@@ -13,20 +13,14 @@ function isValidUrl(url) {
 }
 
 function isNormalUser(chatId) {
-  // Implement logic to determine if the user is a normal user
-  // Return true if the user is a normal user, false otherwise
   return !isAdmin(chatId) && !isDeveloper(chatId);
 }
 
 function isDeveloper(chatId) {
-  // Implement logic to determine if the user is a developer
-  // Return true if the user is a developer, false otherwise
   return chatId === process.env.TELEGRAM_DEVELOPER_CHAT_ID; // Replace with the actual developer's chat ID
 }
 
 function isAdmin(chatId) {
-  // Implement logic to determine if the user is the admin
-  // Return true if the user is the admin, false otherwise
   return chatId === Number(process.env.TELEGRAM_ADMIN_CHAT_ID); // Replace with the actual admin's chat ID
 }
 
@@ -36,12 +30,6 @@ async function checkDomainAvailability(domain, domainSold) {
   }
 
   return await checkDomainPriceOnline(domain);
-}
-
-function getPrice(domainName) {
-  // Implement logic to get the price of the domain
-  // Return the price of the domain
-  return 1; // Replace with the actual logic
 }
 
 async function convertUSDToNaira(amountInUSD) {
@@ -104,17 +92,6 @@ function year() {
   return 'Year ' + currentDate.getFullYear();
 }
 
-function getShortenedLinks(chatId, linksOf, clicksOn) {
-  return !linksOf[chatId]
-    ? []
-    : linksOf[chatId].map(
-        d =>
-          `${clicksOn[d.shortenedURL] || 0} ${clicksOn[d.shortenedURL] === 1 ? 'click' : 'clicks'} → ${
-            d.shortenedURL
-          } → ${d.url}\n`,
-      );
-}
-
 function isValidEmail(email) {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(email);
@@ -123,7 +100,6 @@ function isValidEmail(email) {
 // convertUSDToNaira(1)
 module.exports = {
   isValidEmail,
-  getShortenedLinks,
   today,
   week,
   month,

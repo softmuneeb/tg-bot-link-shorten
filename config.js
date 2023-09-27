@@ -71,7 +71,7 @@ const linkType = {
   },
 };
 
-const payBank = {
+const payBank = url => ({
   reply_markup: {
     inline_keyboard: [
       [
@@ -84,7 +84,7 @@ const payBank = {
       ],
     ],
   },
-};
+});
 
 module.exports = {
   payBank,
