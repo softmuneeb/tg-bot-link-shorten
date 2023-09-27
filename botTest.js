@@ -20,9 +20,7 @@ const host = process.env.MONGO_HOST;
 const password = process.env.MONGO_PASSWORD;
 const username = process.env.MONGO_USERNAME;
 
-const uri = `mongodb+srv://${username}:${password}@${host}/?retryWrites=true&w=majority`;
-
-const client = new MongoClient(uri, {
+const client = new MongoClient(process.env.MONGO_URL, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
