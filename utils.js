@@ -106,7 +106,6 @@ module.exports = {
   year,
   getLocalIpAddress,
   convertUSDToNaira,
-  getPrice,
   checkDomainAvailability,
   isValidUrl,
   isNormalUser,

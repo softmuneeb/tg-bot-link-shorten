@@ -13,4 +13,48 @@ const getShortenedLinks = async (linksOf, chatId, clicksOn) => {
       );
 };
 
-module.exports = { updateLinksOf, getShortenedLinks };
+function getAnalyticsData(clicksOf) {
+  let res = `Total short links: ${totalShortLinks}\n`;
+  for (const key in clicksOf) {
+    res += `Clicks in ${key}: ${clicksOf[key]}\n`;
+  }
+
+  return res;
+}
+
+const increment = async (key, value) => {
+  key[value] = (key[value] || 0) + 1;
+};
+
+const get = (key, value, valueInside) => {
+  if (valueInside) {
+    return key[value] && key[value][valueInside];
+  }
+
+  return key[value];
+};
+
+const getAll = key => {
+  return key;
+};
+const del = (table, key, value) => {
+  if (!value) {
+    delete table[key];
+    return;
+  }
+  table[key] && delete table[key][value];
+};
+
+const set = (table, key, value, valueInside) => {
+  if (valueInside) {
+    table[key] && (table[key][value] = valueInside);
+    return;
+  }
+
+  table[key] = value;
+};
+const add = (users, username) => {
+  users.push(username);
+};
+
+module.exports = { updateLinksOf, getShortenedLinks, getAnalyticsData, increment, get, getAll, set, add, del };
