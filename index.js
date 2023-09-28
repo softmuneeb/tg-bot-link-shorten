@@ -939,14 +939,14 @@ Nomadly Bot`,
   );
 
   const chosenDomainPrice = (await get(state, chatId))?.chosenDomainPrice;
-  set(chatIdOfPayment, reference, '');
+  del(state, chatId);
+  del(chatIdOfPayment, reference);
   set(
     payments,
     reference,
     `Bank, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${await get(nameOf, chatId)}, ${new Date()}`,
   );
 
-  del(state, chatId);
   res.send('Payment processed successfully, You can now close this window');
 });
 app.get('/crypto-payment-for-subscription', async (req, res) => {
@@ -994,7 +994,7 @@ Nomadly Bot`,
     o,
   );
 
-  set(chatIdOfPayment, address_in, '');
+  del(chatIdOfPayment, address_in);
   set(
     payments,
     address_in,
@@ -1080,7 +1080,7 @@ Nomadly Bot`,
   );
 
   const chosenDomainPrice = (await get(state, chatId))?.chosenDomainPrice;
-  set(chatIdOfPayment, address_in, '');
+  del(chatIdOfPayment, address_in);
   set(
     payments,
     reference,
