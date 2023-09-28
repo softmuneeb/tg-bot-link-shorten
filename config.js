@@ -12,6 +12,8 @@ const timeOf = {
 
 const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
 const paymentOptions = ['Crypto', 'Bank ₦aira + Card🌐︎'];
+const linkOptions = ['Random Link', 'Custom Link'];
+
 const chooseSubscription = {
   reply_markup: {
     keyboard: [...subscriptionOptions.map(a => [a]), ['Back', 'Cancel']],
@@ -64,10 +66,7 @@ const pay = {
 };
 const linkType = {
   reply_markup: {
-    keyboard: [
-      ['Random Link', 'Custom Link'],
-      ['Back', 'Cancel'],
-    ],
+    keyboard: [linkOptions, ['Back', 'Cancel']],
   },
 };
 
@@ -87,6 +86,7 @@ const payBank = url => ({
 });
 
 module.exports = {
+  linkOptions,
   payBank,
   linkType,
   pay,

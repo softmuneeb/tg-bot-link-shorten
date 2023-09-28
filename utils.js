@@ -49,22 +49,6 @@ async function convertUSDToNaira(amountInUSD) {
   }
 }
 
-function getLocalIpAddress() {
-  const interfaces = os.networkInterfaces();
-  let ipAddress;
-
-  for (const key in interfaces) {
-    for (const iface of interfaces[key]) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        ipAddress = iface.address;
-        break;
-      }
-    }
-    if (ipAddress) break;
-  }
-
-  return ipAddress;
-}
 function today() {
   const currentDate = new Date();
   const day = currentDate.getDate();
@@ -104,7 +88,6 @@ module.exports = {
   week,
   month,
   year,
-  getLocalIpAddress,
   convertUSDToNaira,
   checkDomainAvailability,
   isValidUrl,
