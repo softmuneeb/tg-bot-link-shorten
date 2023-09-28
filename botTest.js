@@ -6,9 +6,10 @@ const { get, set, add, del } = require('./dbTest.js');
 const token = process.env.TELEGRAM_BOT_TOKEN; // Access token from environment variable
 let bot = new TelegramBot(token, { polling: true });
 
-let db;
 let state;
 let escrows;
+
+let db;
 const dbName = 'escrowBot';
 
 const client = new MongoClient(process.env.MONGO_URL, {
@@ -26,6 +27,8 @@ client
     state = db.collection('state');
     escrows = db.collection('escrows');
 
+    await set(escrows, 'chatId1', 'link2', { count: 2, fullUrl: 'longurl2' });
+    get(escrows, 'chatId1').then(console.log);
     console.log('Connected');
   })
   .catch(err => console.log(err));

@@ -28,9 +28,10 @@ async function get(c, key) {
   }
 }
 
-async function set(c, key, value) {
+async function set(c, key, value, valueInside) {
   try {
-    await c.updateOne({ _id: key }, { $set: value }, { upsert: true });
+    if (!valueInside) await c.updateOne({ _id: key }, { $set: value }, { upsert: true });
+    else await c.updateOne({ _id: key }, { $set: { [value]: valueInside } }, { upsert: true });
     console.log(`${key} -> ${JSON.stringify(value)} set in ${c.collectionName}`);
   } catch (error) {
     console.error(`Error setting ${key} -> ${JSON.stringify(value)} in ${c.collectionName}:`, error);
