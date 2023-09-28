@@ -1,7 +1,9 @@
+require('dotenv').config();
+
 const priceOf = {
-  Daily: 0.03,
-  Weekly: 0.04,
-  Monthly: 0.05,
+  Daily: Number(process.env.PRICE_DAILY_SUBSCRIPTION),
+  Weekly: Number(process.env.PRICE_WEEKLY_SUBSCRIPTION),
+  Monthly: Number(process.env.PRICE_MONTHLY_SUBSCRIPTION),
 };
 
 const timeOf = {

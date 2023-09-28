@@ -1,6 +1,7 @@
 require('dotenv').config();
 const axios = require('axios');
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
+const PERCENT_INCREASE_DOMAIN = 1 + process.env.PERCENT_INCREASE_DOMAIN;
 
 // Function to test domain availability
 async function checkDomainPriceOnline(domainName) {
@@ -20,7 +21,7 @@ async function checkDomainPriceOnline(domainName) {
           .description.split('is ')[1],
       );
 
-      const price = Math.ceil(price1Year + price1Year * 1.2); //20% profit
+      const price = Math.ceil(price1Year + price1Year * PERCENT_INCREASE_DOMAIN);
       // const price = 0.2; //20% profit
       return { available: true, price };
     } else if (statusCode === 400) {

@@ -50,6 +50,7 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 process.env['NTBA_FIX_350'] = 1;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const SELF_URL = process.env.SELF_URL;
+const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME;
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 console.log('Bot is running...');
@@ -79,13 +80,7 @@ let connect_reseller_working = false;
 let db;
 const dbName = 'domainSellBot16';
 
-const client = new MongoClient(process.env.MONGO_URL, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
+const client = new MongoClient(process.env.MONGO_URL);
 
 client
   .connect()
@@ -144,7 +139,7 @@ bot.on('message', async msg => {
 
   const blocked = await get(chatIdBlocked, chatId);
   if (blocked) {
-    bot.sendMessage(chatId, 'You are currently blocked from using the bot. Please contact @nomadly_private', rem);
+    bot.sendMessage(chatId, `You are currently blocked from using the bot. Please contact ${SUPPORT_USERNAME}`, rem);
     return;
   }
 
@@ -732,7 +727,7 @@ Nomadly Bot`;
     return;
   }
   if (message === '🛠️ Get support') {
-    bot.sendMessage(chatId, 'Please contact @nomadly_private');
+    bot.sendMessage(chatId, `Please contact ${SUPPORT_USERNAME}`);
     return;
   }
   // else {
