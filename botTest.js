@@ -1,4 +1,3 @@
-
 require('dotenv').config(); // Load environment variables from .env file
 
 const TelegramBot = require('node-telegram-bot-api');
@@ -6,25 +5,33 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const token = process.env.TELEGRAM_BOT_TOKEN; // Access token from environment variable
 let bot = new TelegramBot(token, { polling: true });
 
+// let db = true;
 // let state = {};
-// let escrows;
-// function get(state, key) {
-//   return state[key];
+// let escrows = {};
+// function get(table, key) {
+//   return table[key];
 // }
-// function set(state, key, value) {
-//   state[key] = value;
+// function set(table, key, value) {
+//   table[key] = value;
 // }
-// function add(state, key, value) {
-//   state[key] = value;
+// function add(table, key, value) {
+//   if (!table[key]) {
+//     table[key] = {};
+//     table[key]['list'] = [];
+//   }
+//   table[key]['list'].push(value);
 // }
-// function del(state, key, value) {
-//   state[key] = value;
-// }
+// function del(table, key) {
+//   if (!table[key]) return false;
 
+//   delete table[key];
+//   return true;
+// }
 
 // DB State
 let db;
 const dbName = 'escrowBot';
+
 let state;
 let escrows;
 
@@ -66,7 +73,7 @@ async function set(c, key, value) {
   }
 }
 
-async function del(collection) {
+async function del(collection, chatId) {
   try {
     const result = await collection.deleteOne({ _id: chatId });
     return result.deletedCount === 1;
@@ -100,6 +107,14 @@ bot.on('message', async msg => {
   if (msg.text === '/start') {
     set(state, chatId, {}); // Initialize state for this user
     sendMessage(chatId, 'Welcome to Escrow Bot. Choose Option /CreateEscrow or /ViewEscrows');
+  } else if (msg.text === '/cancel') {
+    const deleted = await del(state, chatId);
+
+    if (deleted) {
+      sendMessage(chatId, 'Process cancelled. Type /start to begin again.');
+    } else {
+      sendMessage(chatId, 'No active process to cancel. Type /start to begin.');
+    }
   } else if (msg.text === '/CreateEscrow') {
     set(state, chatId, { step: 1 }); // Set step to 1 for CreateEscrow process
     sendMessage(chatId, 'Enter Escrow Name');
@@ -147,18 +162,6 @@ bot.on('message', async msg => {
         sendMessage(chatId, 'Invalid command.');
         break;
     }
-  }
-});
-
-bot.onText(/\/cancel/, async msg => {
-  const chatId = msg.chat.id;
-
-  const deleted = await del(chatId);
-
-  if (deleted) {
-    sendMessage(chatId, 'Process cancelled. Type /start to begin again.');
-  } else {
-    sendMessage(chatId, 'No active process to cancel. Type /start to begin.');
   }
 });
 
