@@ -24,6 +24,7 @@ const {
   bc,
   linkType,
   payBank,
+  linkOptions,
 } = require('./config.js');
 const {
   isValidUrl,
