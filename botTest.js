@@ -6,6 +6,12 @@
 // function set(state, key, value) {
 //   state[key] = value;
 // }
+// function add(state, key, value) {
+//   state[key] = value;
+// }
+// function del(state, key, value) {
+//   state[key] = value;
+// }
 
 require('dotenv').config(); // Load environment variables from .env file
 
@@ -14,11 +20,11 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const token = process.env.TELEGRAM_BOT_TOKEN; // Access token from environment variable
 let bot = new TelegramBot(token, { polling: true });
 
+// DB State
 let db;
 const dbName = 'escrowBot';
-const host = process.env.MONGO_HOST;
-const password = process.env.MONGO_PASSWORD;
-const username = process.env.MONGO_USERNAME;
+let state;
+let escrows;
 
 const client = new MongoClient(process.env.MONGO_URL, {
   serverApi: {
@@ -32,55 +38,34 @@ client
   .connect()
   .then(async () => {
     db = client.db(dbName);
-    // await client.db('admin').command({ ping: 1 });
+    state = db.collection('state');
+    escrows = db.collection('escrows');
+
     console.log('Connected');
-
-    // array language of mongo db
-    // addObjectToArray('linkoosOf', 'chat1', { 1: 2, a: { 3: 4 } });
-    // console.log(JSON.stringify(await get('linkoosOf', 'chat1'), null, 2));
-
-    // set('state', '3340', { a: 1 }); // Initialize state for this user
-    // const bb = await get('state', '3340'); // Initialize state for this user
-    // console.log('hi ', bb);
   })
   .catch(err => console.log(err));
 
-async function getAll(collectionName) {
+async function get(c, key) {
   try {
-    const collection = db.collection(collectionName);
-    const result = await collection.find({}).toArray();
-    return result;
-  } catch (error) {
-    console.error(`Error getting all documents from ${collectionName}:`, error);
-    return null;
-  }
-}
-
-async function get(collectionName, key) {
-  try {
-    const collection = db.collection(collectionName);
-    const result = await collection.findOne({ _id: key });
+    const result = await c.findOne({ _id: key });
     return result ? result : undefined;
   } catch (error) {
-    console.error(`Error getting ${key} from ${collectionName}:`, error);
+    console.error(`Error getting ${key} from ${c.collectionName}:`, error);
     return null;
   }
 }
 
-async function set(collectionName, key, value) {
+async function set(c, key, value) {
   try {
-    const collection = db.collection(collectionName);
-    //   collection.insertOne({ _id: key, [key]: value });
-    await collection.updateOne({ _id: key }, { $set: value }, { upsert: true });
-    console.log(`${key} -> ${JSON.stringify(value)} set in ${collectionName}`);
+    await c.updateOne({ _id: key }, { $set: value }, { upsert: true });
+    console.log(`${key} -> ${JSON.stringify(value)} set in ${c.collectionName}`);
   } catch (error) {
-    console.error(`Error setting ${key} -> ${JSON.stringify(value)} in ${collectionName}:`, error);
+    console.error(`Error setting ${key} -> ${JSON.stringify(value)} in ${c.collectionName}:`, error);
   }
 }
 
-async function deleteUserState(chatId) {
+async function del(collection) {
   try {
-    const collection = db.collection('state'); // Assuming 'state' is the collection name
     const result = await collection.deleteOne({ _id: chatId });
     return result.deletedCount === 1;
   } catch (error) {
@@ -89,9 +74,8 @@ async function deleteUserState(chatId) {
   }
 }
 
-async function add(collectionName, key, newValue) {
+async function add(collection, key, newValue) {
   try {
-    const collection = db.collection(collectionName);
     const filter = { _id: key };
     const update = { $push: { ['list']: newValue } };
 
@@ -112,51 +96,47 @@ bot.on('message', async msg => {
   const chatId = '' + msg.chat.id;
 
   if (msg.text === '/start') {
-    set('state', chatId, {}); // Initialize state for this user
+    set(state, chatId, {}); // Initialize state for this user
     sendMessage(chatId, 'Welcome to Escrow Bot. Choose Option /CreateEscrow or /ViewEscrows');
   } else if (msg.text === '/CreateEscrow') {
-    set('state', chatId, { step: 1 }); // Set step to 1 for CreateEscrow process
+    set(state, chatId, { step: 1 }); // Set step to 1 for CreateEscrow process
     sendMessage(chatId, 'Enter Escrow Name');
   } else if (msg.text === '/ViewEscrows') {
-    const escrows = (await get('escrows', chatId))?.list;
-    console.log('escrows', escrows);
-    const escrowList = escrows.map(
+    const list = (await get(escrows, chatId))?.list;
+    console.log('escrows', list);
+    const escrowList = list.map(
       (escrow, index) =>
         `${index + 1}. Name: ${escrow.name}, Description: ${escrow.description}, Price: ${escrow.price}`,
     );
     const message = escrowList.join('\n');
     sendMessage(chatId, message || 'No escrows available.');
   } else {
-    const step = (await get('state', chatId)).step;
-    // console.log('step ', step);
+    const step = (await get(state, chatId)).step;
     switch (step) {
       case 1:
-        set('state', chatId, { ...(await get('state', chatId)), name: msg.text, step: 2 });
+        set(state, chatId, { ...(await get(state, chatId)), name: msg.text, step: 2 });
         sendMessage(chatId, 'Add Description or type /back to go back');
         break;
 
       case 2:
         if (msg.text === '/back') {
-          set('state', chatId, { ...(await get('state', chatId)), step: 1 });
           sendMessage(chatId, 'Enter Escrow Name');
+          set(state, chatId, { ...(await get(state, chatId)), step: 1 });
         } else {
-          set('state', chatId, { ...(await get('state', chatId)), description: msg.text, step: 3 });
           sendMessage(chatId, 'Add Price or type /back to go back');
+          set(state, chatId, { ...(await get(state, chatId)), description: msg.text, step: 3 });
         }
         break;
 
       case 3:
         if (msg.text === '/back') {
-          set('state', chatId, { ...(await get('state', chatId)), step: 2 });
           sendMessage(chatId, 'Add Description');
+          set(state, chatId, { ...(await get(state, chatId)), step: 2 });
         } else {
-          set('state', chatId, { ...(await get('state', chatId)), price: msg.text });
-          const name = (await get('state', chatId))?.name;
-          const description = (await get('state', chatId))?.description;
-          const price = (await get('state', chatId))?.price;
-          const newEscrow = { name, description, price };
-          await add('escrows', chatId, newEscrow);
-          set('state', chatId, { step: 0 }); // Reset step to 0
+          const { name, description } = await get(state, chatId);
+          const newEscrow = { name, description, price: msg.text };
+          add(escrows, chatId, newEscrow);
+          set(state, chatId, { step: 0 }); // Reset step to 0
           sendMessage(chatId, 'Escrow Created Successfully!');
         }
         break;
@@ -171,7 +151,7 @@ bot.on('message', async msg => {
 bot.onText(/\/cancel/, async msg => {
   const chatId = msg.chat.id;
 
-  const deleted = await deleteUserState(chatId);
+  const deleted = await del(chatId);
 
   if (deleted) {
     sendMessage(chatId, 'Process cancelled. Type /start to begin again.');
