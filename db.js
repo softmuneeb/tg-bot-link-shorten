@@ -1,60 +1,66 @@
-const updateLinksOf = async (linksOf, chatId, data) => {
-  linksOf[chatId] = (linksOf[chatId] || []).concat(data);
-};
-
-const getShortenedLinks = async (linksOf, chatId, clicksOn) => {
-  return !linksOf[chatId]
-    ? []
-    : linksOf[chatId].map(
-        d =>
-          `${clicksOn[d.shortenedURL] || 0} ${clicksOn[d.shortenedURL] === 1 ? 'click' : 'clicks'} → ${
-            d.shortenedURL
-          } → ${d.url}\n`,
-      );
-};
-
 function getAnalyticsData(clicksOf) {
   let res = `Total short links: ${totalShortLinks}\n`;
   for (const key in clicksOf) {
     res += `Clicks in ${key}: ${clicksOf[key]}\n`;
   }
-
   return res;
 }
 
 const increment = async (key, value) => {
   key[value] = (key[value] || 0) + 1;
+  // db.collection.updateOne({ _id: key }, { $inc: { likes: 1 } });
 };
 
-const get = (key, value, valueInside) => {
-  if (valueInside) {
-    return key[value] && key[value][valueInside];
+// function get(table, key) {
+//   return table[key];
+// }
+// function set(table, key, value) {
+//   table[key] = value;
+// }
+// function del(table, key) {
+//   if (!table[key]) return false;
+
+//   delete table[key];
+//   return true;
+// }
+
+async function get(c, key) {
+  try {
+    const result = await c.findOne({ _id: key });
+    console.log({ findIn: c.collectionName, key, result });
+    return result?.val || result || undefined;
+  } catch (error) {
+    console.error(`Error getting ${key} from ${c.collectionName}:`, error);
+    return null;
   }
+}
 
-  return key[value];
-};
+// done these things to keep same way in changing db to memory variables (and memory variables back to db, easily)
+async function set(c, key, value, valueInside) {
+  try {
+    if (!valueInside) {
+      await c.updateOne({ _id: key }, { $set: { val: value } }, { upsert: true });
+    } else {
+      await c.updateOne({ _id: key }, { $set: { [value]: valueInside } }, { upsert: true });
+    }
 
-const getAll = key => {
-  return key;
-};
-const del = (table, key, value) => {
-  if (!value) {
-    delete table[key];
-    return;
+    let a = JSON.stringify(valueInside);
+    a = a === undefined ? '' : ` ${a}`;
+    console.log(`${key}: ${JSON.stringify(value)}${a} set in ${c.collectionName}`);
+  } catch (error) {
+    console.error(`Error setting ${key} -> ${JSON.stringify(value)} in ${c.collectionName}:`, error);
   }
-  table[key] && delete table[key][value];
-};
+}
 
-const set = (table, key, value, valueInside) => {
-  if (valueInside) {
-    table[key] && (table[key][value] = valueInside);
-    return;
+async function del(c, chatId) {
+  try {
+    const result = await c.deleteOne({ _id: chatId });
+    console.log(`Deleted ${result.deletedCount >= 1 ? 'True' : 'False'} in ${c.collectionName} for ${chatId}`);
+    return result.deletedCount === 1;
+  } catch (error) {
+    console.error('Error deleting user state:', error);
+    return false;
   }
+}
 
-  table[key] = value;
-};
-const add = (users, username) => {
-  users.push(username);
-};
-
-module.exports = { updateLinksOf, getShortenedLinks, getAnalyticsData, increment, get, getAll, set, add, del };
+module.exports = { getAnalyticsData, increment, get, set, del };

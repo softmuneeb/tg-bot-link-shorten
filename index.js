@@ -1,6 +1,7 @@
 // TODO: keep in eye data types Number vs String may give bugs...
 
 const { getRegisteredDomainNames } = require('./get-purchased-domains.test.js');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const TelegramBot = require('node-telegram-bot-api');
 const { createCheckout } = require('./fincra.js');
 const { customAlphabet } = require('nanoid');
@@ -42,17 +43,7 @@ const { getCryptoDepositAddress, convertUSDToCrypto } = require('./blockbee.js')
 const { saveDomainInServer } = require('./cr-rl-connect-domain-to-server.js');
 const { saveServerInDomain } = require('./cr-add-dns-record.js');
 const { buyDomainOnline } = require('./register-domain.test.js');
-const {
-  updateLinksOf,
-  getShortenedLinks,
-  getAnalyticsData,
-  increment,
-  get,
-  getAll,
-  set,
-  add,
-  del,
-} = require('./db.js');
+const { get, set, del, increment } = require('./db.js');
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);
 process.env['NTBA_FIX_350'] = 1;
@@ -63,33 +54,78 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 console.log('Bot is running...');
 
 // variables to implement core functionality
-const state = {};
-const linksOf = {};
-const fullUrlOf = {};
-const domainsOf = {};
-const domainSold = {};
-const chatIdBlocked = {};
-const planEndingTime = {};
-const chatIdOfPayment = {};
-let totalShortLinks = 0;
+let state = {};
+let linksOf = {};
+let fullUrlOf = {};
+let domainsOf = {};
+let domainSold = {};
+let chatIdBlocked = {};
+let planEndingTime = {};
+let chatIdOfPayment = {};
+let totalShortLinks = { count: 0 };
 
 // variables to view system information
-const payments = {};
-const users = [];
-const clicksOf = {};
-const clicksOn = {};
-const nameOf = {};
-const chatIdOf = {};
+let payments = {};
+let clicksOf = {};
+let clicksOn = {};
+let chatIdOf = {};
+let nameOf = {};
+let planOf = {};
 
 let connect_reseller_working = false;
-restoreData();
+// restoreData();
+// manually data add here or call methods
+
+let db;
+const dbName = 'domainSellBot11';
+
+const client = new MongoClient(process.env.MONGO_URL, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+});
+
+client
+  .connect()
+  .then(async () => {
+    db = client.db(dbName);
+
+    // variables to implement core functionality
+    state = db.collection('state');
+    linksOf = db.collection('linksOf');
+    fullUrlOf = db.collection('fullUrlOf');
+    domainsOf = db.collection('domainsOf');
+    domainSold = db.collection('domainSold');
+    chatIdBlocked = db.collection('chatIdBlocked');
+    planEndingTime = db.collection('planEndingTime');
+    chatIdOfPayment = db.collection('chatIdOfPayment');
+    totalShortLinks = db.collection('totalShortLinks');
+
+    // variables to view system information
+    payments = db.collection('payments');
+    clicksOf = db.collection('clicksOf');
+    clicksOn = db.collection('clicksOn');
+    chatIdOf = db.collection('chatIdOf');
+    nameOf = db.collection('nameOf');
+    planOf = db.collection('planOf');
+
+    console.log('DB Connected');
+  })
+  .catch(err => console.log('DB Connected', err, err?.message));
 
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
   const message = msg.text;
-  const username = get(nameOf, chatId) || msg.from.username || nanoid();
-  console.log(chatId + '\t' + username + '\t' + message);
+  console.log('command \t' + chatId + '\t' + msg.from.username + '\t' + message);
+  const nameOfChatId = await get(nameOf, chatId);
+  const username = nameOfChatId || msg.from.username || nanoid();
 
+  if (!db) {
+    bot.sendMessage(chatId, 'Bot starting, please wait');
+    return;
+  }
   if (!connect_reseller_working) {
     try {
       await getRegisteredDomainNames();
@@ -104,21 +140,21 @@ bot.on('message', async msg => {
     }
   }
 
-  if (get(chatIdBlocked, chatId)) {
+  const blocked = await get(chatIdBlocked, chatId);
+  if (blocked) {
     bot.sendMessage(chatId, 'You are currently blocked from using the bot. Please contact @nomadly_private', rem);
     return;
   }
 
-  if (!get(state, chatId)) {
-    set(state, chatId, {});
-  }
-  if (!get(nameOf, chatId)) {
+  if (!nameOfChatId) {
+    // set(state, chatId, {});
     set(nameOf, chatId, username);
     set(chatIdOf, username, chatId);
-    add(users, username);
   }
 
-  const action = get(state, chatId, 'action');
+  const action = (await get(state, chatId))?.action;
+  console.log({ action });
+
   const firstSteps = ['block-user', 'unblock-user', 'choose-domain', 'choose-domain-to-buy', 'choose-subscription'];
 
   if (message === '/start') {
@@ -134,7 +170,7 @@ bot.on('message', async msg => {
   }
   //
   if (message === 'Cancel' || (firstSteps.includes(action) && message === 'Back')) {
-    del(state, chatId, 'action');
+    del(state, chatId);
     bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
     return;
   }
@@ -153,7 +189,7 @@ bot.on('message', async msg => {
   if (action === 'block-user') {
     const userToBlock = message;
 
-    const chatIdToBlock = get(chatIdOf, userToBlock);
+    const chatIdToBlock = await get(chatIdOf, userToBlock);
 
     if (!chatIdToBlock) {
       bot.sendMessage(chatId, `User ${userToBlock} not found`, bc);
@@ -162,7 +198,7 @@ bot.on('message', async msg => {
 
     set(chatIdBlocked, chatIdToBlock, true);
     bot.sendMessage(chatId, `User ${userToBlock} has been blocked.`, aO);
-    del(state, chatId, 'action');
+    del(state, chatId);
     return;
   }
   //
@@ -179,7 +215,7 @@ bot.on('message', async msg => {
   }
   if (action === 'unblock-user') {
     const userToUnblock = message;
-    const chatIdToUnblock = get(chatIdOf, userToUnblock);
+    const chatIdToUnblock = await get(chatIdOf, userToUnblock);
     if (!chatIdToUnblock) {
       bot.sendMessage(chatId, `User ${userToUnblock} not found`, bc);
       return;
@@ -187,23 +223,22 @@ bot.on('message', async msg => {
 
     set(chatIdBlocked, chatIdToUnblock, false);
     bot.sendMessage(chatId, `User ${userToUnblock} has been unblocked.`, aO);
-    del(state, chatId, 'action');
+    del(state, chatId);
     return;
   }
   //
   //
   if (message === '🔗 URL Shortener') {
-    if (!isSubscribed(chatId)) {
+    if (!(await isSubscribed(chatId))) {
       bot.sendMessage(chatId, '📋 Subscribe first');
       return;
     }
-    if (!ownsDomainName(chatId)) {
+    if (!(await ownsDomainName(chatId))) {
       bot.sendMessage(chatId, '🌐 Buy domain names first');
       return;
     }
     set(state, chatId, 'action', 'choose-domain');
     bot.sendMessage(chatId, 'Kindly share the URL that you would like to have shortened.', bc);
-    return;
     return;
   }
   if (action === 'choose-domain') {
@@ -212,7 +247,7 @@ bot.on('message', async msg => {
       return;
     }
 
-    const domains = getPurchasedDomains(chatId);
+    const domains = await getPurchasedDomains(chatId);
     const keyboard = [...domains.map(d => [d]), ['Back', 'Cancel']];
     bot.sendMessage(chatId, `Please select the domain you would like to connect with your shortened link.`, {
       reply_markup: {
@@ -242,7 +277,7 @@ bot.on('message', async msg => {
   }
   if (action === 'choose-link-type') {
     if (message === 'Back') {
-      const domains = getPurchasedDomains(chatId);
+      const domains = await getPurchasedDomains(chatId);
       const keyboard = [...domains.map(d => [d]), ['Back', 'Cancel']];
       bot.sendMessage(chatId, `Please select the domain you would like to connect with your shortened link.`, {
         reply_markup: {
@@ -263,22 +298,20 @@ bot.on('message', async msg => {
       return;
     }
 
-    const url = get(state, chatId, 'url');
-    const domain = get(state, chatId, 'selectedDomain');
+    const url = (await get(state, chatId))?.url;
+    const domain = (await get(state, chatId))?.selectedDomain;
     const shortenedURL = domain + '/' + nanoid();
-    if (get(fullUrlOf, shortenedURL)) {
+    if (await get(fullUrlOf, shortenedURL)) {
       bot.sendMessage(chatId, `Link already exists. Please send 'ok' to try another.`);
       return;
     }
     set(fullUrlOf, shortenedURL, url);
     bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
 
-    await updateLinksOf(linksOf, chatId, { url, shortenedURL });
+    await add(linksOf, chatId, { url, shortenedURL });
 
     totalShortLinks++;
-    del(state, chatId, 'url');
-    del(state, chatId, 'action');
-    del(state, chatId, 'selectedDomain');
+    set(state, chatId, 'action', 'none');
     return;
   }
   if (action === 'shorten-custom') {
@@ -287,8 +320,8 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', 'choose-link-type');
     }
 
-    const url = get(state, chatId, 'url');
-    const domain = get(state, chatId, 'selectedDomain');
+    const url = (await get(state, chatId))?.url;
+    const domain = (await get(state, chatId))?.selectedDomain;
     const shortenedURL = domain + '/' + message;
 
     if (!isValidUrl('https://' + shortenedURL)) {
@@ -296,7 +329,7 @@ bot.on('message', async msg => {
       return;
     }
 
-    if (get(fullUrlOf, shortenedURL)) {
+    if (await get(fullUrlOf, shortenedURL)) {
       bot.sendMessage(chatId, `Link already exists. Please try another.`);
       return;
     }
@@ -304,18 +337,17 @@ bot.on('message', async msg => {
     set(fullUrlOf, shortenedURL, url);
     bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
 
-    await updateLinksOf(linksOf, chatId, { url, shortenedURL });
+    await add(linksOf, chatId, { url, shortenedURL });
 
     totalShortLinks++;
-    del(state, chatId, 'url');
-    del(state, chatId, 'action');
-    del(state, chatId, 'selectedDomain');
+
+    del(state, chatId);
     return;
   }
   //
   //
   if (message === '🌐 Buy domain names') {
-    if (!isSubscribed(chatId)) {
+    if (!(await isSubscribed(chatId))) {
       bot.sendMessage(chatId, '📋 Subscribe first');
       return;
     }
@@ -375,8 +407,8 @@ bot.on('message', async msg => {
     return;
   }
   if (action === 'bank-transfer-payment-domain') {
-    const price = get(state, chatId, 'chosenDomainPrice');
-    const domain = get(state, chatId, 'chosenDomainForPayment');
+    const price = (await get(state, chatId))?.chosenDomainPrice;
+    const domain = (await get(state, chatId))?.chosenDomainForPayment;
     if (message === 'Back') {
       bot.sendMessage(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, pay);
       set(state, chatId, 'action', 'domain-name-payment');
@@ -396,7 +428,7 @@ bot.on('message', async msg => {
 
     if (error) {
       bot.sendMessage(chatId, error, o);
-      del(state, chatId, 'action');
+      del(state, chatId);
       return;
     }
 
@@ -409,13 +441,13 @@ Nomadly Bot`,
       payBank(url),
     );
     bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, o);
-    del(state, chatId, 'action');
+    set(state, chatId, 'action', 'none');
     return;
   }
   if (action === 'crypto-transfer-payment-domain') {
     const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
-    const priceUSD = get(state, chatId, 'chosenDomainPrice');
-    const domain = get(state, chatId, 'chosenDomainForPayment');
+    const priceUSD = (await get(state, chatId))?.chosenDomainPrice;
+    const domain = (await get(state, chatId))?.chosenDomainForPayment;
     const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
     if (message === 'Back') {
       bot.sendMessage(chatId, `Price of ${domain} subscription is ${priceUSD} USD. Choose payment method.`, pay);
@@ -451,7 +483,7 @@ Nomadly Bot`;
       ...o,
       parse_mode: 'HTML',
     });
-    del(state, chatId, 'action');
+    set(state, chatId, 'action', 'none');
 
     // send QR Code Image
     const qrCode = await bb.getQrcode(null, 256);
@@ -468,7 +500,7 @@ Nomadly Bot`;
   //
   //
   if (message === '📋 Subscribe here') {
-    if (isSubscribed(chatId)) {
+    if (await isSubscribed(chatId)) {
       bot.sendMessage(chatId, 'You are currently enrolled in a subscription plan.', o);
       return;
     }
@@ -485,7 +517,9 @@ Nomadly Bot`;
       return;
     }
 
-    set(state, chatId, 'chosenPlanForPayment', plan);
+    set(state, chatId, 'chosenPlanForPayment', plan).then(() => {
+      get(state, chatId).then(a => console.log(a, a?.chosenPlanForPayment));
+    });
 
     bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
 
@@ -507,7 +541,7 @@ Nomadly Bot`;
 
     if (paymentOption === 'Bank ₦aira + Card🌐︎') {
       bot.sendMessage(chatId, `Please provide your email for bank payment reference:`, bc);
-      set(state, chatId, 'action', 'bank-transfer-payment');
+      set(state, chatId, 'action', 'bank-transfer-payment-subscription');
       return;
     }
 
@@ -519,9 +553,9 @@ Nomadly Bot`;
     set(state, chatId, 'action', 'crypto-transfer-payment');
     return;
   }
-  if (action === 'bank-transfer-payment') {
+  if (action === 'bank-transfer-payment-subscription') {
+    const plan = (await get(state, chatId))?.chosenPlanForPayment;
     if (message === 'Back') {
-      const plan = get(state, chatId, 'chosenPlanForPayment');
       bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
       set(state, chatId, 'action', 'subscription-payment');
       return;
@@ -533,7 +567,6 @@ Nomadly Bot`;
       return;
     }
 
-    const plan = get(state, chatId, 'chosenPlanForPayment');
     const priceNGN = Number(await convertUSDToNaira(priceOf[plan]));
     const reference = nanoid();
     set(chatIdOfPayment, reference, chatId);
@@ -541,7 +574,7 @@ Nomadly Bot`;
 
     if (error) {
       bot.sendMessage(chatId, error, o);
-      del(state, chatId, 'action');
+      del(state, chatId);
       return;
     }
 
@@ -554,11 +587,11 @@ Nomadly Bot`,
       payBank(url),
     );
     bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, o);
-    del(state, chatId, 'action');
+    set(state, chatId, 'action', 'none');
     return;
   }
   if (action === 'crypto-transfer-payment') {
-    const plan = get(state, chatId, 'chosenPlanForPayment');
+    const plan = (await get(state, chatId))?.chosenPlanForPayment;
     const priceUSD = priceOf[plan];
 
     if (message === 'Back') {
@@ -597,7 +630,7 @@ Nomadly Bot`;
       ...o,
       parse_mode: 'HTML',
     });
-    del(state, chatId, 'action');
+    set(state, chatId, 'action', 'none');
 
     // send QR Code Image
     const qrCode = await bb.getQrcode(null, 256);
@@ -614,13 +647,13 @@ Nomadly Bot`;
   //
   //
   if (message === '🔍 View subscription plan') {
-    const subscribedPlan = get(state, chatId, 'subscription');
+    const subscribedPlan = await get(planOf, chatId);
 
     if (subscribedPlan) {
-      if (!isSubscribed(chatId)) {
+      if (!(await isSubscribed(chatId))) {
         bot.sendMessage(
           chatId,
-          `Your ${subscribedPlan} subscription is expired on ${new Date(get(planEndingTime, chatId))}`,
+          `Your ${subscribedPlan} subscription is expired on ${new Date(await get(planEndingTime, chatId))}`,
         );
         return;
       }
@@ -628,7 +661,7 @@ Nomadly Bot`;
       bot.sendMessage(
         chatId,
         `You are currently subscribed to the ${subscribedPlan} plan. Your plan is valid till ${new Date(
-          get(planEndingTime, chatId),
+          await get(planEndingTime, chatId),
         )}`,
       );
       return;
@@ -638,13 +671,13 @@ Nomadly Bot`;
     return;
   }
   if (message === '🔍 View shortened links') {
-    const shortenedLinks = await getShortenedLinks(linksOf, chatId, clicksOn);
-    if (shortenedLinks.length === 0) {
+    const links = (await get(linksOf, chatId, clicksOn))?.list;
+    if (links.length === 0) {
       bot.sendMessage(chatId, 'You have no shortened links yet.');
       return;
     }
 
-    const linksText = shortenedLinks.join('\n');
+    const linksText = formatLinks(links);
     bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
     return;
   }
@@ -683,7 +716,7 @@ Nomadly Bot`;
       return;
     }
 
-    bot.sendMessage(chatId, `Users:\n${getAll(users).join('\n')}`);
+    bot.sendMessage(chatId, `Users:\n${getUsers(users).join('\n')}`);
     return;
   }
   if (message === 'View Analytics') {
@@ -705,16 +738,16 @@ Nomadly Bot`;
   // }
 });
 
-function getPurchasedDomains(chatId) {
-  return get(domainsOf, chatId) || [];
+async function getPurchasedDomains(chatId) {
+  return (await get(domainsOf, chatId)) || [];
 }
 
-function ownsDomainName(chatId) {
-  return getPurchasedDomains(chatId).length > 0;
+async function ownsDomainName(chatId) {
+  return (await getPurchasedDomains(chatId).length) > 0;
 }
 
-function isSubscribed(chatId) {
-  const time = get(planEndingTime, chatId);
+async function isSubscribed(chatId) {
+  const time = await get(planEndingTime, chatId);
   return time && time > Date.now();
 }
 
@@ -722,7 +755,6 @@ function restoreData() {
   try {
     const backupJSON = fs.readFileSync('backup.json', 'utf-8');
     const restoredData = JSON.parse(backupJSON);
-    Object.assign(users, restoredData.users);
     Object.assign(state, restoredData.state);
     Object.assign(linksOf, restoredData.linksOf);
     Object.assign(clicksOf, restoredData.clicksOf);
@@ -745,7 +777,6 @@ function restoreData() {
 async function backupTheData() {
   const backupData = {
     state,
-    users,
     linksOf,
     clicksOf,
     clicksOn,
@@ -763,9 +794,14 @@ async function backupTheData() {
   fs.writeFileSync('backup.json', backupJSON, 'utf-8');
 }
 
+// Test it on admin side
+// async function getUsers() {
+//   return Object.keys(getAll(chatIdOf));
+// }
+
 async function buyDomain(chatId, domain) {
   // check dns records
-  if (get(domainSold, domain)) {
+  if (await get(domainSold, domain)) {
     return { error: 'Already registered' };
   }
   // return { success: true };
@@ -774,12 +810,23 @@ async function buyDomain(chatId, domain) {
 
   if (result.success) {
     set(domainSold, domain, true);
-    const domains = (get(domainsOf, chatId) || []).concat(domain);
+    const domains = ((await get(domainsOf, chatId)) || []).concat(domain);
     set(domainsOf, chatId, domains);
   }
 
   return result;
 }
+
+const formatLinks = async (linksOf, chatId, clicksOn) => {
+  return !linksOf[chatId]
+    ? []
+    : linksOf[chatId].map(
+        d =>
+          `${clicksOn[d.shortenedURL] || 0} ${clicksOn[d.shortenedURL] === 1 ? 'click' : 'clicks'} → ${
+            d.shortenedURL
+          } → ${d.url}\n`,
+      );
+};
 
 const app = express();
 app.use(cors());
@@ -787,31 +834,29 @@ app.set('json spaces', 2);
 app.get('/', (req, res) => {
   res.json({ message: 'Assalamo Alaikum', from: req.hostname });
 });
-app.get('/bank-payment-for-subscription', (req, res) => {
+app.get('/bank-payment-for-subscription', async (req, res) => {
   console.log(req.originalUrl);
   const reference = req.query.reference;
-  const chatId = get(chatIdOfPayment, reference);
+  const chatId = await get(chatIdOfPayment, reference);
 
-  if (!get(state, chatId, 'chosenPlanForPayment')) {
+  const plan = (await get(state, chatId))?.chosenPlanForPayment;
+  if (!plan) {
     res.send('Payment already processed or not found');
     return;
   }
 
-  const plan = get(state, chatId, 'chosenPlanForPayment');
+  set(planOf, chatId, plan);
   set(planEndingTime, chatId, Date.now() + timeOf[plan]);
-
-  set(state, chatId, 'subscription', plan);
-
-  del(chatIdOfPayment, reference);
   set(
     payments,
     reference,
-    `Bank, Plan, ${plan}, ${chatId}, $${priceOf[plan]}, ${get(nameOf, chatId)}, ${new Date()}, ${get(
+    `Bank, Plan, ${plan}, ${chatId}, $${priceOf[plan]}, ${await get(nameOf, chatId)}, ${new Date()}, ${await get(
       planEndingTime,
       chatId,
     )}`,
   );
-  del(state, chatId, 'chosenPlanForPayment');
+  del(state, chatId);
+  del(chatIdOfPayment, reference);
 
   bot.sendMessage(
     chatId,
@@ -840,13 +885,14 @@ Nomadly Bot`,
 app.get('/bank-payment-for-domain', async (req, res) => {
   console.log(req.originalUrl);
   const reference = req.query.reference;
-  const chatId = get(chatIdOfPayment, reference);
-  if (!get(state, chatId, 'chosenDomainForPayment')) {
+  const chatId = await get(chatIdOfPayment, reference);
+  const domain = (await get(state, chatId))?.chosenDomainForPayment;
+
+  if (!domain) {
     res.send('Payment already processed or not found');
     return;
   }
 
-  const domain = get(state, chatId, 'chosenDomainForPayment');
   const { error: buyDomainError } = await buyDomain(chatId, domain);
   if (buyDomainError) {
     bot.sendMessage(chatId, 'Domain purchase fails, try another name.', rem);
@@ -880,20 +926,18 @@ Nomadly Bot`,
     `Your domain ${domain} is now linked to your account. Please note that DNS update might take up to 1hr. Enjoy URL shortening. 😇`,
   );
 
-  const chosenDomainPrice = get(state, chatId, 'chosenDomainPrice');
+  const chosenDomainPrice = (await get(state, chatId))?.chosenDomainPrice;
   set(chatIdOfPayment, reference, '');
   set(
     payments,
     reference,
-    `Bank, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${get(nameOf, chatId)}, ${new Date()}`,
+    `Bank, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${await get(nameOf, chatId)}, ${new Date()}`,
   );
 
-  del(state, chatId, 'chosenDomainPrice');
-  del(state, chatId, 'chosenDomainForPayment');
-
+  del(state, chatId);
   res.send('Payment processed successfully, You can now close this window');
 });
-app.get('/crypto-payment-for-subscription', (req, res) => {
+app.get('/crypto-payment-for-subscription', async (req, res) => {
   // handle multiple invocations of the same url
   const urlParams = new URLSearchParams(req.originalUrl);
 
@@ -908,8 +952,8 @@ app.get('/crypto-payment-for-subscription', (req, res) => {
     return;
   }
 
-  const chatId = get(chatIdOfPayment, address_in);
-  const session = get(state, chatId, 'cryptoPaymentSession');
+  const chatId = await get(chatIdOfPayment, address_in);
+  const session = (await get(state, chatId))?.cryptoPaymentSession;
 
   if (!session) {
     res.send('Payment issue, no crypto payment session found');
@@ -926,9 +970,9 @@ app.get('/crypto-payment-for-subscription', (req, res) => {
     return;
   }
 
-  const plan = get(state, chatId, 'chosenPlanForPayment');
+  const plan = (await get(state, chatId))?.chosenPlanForPayment;
   set(planEndingTime, chatId, Date.now(), timeOf[plan]);
-  set(state, chatId, 'subscription', plan);
+  set(planOf, chatId, plan);
   bot.sendMessage(
     chatId,
     `Your payment was successful, and you're now subscribed to our ${plan} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
@@ -942,14 +986,13 @@ Nomadly Bot`,
   set(
     payments,
     address_in,
-    `Crypto, Plan, ${plan}, ${chatId}, $${priceOf[plan]}, ${value_coin} ${coin}, ${get(
+    `Crypto, Plan, ${plan}, ${chatId}, $${priceOf[plan]}, ${value_coin} ${coin}, ${await get(
       nameOf,
       chatId,
-    )}, ${new Date()}, ${get(planEndingTime, chatId)}`,
+    )}, ${new Date()}, ${await get(planEndingTime, chatId)}`,
   );
 
-  del(state, chatId, 'chosenPlanForPayment');
-  del(state, chatId, 'cryptoPaymentSession');
+  del(state, chatId);
   res.send('Payment processed successfully, You can now close this window');
 });
 
@@ -968,8 +1011,8 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
     return;
   }
 
-  const chatId = get(chatIdOfPayment, address_in);
-  const session = get(state, chatId, 'cryptoPaymentSession');
+  const chatId = await get(chatIdOfPayment, address_in);
+  const session = (await get(state, chatId))?.cryptoPaymentSession;
 
   if (!session) {
     res.send('Payment session not found, please try again or contact support');
@@ -985,12 +1028,12 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
     return;
   }
 
-  if (!get(state, chatId, 'chosenDomainForPayment')) {
+  const domain = (await get(state, chatId))?.chosenDomainForPayment;
+  if (!domain) {
     res.send('Payment already processed or not found');
     return;
   }
 
-  const domain = get(state, chatId, 'chosenDomainForPayment');
   const { error: buyDomainError } = await buyDomain(chatId, domain);
   if (!buyDomainError) {
     bot.sendMessage(chatId, 'Domain purchase fails, try another name.', rem);
@@ -1024,21 +1067,18 @@ Nomadly Bot`,
     `Your domain ${domain} is now linked to your account. Please note that DNS update might take up to 1hr. Enjoy URL shortening. 😇`,
   );
 
-  const chosenDomainPrice = get(state, chatId, 'chosenDomainPrice');
+  const chosenDomainPrice = (await get(state, chatId))?.chosenDomainPrice;
   set(chatIdOfPayment, reference, '');
   set(
     payments,
     reference,
-    `Crypto, Domain Paid, ${domain}, $${chosenDomainPrice}, ${value_coin} ${coin}, ${chatId}, ${get(
+    `Crypto, Domain Paid, ${domain}, $${chosenDomainPrice}, ${value_coin} ${coin}, ${chatId}, ${await get(
       nameOf,
       chatId,
     )}, ${new Date()}`,
   );
 
-  del(state, chatId, 'chosenDomainPrice');
-  del(state, chatId, 'cryptoPaymentSession');
-  del(state, chatId, 'chosenDomainForPayment');
-
+  del(state, chatId);
   res.send('Payment processed successfully, You can now close this window');
 });
 app.get('/json', async (req, res) => {
@@ -1048,14 +1088,14 @@ app.get('/json', async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   fs.createReadStream(fileName).pipe(res);
 });
-app.get('/:id', (req, res) => {
-  const { id } = req.params;
+app.get('/:id', async (req, res) => {
+  const { id } = req?.params;
   if (id === '') {
     res.json({ message: 'Salam', from: req.hostname });
     return;
   }
   const shortUrl = `${req.hostname}/${id}`;
-  const url = get(fullUrlOf, shortUrl);
+  const url = await get(fullUrlOf, shortUrl);
 
   if (!url) {
     res.status(404).send('Link not found');
