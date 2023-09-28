@@ -3,8 +3,6 @@ require('dotenv').config();
 const axios = require('axios');
 const os = require('os');
 
-const { checkDomainPriceOnline } = require('./cr-get-domain-price');
-
 const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE;
 
 function isValidUrl(url) {
@@ -22,14 +20,6 @@ function isDeveloper(chatId) {
 
 function isAdmin(chatId) {
   return chatId === Number(process.env.TELEGRAM_ADMIN_CHAT_ID); // Replace with the actual admin's chat ID
-}
-
-async function checkDomainAvailability(domain, domainSold) {
-  if (domainSold[domain]) {
-    return { available: false, message: 'Domain is already sold, try another' };
-  }
-
-  return await checkDomainPriceOnline(domain);
 }
 
 async function convertUSDToNaira(amountInUSD) {
@@ -89,7 +79,6 @@ module.exports = {
   month,
   year,
   convertUSDToNaira,
-  checkDomainAvailability,
   isValidUrl,
   isNormalUser,
   isDeveloper,
