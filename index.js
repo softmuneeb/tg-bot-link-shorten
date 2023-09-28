@@ -150,7 +150,6 @@ bot.on('message', async msg => {
   }
 
   const action = (await get(state, chatId))?.action;
-  console.log({ action });
 
   const firstSteps = ['block-user', 'unblock-user', 'choose-domain', 'choose-domain-to-buy', 'choose-subscription'];
 
@@ -514,9 +513,7 @@ Nomadly Bot`;
       return;
     }
 
-    set(state, chatId, 'chosenPlanForPayment', plan).then(() => {
-      get(state, chatId).then(a => console.log(a, a?.chosenPlanForPayment));
-    });
+    set(state, chatId, 'chosenPlanForPayment', plan);
 
     bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
 
@@ -842,7 +839,6 @@ app.get('/', (req, res) => {
   res.json({ message: 'Assalamo Alaikum', from: req.hostname });
 });
 app.get('/bank-payment-for-subscription', async (req, res) => {
-  console.log(req.originalUrl);
   const reference = req.query.reference;
   const chatId = await get(chatIdOfPayment, reference);
 
@@ -890,7 +886,6 @@ Nomadly Bot`,
   // res.send('Payment processed successfully, You can now close this window');
 });
 app.get('/bank-payment-for-domain', async (req, res) => {
-  console.log(req.originalUrl);
   const reference = req.query.reference;
   const chatId = await get(chatIdOfPayment, reference);
   const domain = (await get(state, chatId))?.chosenDomainForPayment;
@@ -1004,8 +999,6 @@ Nomadly Bot`,
 });
 
 app.get('/crypto-payment-for-domain', async (req, res) => {
-  console.log(req.originalUrl);
-
   const urlParams = new URLSearchParams(req.originalUrl);
   const coin = urlParams.get('coin');
   const address_in = urlParams.get('address_in');
@@ -1028,7 +1021,6 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
 
   const { priceCrypto, ticker, ref } = session;
   const price = Number(priceCrypto) + Number(priceCrypto) * 0.06;
-  console.log({ value_coin, priceCrypto, price });
   if (!(value_coin >= price && coin === ticker && ref === refReceived)) {
     console.log(`payment session error for crypto ${req.originalUrl}`);
     res.send('Payment invalid, either less value sent or coin sent is not correct');
@@ -1095,6 +1087,16 @@ app.get('/json', async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   fs.createReadStream(fileName).pipe(res);
 });
+
+let serverStartTime = new Date();
+app.get('/uptime', (req, res) => {
+  let now = new Date();
+  let uptimeInMilliseconds = now - serverStartTime;
+  let uptimeInHours = uptimeInMilliseconds / (1000 * 60 * 60);
+
+  res.send(`Server has been running for ${uptimeInHours.toFixed(2)} hours.`);
+});
+
 app.get('/:id', async (req, res) => {
   const { id } = req?.params;
   if (id === '') {

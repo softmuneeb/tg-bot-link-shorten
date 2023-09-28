@@ -32,7 +32,7 @@ const increment = async (c, key) => {
 async function get(c, key) {
   try {
     const result = await c.findOne({ _id: key });
-    console.log({ findIn: c.collectionName, key, result });
+    // console.log({ findIn: c.collectionName, key, result });
     return result?.val || result || undefined;
   } catch (error) {
     console.error(`Error getting ${key} from ${c.collectionName}:`, error);
@@ -61,7 +61,7 @@ async function set(c, key, value, valueInside) {
 
     let a = JSON.stringify(valueInside);
     a = a === undefined ? '' : ` ${a}`;
-    console.log(`${key}: ${JSON.stringify(value)}${a} set in ${c.collectionName}`);
+    // console.log(`${key}: ${JSON.stringify(value)}${a} set in ${c.collectionName}`);
   } catch (error) {
     console.error(`Error setting ${key} -> ${JSON.stringify(value)} in ${c.collectionName}:`, error);
   }
@@ -70,7 +70,7 @@ async function set(c, key, value, valueInside) {
 async function del(c, chatId) {
   try {
     const result = await c.deleteOne({ _id: chatId });
-    console.log(`Deleted ${result.deletedCount >= 1 ? 'True' : 'False'} in ${c.collectionName} for ${chatId}`);
+    // console.log(`Deleted ${result.deletedCount >= 1 ? 'True' : 'False'} in ${c.collectionName} for ${chatId}`);
     return result.deletedCount === 1;
   } catch (error) {
     console.error('Error deleting user state:', error);
