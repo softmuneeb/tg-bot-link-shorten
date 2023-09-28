@@ -6,25 +6,10 @@ function getAnalyticsData(clicksOf) {
   return res;
 }
 
-const increment = async (c, key, keyInside) => {
+const increment = async (c, key) => {
   try {
-    if (keyInside) {
-      const result = await c.updateMany({ _id: key }, { $inc: { [keyInside]: 1 } });
-      console.log(result);
-    } else {
-      const result = await c.updateMany({ _id: key }, { $inc: { val: 1 } });
-      console.log(result);
-    }
-  } catch (error) {
-    console.error(`Error increment ${key} from ${c.collectionName}:`, error);
-    return null;
-  }
-};
-
-const increment2 = async (c, key) => {
-  try {
-    const result = await c.updateMany({ _id: key }, { $inc: { val: 1 } });
-    console.log(result);
+    const count = ((await get(c, key)) || 0) + 1;
+    await set(c, key, count);
   } catch (error) {
     console.error(`Error increment ${key} from ${c.collectionName}:`, error);
     return null;
@@ -57,15 +42,13 @@ async function get(c, key) {
 
 async function getAll(c) {
   try {
-    const collection = db.collection(c);
-    const result = await collection.find({}).toArray();
+    const result = await c.find({}).toArray();
     return result;
   } catch (error) {
     console.error(`Error getting all documents from ${c}:`, error);
     return null;
   }
 }
-
 
 // done these things to keep same way in changing db to memory variables (and memory variables back to db, easily)
 async function set(c, key, value, valueInside) {

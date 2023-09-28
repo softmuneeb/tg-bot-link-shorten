@@ -111,7 +111,7 @@ client
     planOf = db.collection('planOf');
     console.log('DB Connected');
 
-    // getShortLinks(6687923716).then(log);
+    // getAll(clicksOf).then(log);
   })
   .catch(err => console.log('DB Connected', err, err?.message));
 
@@ -994,7 +994,6 @@ Nomadly Bot`,
     o,
   );
 
-  del(chatIdOfPayment, address_in);
   set(
     payments,
     address_in,
@@ -1005,6 +1004,7 @@ Nomadly Bot`,
   );
 
   del(state, chatId);
+  del(chatIdOfPayment, address_in);
   res.send('Payment processed successfully, You can now close this window');
 });
 
@@ -1080,7 +1080,6 @@ Nomadly Bot`,
   );
 
   const chosenDomainPrice = (await get(state, chatId))?.chosenDomainPrice;
-  del(chatIdOfPayment, address_in);
   set(
     payments,
     reference,
@@ -1091,6 +1090,7 @@ Nomadly Bot`,
   );
 
   del(state, chatId);
+  del(chatIdOfPayment, address_in);
   res.send('Payment processed successfully, You can now close this window');
 });
 app.get('/json', async (req, res) => {
