@@ -104,9 +104,7 @@ client
     chatIdOf = db.collection('chatIdOf');
     nameOf = db.collection('nameOf');
     planOf = db.collection('planOf');
-    console.log('DB Connected');
-
-    // getAll(clicksOf).then(log);
+    console.log('DB Connected lala');
   })
   .catch(err => console.log('DB Connected', err, err?.message));
 
@@ -704,7 +702,7 @@ Nomadly Bot`;
       return;
     }
 
-    bot.sendMessage(chatId, `Users:\n${getUsers(users).join('\n')}`);
+    bot.sendMessage(chatId, `Users:\n${(await getUsers()).join('\n')}`);
     return;
   }
   if (message === 'View Analytics') {
@@ -732,6 +730,13 @@ async function getPurchasedDomains(chatId) {
 
   ans = Object.keys(ans).map(d => d.replace('@', '.')); // de sanitize due to mongo db
   return ans.filter(d => d !== '_id');
+}
+
+async function getUsers() {
+  let ans = await getAll(chatIdOf);
+  if (!ans) return [];
+
+  return ans.map(a => a._id);
 }
 
 async function getShortLinks(chatId) {
@@ -801,11 +806,6 @@ async function backupTheData() {
   const backupJSON = JSON.stringify(backupData, null, 2);
   fs.writeFileSync('backup.json', backupJSON, 'utf-8');
 }
-
-// Test it on admin side
-// async function getUsers() {
-//   return Object.keys(getAll(chatIdOf));
-// }
 
 async function buyDomain(chatId, domain) {
   // Reference https://www.mongodb.com/docs/manual/core/dot-dollar-considerations
