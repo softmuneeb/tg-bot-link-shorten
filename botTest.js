@@ -2,38 +2,14 @@ require('dotenv').config(); // Load environment variables from .env file
 
 const TelegramBot = require('node-telegram-bot-api');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const { get, set, add, del } = require('./dbTest.js');
 const token = process.env.TELEGRAM_BOT_TOKEN; // Access token from environment variable
 let bot = new TelegramBot(token, { polling: true });
 
-// let db = true;
-// let state = {};
-// let escrows = {};
-// function get(table, key) {
-//   return table[key];
-// }
-// function set(table, key, value) {
-//   table[key] = value;
-// }
-// function add(table, key, value) {
-//   if (!table[key]) {
-//     table[key] = {};
-//     table[key]['list'] = [];
-//   }
-//   table[key]['list'].push(value);
-// }
-// function del(table, key) {
-//   if (!table[key]) return false;
-
-//   delete table[key];
-//   return true;
-// }
-
-// DB State
 let db;
-const dbName = 'escrowBot';
-
 let state;
 let escrows;
+const dbName = 'escrowBot';
 
 const client = new MongoClient(process.env.MONGO_URL, {
   serverApi: {
@@ -54,52 +30,6 @@ client
   })
   .catch(err => console.log(err));
 
-async function get(c, key) {
-  try {
-    const result = await c.findOne({ _id: key });
-    return result ? result : undefined;
-  } catch (error) {
-    console.error(`Error getting ${key} from ${c.collectionName}:`, error);
-    return null;
-  }
-}
-
-async function set(c, key, value) {
-  try {
-    await c.updateOne({ _id: key }, { $set: value }, { upsert: true });
-    console.log(`${key} -> ${JSON.stringify(value)} set in ${c.collectionName}`);
-  } catch (error) {
-    console.error(`Error setting ${key} -> ${JSON.stringify(value)} in ${c.collectionName}:`, error);
-  }
-}
-
-async function del(collection, chatId) {
-  try {
-    const result = await collection.deleteOne({ _id: chatId });
-    return result.deletedCount === 1;
-  } catch (error) {
-    console.error('Error deleting user state:', error);
-    return false;
-  }
-}
-
-async function add(collection, key, newValue) {
-  try {
-    const filter = { _id: key };
-    const update = { $push: { ['list']: newValue } };
-
-    const result = await collection.updateOne(filter, update, { upsert: true });
-
-    if (result.modifiedCount === 1) {
-      console.log(`Object added to array in document with _id: ${key}`);
-    } else {
-      console.log(`No document matched the filter or no changes were made.`);
-    }
-  } catch (error) {
-    console.error(`Error adding object to array:`, error);
-  }
-}
-
 bot.on('message', async msg => {
   if (!db) return;
   const chatId = '' + msg.chat.id;
@@ -119,7 +49,7 @@ bot.on('message', async msg => {
     set(state, chatId, { step: 1 }); // Set step to 1 for CreateEscrow process
     sendMessage(chatId, 'Enter Escrow Name');
   } else if (msg.text === '/ViewEscrows') {
-    const list = (await get(escrows, chatId))?.list;
+    const list = (await get(escrows, chatId))?.list || [];
     console.log('escrows', list);
     const escrowList = list.map(
       (escrow, index) =>
