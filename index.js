@@ -119,6 +119,7 @@ bot.on('message', async msg => {
   }
 
   const action = get(state, chatId, 'action');
+  const firstSteps = ['block-user', 'unblock-user', 'choose-domain', 'choose-domain-to-buy', 'choose-subscription'];
 
   if (message === '/start') {
     if (isAdmin(chatId)) {
@@ -128,6 +129,12 @@ bot.on('message', async msg => {
     } else {
       bot.sendMessage(chatId, 'Thank you for choosing the URL Shortener Bot! Please choose an option:', o);
     }
+  }
+  //
+  else if (message === 'Cancel' || (firstSteps.includes(action) && message === 'Back')) {
+    del(state, chatId, 'action');
+    bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
+    return;
   }
   //
   else if (message === 'Block User') {
@@ -140,11 +147,6 @@ bot.on('message', async msg => {
 
     set(state, chatId, 'action', 'block-user');
   } else if (action === 'block-user') {
-    if (message === 'Back' || message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has pressed ${message} Button.`, o);
-      return;
-    }
     const userToBlock = message;
 
     const chatIdToBlock = get(chatIdOf, userToBlock);
@@ -168,12 +170,6 @@ bot.on('message', async msg => {
     bot.sendMessage(chatId, 'Please share the username of the user that needs to be unblocked.', bc);
     set(state, chatId, 'action', 'unblock-user');
   } else if (action === 'unblock-user') {
-    if (message === 'Back' || message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has pressed ${message} Button.`, o);
-      return;
-    }
-
     const userToUnblock = message;
     const chatIdToUnblock = get(chatIdOf, userToUnblock);
     if (!chatIdToUnblock) {
@@ -198,11 +194,6 @@ bot.on('message', async msg => {
     set(state, chatId, 'action', 'choose-domain');
     bot.sendMessage(chatId, 'Kindly share the URL that you would like to have shortened.', bc);
   } else if (action === 'choose-domain') {
-    if (message === 'Back' || message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has pressed ${message} Button.`, o);
-      return;
-    }
     if (!isValidUrl(message)) {
       bot.sendMessage(chatId, 'Please provide a valid URL. e.g https://google.com', bc);
       return;
@@ -221,10 +212,6 @@ bot.on('message', async msg => {
     if (message === 'Back') {
       set(state, chatId, 'action', 'choose-domain');
       bot.sendMessage(chatId, `Please choose the URL to shorten.`, bc);
-      return;
-    } else if (message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
     const domains = getPurchasedDomains(chatId);
@@ -246,9 +233,6 @@ bot.on('message', async msg => {
         },
       });
       set(state, chatId, 'action', 'shorten');
-    } else if (message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
     } else if (message === 'Random Link') {
       const url = get(state, chatId, 'url');
       const domain = get(state, chatId, 'selectedDomain');
@@ -277,10 +261,6 @@ bot.on('message', async msg => {
     if (message === 'Back') {
       bot.sendMessage(chatId, `Choose link type:`, linkType);
       set(state, chatId, 'action', 'choose-link-type');
-    } else if (message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
-      return;
     }
 
     const url = get(state, chatId, 'url');
@@ -316,12 +296,6 @@ bot.on('message', async msg => {
     set(state, chatId, 'action', 'choose-domain-to-buy');
     bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase.', bc);
   } else if (action === 'choose-domain-to-buy') {
-    if (message === 'Back' || message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has pressed ${message} Button.`, o);
-      return;
-    }
-
     const domain = message.toLowerCase();
     const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/;
 
@@ -346,10 +320,6 @@ bot.on('message', async msg => {
     if (message === 'Back') {
       set(state, chatId, 'action', 'choose-domain-to-buy');
       bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase.', bc);
-      return;
-    } else if (message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
 
@@ -379,10 +349,6 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, pay);
 
       set(state, chatId, 'action', 'domain-name-payment');
-      return;
-    } else if (message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
     const email = message;
@@ -421,10 +387,6 @@ Nomadly Bot`,
     if (message === 'Back') {
       bot.sendMessage(chatId, `Price of ${domain} subscription is ${priceUSD} USD. Choose payment method.`, pay);
       set(state, chatId, 'action', 'domain-name-payment');
-      return;
-    } else if (message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
     if (!cryptoTransferOptions.includes(ticker)) {
@@ -479,11 +441,6 @@ Nomadly Bot`;
     set(state, chatId, 'action', 'choose-subscription');
     bot.sendMessage(chatId, 'Select the perfect subscription plan for you:', chooseSubscription);
   } else if (action === 'choose-subscription') {
-    if (message === 'Back' || message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has pressed ${message} Button.`, o);
-      return;
-    }
     const plan = message;
 
     if (!subscriptionOptions.includes(plan)) {
@@ -501,12 +458,7 @@ Nomadly Bot`;
       set(state, chatId, 'action', 'choose-subscription');
       bot.sendMessage(chatId, 'Select the perfect subscription plan for you:', chooseSubscription);
       return;
-    } else if (message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
-      return;
     }
-
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
@@ -533,10 +485,6 @@ Nomadly Bot`;
       bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
 
       set(state, chatId, 'action', 'subscription-payment');
-      return;
-    } else if (message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
     const email = message;
@@ -575,10 +523,6 @@ Nomadly Bot`,
     if (message === 'Back') {
       bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceUSD} USD. Choose payment method.`, pay);
       set(state, chatId, 'action', 'subscription-payment');
-      return;
-    } else if (message === 'Cancel') {
-      del(state, chatId, 'action');
-      bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
       return;
     }
     const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
