@@ -711,8 +711,8 @@ Nomadly Bot`;
       return;
     }
 
-    const analyticsData = await getAll(clicksOf);
-    bot.sendMessage(chatId, `Analytics Data:\n${analyticsData}`);
+    const analyticsData = await getAnalytics();
+    bot.sendMessage(chatId, `Analytics Data:\n${analyticsData.join('\n')}`);
     return;
   }
   if (message === '🛠️ Get support') {
@@ -737,6 +737,12 @@ async function getUsers() {
   if (!ans) return [];
 
   return ans.map(a => a._id);
+}
+
+async function getAnalytics() {
+  let ans = await getAll(clicksOf);
+  if (!ans) return [];
+  return ans.map(a => `${a._id}  ${a.val} click${a.val === 1 ? '' : 's'}`);
 }
 
 async function getShortLinks(chatId) {
