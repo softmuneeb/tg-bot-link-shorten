@@ -460,7 +460,9 @@ Nomadly Bot`,
       ref,
     });
 
-    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to\n\n<code>${address}</code>\n\nOnce the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
+    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to\n\n<code>${address}</code>
+
+Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`;
@@ -605,7 +607,9 @@ Nomadly Bot`,
       ref,
     });
 
-    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to \n\n<code>${address}</code>\n\nOnce the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to\n\n<code>${address}</code>
+
+Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
 
 Best regards,
 Nomadly Bot`;

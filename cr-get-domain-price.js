@@ -1,7 +1,7 @@
 require('dotenv').config();
 const axios = require('axios');
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
-const PERCENT_INCREASE_DOMAIN = 1 + process.env.PERCENT_INCREASE_DOMAIN;
+const PERCENT_INCREASE_DOMAIN = 1 + Number(process.env.PERCENT_INCREASE_DOMAIN);
 
 // Function to test domain availability
 async function checkDomainPriceOnline(domainName) {
