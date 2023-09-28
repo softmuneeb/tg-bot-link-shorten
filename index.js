@@ -124,17 +124,7 @@ bot.on('message', async msg => {
   const username = nameOfChatId || msg.from.username || nanoid();
 
   if (!connect_reseller_working) {
-    try {
-      await getRegisteredDomainNames();
-      connect_reseller_working = true;
-    } catch (error) {
-      const ip = await axios.get('https://api.ipify.org/');
-      // when all okay project okay then put admin other wise admin may irritate of many messages
-      const message = `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
-      console.log(message);
-      bot.sendMessage(process.env.TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'markdown' });
-      return;
-    }
+    tryConnectReseller();
   }
 
   const blocked = await get(chatIdBlocked, chatId);
@@ -1130,18 +1120,21 @@ const startServer = () => {
 };
 startServer();
 
-getRegisteredDomainNames()
-  .then(() => {
-    connect_reseller_working = true;
-  })
-  .catch(() => {
-    //
-    axios.get('https://api.ipify.org/').then(ip => {
-      const message = `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
-      console.log(message);
-      bot.sendMessage(process.env.TELEGRAM_DEV_CHAT_ID, message, {
-        parse_mode: 'markdown',
+const tryConnectReseller = () => {
+  getRegisteredDomainNames()
+    .then(() => {
+      connect_reseller_working = true;
+    })
+    .catch(() => {
+      //
+      axios.get('https://api.ipify.org/').then(ip => {
+        const message = `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
+        console.log(message);
+        bot.sendMessage(process.env.TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'markdown' });
+        bot.sendMessage(process.env.TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'markdown' });
       });
+      //
     });
-    //
-  });
+};
+
+tryConnectReseller();
