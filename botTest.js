@@ -39,7 +39,7 @@ client
     // addObjectToArray('linkoosOf', 'chat1', { 1: 2, a: { 3: 4 } });
     // console.log(JSON.stringify(await get('linkoosOf', 'chat1'), null, 2));
 
-    // await set('state', '3340', { a: 1 }); // Initialize state for this user
+    // set('state', '3340', { a: 1 }); // Initialize state for this user
     // const bb = await get('state', '3340'); // Initialize state for this user
     // console.log('hi ', bb);
   })
@@ -74,7 +74,7 @@ async function set(collectionName, key, value) {
     await collection.updateOne({ _id: key }, { $set: value }, { upsert: true });
     console.log(`${key} -> ${JSON.stringify(value)} set in ${collectionName}`);
   } catch (error) {
-    console.error(`Error setting ${key} in ${collectionName}:`, error);
+    console.error(`Error setting ${key} -> ${JSON.stringify(value)} in ${collectionName}:`, error);
   }
 }
 
@@ -89,7 +89,7 @@ async function deleteUserState(chatId) {
   }
 }
 
-async function addObjectToArray(collectionName, key, newValue) {
+async function add(collectionName, key, newValue) {
   try {
     const collection = db.collection(collectionName);
     const filter = { _id: key };
@@ -112,10 +112,10 @@ bot.on('message', async msg => {
   const chatId = '' + msg.chat.id;
 
   if (msg.text === '/start') {
-    await set('state', chatId, {}); // Initialize state for this user
+    set('state', chatId, {}); // Initialize state for this user
     sendMessage(chatId, 'Welcome to Escrow Bot. Choose Option /CreateEscrow or /ViewEscrows');
   } else if (msg.text === '/CreateEscrow') {
-    await set('state', chatId, { step: 1 }); // Set step to 1 for CreateEscrow process
+    set('state', chatId, { step: 1 }); // Set step to 1 for CreateEscrow process
     sendMessage(chatId, 'Enter Escrow Name');
   } else if (msg.text === '/ViewEscrows') {
     const escrows = (await get('escrows', chatId))?.list;
@@ -131,32 +131,32 @@ bot.on('message', async msg => {
     // console.log('step ', step);
     switch (step) {
       case 1:
-        await set('state', chatId, { ...(await get('state', chatId)), name: msg.text, step: 2 });
+        set('state', chatId, { ...(await get('state', chatId)), name: msg.text, step: 2 });
         sendMessage(chatId, 'Add Description or type /back to go back');
         break;
 
       case 2:
         if (msg.text === '/back') {
-          await set('state', chatId, { ...(await get('state', chatId)), step: 1 });
+          set('state', chatId, { ...(await get('state', chatId)), step: 1 });
           sendMessage(chatId, 'Enter Escrow Name');
         } else {
-          await set('state', chatId, { ...(await get('state', chatId)), description: msg.text, step: 3 });
+          set('state', chatId, { ...(await get('state', chatId)), description: msg.text, step: 3 });
           sendMessage(chatId, 'Add Price or type /back to go back');
         }
         break;
 
       case 3:
         if (msg.text === '/back') {
-          await set('state', chatId, { ...(await get('state', chatId)), step: 2 });
+          set('state', chatId, { ...(await get('state', chatId)), step: 2 });
           sendMessage(chatId, 'Add Description');
         } else {
-          await set('state', chatId, { ...(await get('state', chatId)), price: msg.text });
+          set('state', chatId, { ...(await get('state', chatId)), price: msg.text });
           const name = (await get('state', chatId))?.name;
           const description = (await get('state', chatId))?.description;
           const price = (await get('state', chatId))?.price;
           const newEscrow = { name, description, price };
-          await addObjectToArray('escrows', chatId, newEscrow);
-          await set('state', chatId, { step: 0 }); // Reset step to 0
+          await add('escrows', chatId, newEscrow);
+          set('state', chatId, { step: 0 }); // Reset step to 0
           sendMessage(chatId, 'Escrow Created Successfully!');
         }
         break;
@@ -174,9 +174,9 @@ bot.onText(/\/cancel/, async msg => {
   const deleted = await deleteUserState(chatId);
 
   if (deleted) {
-    await sendMessage(chatId, 'Process cancelled. Type /start to begin again.');
+    sendMessage(chatId, 'Process cancelled. Type /start to begin again.');
   } else {
-    await sendMessage(chatId, 'No active process to cancel. Type /start to begin.');
+    sendMessage(chatId, 'No active process to cancel. Type /start to begin.');
   }
 });
 
