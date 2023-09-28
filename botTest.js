@@ -1,3 +1,11 @@
+
+require('dotenv').config(); // Load environment variables from .env file
+
+const TelegramBot = require('node-telegram-bot-api');
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const token = process.env.TELEGRAM_BOT_TOKEN; // Access token from environment variable
+let bot = new TelegramBot(token, { polling: true });
+
 // let state = {};
 // let escrows;
 // function get(state, key) {
@@ -13,12 +21,6 @@
 //   state[key] = value;
 // }
 
-require('dotenv').config(); // Load environment variables from .env file
-
-const TelegramBot = require('node-telegram-bot-api');
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const token = process.env.TELEGRAM_BOT_TOKEN; // Access token from environment variable
-let bot = new TelegramBot(token, { polling: true });
 
 // DB State
 let db;
