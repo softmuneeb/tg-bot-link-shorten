@@ -853,10 +853,7 @@ app.get('/bank-payment-for-subscription', async (req, res) => {
   set(
     payments,
     reference,
-    `Bank, Plan, ${plan}, ${chatId}, $${priceOf[plan]}, ${await get(nameOf, chatId)}, ${new Date()}, ${await get(
-      planEndingTime,
-      chatId,
-    )}`,
+    `Bank, Plan, ${plan}, ${chatId}, $${priceOf[plan]}, ${await get(nameOf, chatId)}, ${new Date()}`,
   );
   del(state, chatId);
   del(chatIdOfPayment, reference);
@@ -990,7 +987,7 @@ Nomadly Bot`,
     `Crypto, Plan, ${plan}, ${chatId}, $${priceOf[plan]}, ${value_coin} ${coin}, ${await get(
       nameOf,
       chatId,
-    )}, ${new Date()}, ${await get(planEndingTime, chatId)}`,
+    )}, ${new Date()}`,
   );
 
   del(state, chatId);
