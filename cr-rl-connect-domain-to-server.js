@@ -66,15 +66,16 @@ async function isRailwayAPIWorking() {
   );
   const error = response?.data?.errors?.[0]?.message;
 
+  console.log('isRailwayAPIWorking GraphQL Response:', JSON.stringify(response.data, null, 2));
+
   if (error) {
     console.error('Error query me', error);
-    console.log('GraphQL Response:', JSON.stringify(response.data, null, 2));
     return { error };
   }
 
   return response.data;
 }
 
-// isRailwayAPIWorking();
+isRailwayAPIWorking();
 // saveDomainInServer('lemon-is-json-15.sbs');
 module.exports = { saveDomainInServer, isRailwayAPIWorking };
