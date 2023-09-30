@@ -123,7 +123,7 @@ bot.on('message', async msg => {
     bot.sendMessage(chatId, 'Bot starting, please wait');
     return;
   }
-  
+
   const nameOfChatId = await get(nameOf, chatId);
   const username = nameOfChatId || msg.from.username || nanoid();
 
@@ -225,7 +225,7 @@ bot.on('message', async msg => {
       return;
     }
     set(state, chatId, 'action', 'choose-domain');
-    bot.sendMessage(chatId, 'Kindly share the URL that you would like to have shortened.', bc);
+    bot.sendMessage(chatId, 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com', bc);
     return;
   }
   if (action === 'choose-domain') {
