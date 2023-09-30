@@ -836,9 +836,11 @@ const app = express();
 app.use(cors());
 app.set('json spaces', 2);
 app.get('/', (req, res) => {
-  res.json({
-    message: `Keep your eyes on this space! We're gearing up to launch our URL shortening application that will make your links short, sweet, and to the point. Stay tuned for our big reveal!`,
-  });
+  res.send(
+    `Keep your eyes on this space! We're gearing up to launch our URL shortening application that will make your links short, sweet, and to the point. Stay tuned for our big reveal!
+
+Support @nomadly_private at Telegram.`,
+  );
 });
 app.get('/bank-payment-for-subscription', async (req, res) => {
   const reference = req.query.reference;
@@ -1140,7 +1142,7 @@ const tryConnectReseller = () => {
         const message = `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
         console.log(message);
         bot.sendMessage(process.env.TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'markdown' });
-        bot.sendMessage(process.env.TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'markdown' });
+        bot.sendMessage(process.env.TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'markdown' }, aO);
       });
       //
     });
