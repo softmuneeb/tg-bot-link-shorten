@@ -127,7 +127,6 @@ bot.on('message', async msg => {
   const nameOfChatId = await get(nameOf, chatId);
   const username = nameOfChatId || msg.from.username || nanoid();
 
-
   const blocked = await get(chatIdBlocked, chatId);
   if (blocked) {
     bot.sendMessage(chatId, `You are currently blocked from using the bot. Please contact ${SUPPORT_USERNAME}`, rem);
@@ -389,7 +388,7 @@ bot.on('message', async msg => {
       return;
     }
 
-    bot.sendMessage(chatId, `Please provide your email for bank payment reference:`, bc);
+    bot.sendMessage(chatId, `Please provide an email for payment confirmation.`, bc);
     set(state, chatId, 'action', 'bank-transfer-payment-domain');
     return;
   }
@@ -527,7 +526,7 @@ Nomadly Bot`;
     }
 
     if (paymentOption === 'Bank ₦aira + Card🌐︎') {
-      bot.sendMessage(chatId, `Please provide your email for bank payment reference:`, bc);
+      bot.sendMessage(chatId, `Please provide an email for payment confirmation.`, bc);
       set(state, chatId, 'action', 'bank-transfer-payment-subscription');
       return;
     }
