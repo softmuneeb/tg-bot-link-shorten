@@ -836,7 +836,9 @@ const app = express();
 app.use(cors());
 app.set('json spaces', 2);
 app.get('/', (req, res) => {
-  res.json({ message: 'Assalamo Alaikum', from: req.hostname });
+  res.json({
+    message: `Keep your eyes on this space! We're gearing up to launch our URL shortening application that will make your links short, sweet, and to the point. Stay tuned for our big reveal!`,
+  });
 });
 app.get('/bank-payment-for-subscription', async (req, res) => {
   const reference = req.query.reference;
@@ -1101,7 +1103,7 @@ app.get('/:id', async (req, res) => {
     return;
   }
   const shortUrl = `${req.hostname}/${id}`;
-  const url = await get(fullUrlOf, shortUrl);
+  const url = await get(fullUrlOf, shortUrl.replace('.', '@'));
 
   if (!url) {
     res.status(404).send('Link not found');
