@@ -338,7 +338,7 @@ bot.on('message', async msg => {
       return;
     }
     set(state, chatId, 'action', 'choose-domain-to-buy');
-    bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase.', bc);
+    bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase. e.g abcpay.com', bc);
     return;
   }
   if (action === 'choose-domain-to-buy') {
@@ -367,7 +367,7 @@ bot.on('message', async msg => {
   if (action === 'domain-name-payment') {
     if (message === 'Back') {
       set(state, chatId, 'action', 'choose-domain-to-buy');
-      bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase.', bc);
+      bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase. e.g abcpay.com', bc);
       return;
     }
 
@@ -926,10 +926,7 @@ Nomadly Bot`,
     return;
   }
 
-  bot.sendMessage(
-    chatId,
-    `Your domain ${domain} is now linked to your account. Please note that DNS update might take up to 1hr. Enjoy URL shortening. 😇`,
-  );
+  bot.sendMessage(chatId, `Your domain ${domain} is now linked to your account while DNS propagates. 🚀`);
 
   const chosenDomainPrice = (await get(state, chatId))?.chosenDomainPrice;
   del(state, chatId);
@@ -1064,10 +1061,7 @@ Nomadly Bot`,
     return;
   }
 
-  bot.sendMessage(
-    chatId,
-    `Your domain ${domain} is now linked to your account. Please note that DNS update might take up to 1hr. Enjoy URL shortening. 😇`,
-  );
+  bot.sendMessage(chatId, `Your domain ${domain} is now linked to your account while DNS propagates. 🚀`);
 
   const chosenDomainPrice = (await get(state, chatId))?.chosenDomainPrice;
   set(
