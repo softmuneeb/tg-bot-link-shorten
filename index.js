@@ -905,7 +905,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
   }
   bot.sendMessage(
     chatId,
-    `Your payment is processed and domain ${domain} is now yours. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#CNAME/${domain} Thank you for choosing us.
+    `Your payment is processed and domain ${domain} is now yours. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain} Thank you for choosing us.
 
 Best,
 Nomadly Bot`,
@@ -1040,7 +1040,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   }
   bot.sendMessage(
     chatId,
-    `Your payment is processed and domain ${domain} is now yours. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#CNAME/${domain} Thank you for choosing us.
+    `Your payment is processed and domain ${domain} is now yours. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain} Thank you for choosing us.
 
 Best,
 Nomadly Bot`,
