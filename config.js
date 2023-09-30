@@ -47,6 +47,7 @@ const o = {
       ['🛠️ Get support'],
     ],
   },
+  disable_web_page_preview: true,
 };
 
 const rem = {
