@@ -118,12 +118,15 @@ bot.on('message', async msg => {
     return;
   }
 
+  if (!connect_reseller_working) {
+    tryConnectReseller();
+    bot.sendMessage(chatId, 'Bot starting, please wait');
+    return;
+  }
+  
   const nameOfChatId = await get(nameOf, chatId);
   const username = nameOfChatId || msg.from.username || nanoid();
 
-  if (!connect_reseller_working) {
-    tryConnectReseller();
-  }
 
   const blocked = await get(chatIdBlocked, chatId);
   if (blocked) {
