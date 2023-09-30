@@ -1,12 +1,14 @@
 require('dotenv').config();
 const axios = require('axios');
 const API_TOKEN = process.env.API_KEY_RAILWAY;
+const ENVIRONMENT_ID = process.env.RAILWAY_ENVIRONMENT_ID;
+const SERVICE_ID = process.env.RAILWAY_SERVICE_ID;
 const GRAPHQL_ENDPOINT = 'https://backboard.railway.app/graphql/v2';
 async function saveDomainInServer(domain) {
   const GRAPHQL_QUERY = `
   mutation customDomainCreate {
       customDomainCreate(
-          input: { domain: "${domain}", environmentId: "beba5254-5c21-40e4-9520-96aa644654c0", serviceId: "945d993f-a8af-40cb-982d-2b0f37a791c4"}
+          input: { domain: "${domain}", environmentId: "${ENVIRONMENT_ID}", serviceId: "${SERVICE_ID}"}
       ) {
           id
           status {
