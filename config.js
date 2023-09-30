@@ -59,6 +59,7 @@ const bc = {
   reply_markup: {
     keyboard: [['Back', 'Cancel']],
   },
+  disable_web_page_preview: true,
 };
 
 const pay = {
