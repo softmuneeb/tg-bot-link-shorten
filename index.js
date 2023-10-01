@@ -818,6 +818,14 @@ async function backupTheData() {
   const backupJSON = JSON.stringify(backupData, null, 2);
   fs.writeFileSync('backup.json', backupJSON, 'utf-8');
 }
+async function backupPayments() {
+  const data = await getAll(payments);
+
+  console.log(data);
+  const head = 'A,B,C,D,E,F,G,H\n';
+  const backup = data.map(a => a.val).join('\n');
+  fs.writeFileSync('payments.csv', head + backup, 'utf-8');
+}
 
 async function buyDomain(chatId, domain) {
   // Reference https://www.mongodb.com/docs/manual/core/dot-dollar-considerations
@@ -863,7 +871,7 @@ app.get('/bank-payment-for-subscription', async (req, res) => {
   set(
     payments,
     reference,
-    `Bank, Plan, ${plan}, ${chatId}, $${priceOf[plan]}, ${await get(nameOf, chatId)}, ${new Date()}`,
+    `Bank, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${await get(nameOf, chatId)}, ${new Date()}`,
   );
   del(state, chatId);
   del(chatIdOfPayment, reference);
@@ -991,10 +999,10 @@ Nomadly Bot`,
   set(
     payments,
     address_in,
-    `Crypto, Plan, ${plan}, ${chatId}, $${priceOf[plan]}, ${value_coin} ${coin}, ${await get(
+    `Crypto, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${await get(
       nameOf,
       chatId,
-    )}, ${new Date()}`,
+    )}, ${new Date()}, ${value_coin} ${coin}`,
   );
 
   del(state, chatId);
@@ -1071,10 +1079,10 @@ Nomadly Bot`,
   set(
     payments,
     reference,
-    `Crypto, Domain Paid, ${domain}, $${chosenDomainPrice}, ${value_coin} ${coin}, ${chatId}, ${await get(
+    `Crypto, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${await get(
       nameOf,
       chatId,
-    )}, ${new Date()}`,
+    )}, ${new Date()}, ${value_coin} ${coin}`,
   );
 
   del(state, chatId);
@@ -1084,6 +1092,13 @@ Nomadly Bot`,
 app.get('/json', async (req, res) => {
   await backupTheData();
   const fileName = 'backup.json';
+  res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+  res.setHeader('Content-Type', 'application/json');
+  fs.createReadStream(fileName).pipe(res);
+});
+app.get('/payments', async (req, res) => {
+  await backupPayments();
+  const fileName = 'payments.csv';
   res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
   res.setHeader('Content-Type', 'application/json');
   fs.createReadStream(fileName).pipe(res);
