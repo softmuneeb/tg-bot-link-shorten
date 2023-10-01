@@ -1,3 +1,38 @@
+1 oct 2023
+
+6251043632
+option1122q
+
+payment session error for crypto 
+
+/crypto-payment-for-domain?
+ref=ttX0a&
+address_in=3Ngg3MtXodXSbVwcWScPw9MNGkZXEfvYhW&
+address_out=1JH5TnZzjYTf1yYwBDLjWoHgkAcCHc1Do7&
+txid_in=08011935b714d57897da861657af85bc9c41fd9ba8eff2f70f582c43bf839e2a&
+txid_out=5041f0f0e238f3acf64d0e86455f14f0eeb18c7d51420cccc75b0f5b48a511c7&
+fee_coin=0.00000546&
+value_coin=0.000105&
+value_forwarded=9065&
+value_forwarded_coin=0.00009065&
+coin=btc&
+price=27004.8315418563&
+
+{
+  "action": "none",
+  "chosenPlanForPayment": "Daily",
+  "cryptoPaymentSession": {
+    "priceCrypto": "0.00037036",
+    "ticker": "btc",
+    "ref": "cguLF"
+  }
+}
+
+
+
+
+
+
 NODEJS Package:
   const coin = 'polygon_matic';
   const myAddress = ''; // auto gen by BB
