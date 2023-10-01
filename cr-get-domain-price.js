@@ -23,7 +23,7 @@ async function checkDomainPriceOnline(domainName) {
 
       const price = Math.ceil(price1Year * PERCENT_INCREASE_DOMAIN);
       // const price = 0.2; //20% profit
-      return { available: true, price };
+      return { available: true, price: price > 5 ? price : 6 };
     } else if (statusCode === 400) {
       return {
         available: false,
