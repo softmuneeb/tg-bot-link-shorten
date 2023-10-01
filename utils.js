@@ -2,7 +2,7 @@ require('dotenv').config();
 const axios = require('axios');
 
 const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE;
-const PERCENT_INCREASE_USD_TO_NAIRA = process.env.PERCENT_INCREASE_USD_TO_NAIRA;
+const PERCENT_INCREASE_USD_TO_NAIRA = Number(process.env.PERCENT_INCREASE_USD_TO_NAIRA);
 
 function isValidUrl(url) {
   const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
