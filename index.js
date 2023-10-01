@@ -798,18 +798,20 @@ function restoreData() {
 
 async function backupTheData() {
   const backupData = {
-    state,
-    linksOf,
-    clicksOf,
-    clicksOn,
-    fullUrlOf,
-    domainsOf,
-    nameOf,
-    chatIdOf,
-    chatIdBlocked,
-    planEndingTime,
-    chatIdOfPayment,
-    totalShortLinks,
+    state: await getAll(state),
+    linksOf: await getAll(linksOf),
+    fullUrlOf: await getAll(fullUrlOf),
+    domainsOf: await getAll(domainsOf),
+    chatIdBlocked: await getAll(chatIdBlocked),
+    planEndingTime: await getAll(planEndingTime),
+    chatIdOfPayment: await getAll(chatIdOfPayment),
+    totalShortLinks: await getAll(totalShortLinks),
+    payments: await getAll(payments),
+    clicksOf: await getAll(clicksOf),
+    clicksOn: await getAll(clicksOn),
+    chatIdOf: await getAll(chatIdOf),
+    nameOf: await getAll(nameOf),
+    planOf: await getAll(planOf),
   };
   const backupJSON = JSON.stringify(backupData, null, 2);
   fs.writeFileSync('backup.json', backupJSON, 'utf-8');
