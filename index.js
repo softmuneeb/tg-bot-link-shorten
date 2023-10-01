@@ -119,9 +119,11 @@ bot.on('message', async msg => {
   }
 
   if (!connect_reseller_working) {
-    tryConnectReseller();
-    bot.sendMessage(chatId, 'Bot starting, please wait');
-    return;
+    await tryConnectReseller();
+    if (!connect_reseller_working) {
+      bot.sendMessage(chatId, 'Bot starting, please wait');
+      return;
+    }
   }
 
   const nameOfChatId = await get(nameOf, chatId);
@@ -1130,24 +1132,23 @@ const startServer = () => {
 startServer();
 
 const TELEGRAM_DEV_CHAT_ID = process.env.TELEGRAM_DEV_CHAT_ID;
-const tryConnectReseller = () => {
-  getRegisteredDomainNames()
-    .then(() => {
-      connect_reseller_working = true;
-    })
-    .catch(() => {
-      //
-      axios.get('https://api.ipify.org/').then(ip => {
-        const message = `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
-        console.log(message);
-        TELEGRAM_DEV_CHAT_ID &&
-          bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message, {
-            parse_mode: 'markdown',
-          });
-        bot.sendMessage(process.env.TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'markdown' }, aO);
-      });
-      //
+const tryConnectReseller = async () => {
+  try {
+    await getRegisteredDomainNames();
+    connect_reseller_working = true;
+  } catch (error) {
+    //
+    axios.get('https://api.ipify.org/').then(ip => {
+      const message = `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
+      console.log(message);
+      TELEGRAM_DEV_CHAT_ID &&
+        bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message, {
+          parse_mode: 'markdown',
+        });
+      bot.sendMessage(process.env.TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'markdown' }, aO);
     });
+    //
+  }
 };
 
 tryConnectReseller();
