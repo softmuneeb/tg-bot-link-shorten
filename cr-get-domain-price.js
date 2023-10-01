@@ -41,5 +41,6 @@ async function checkDomainPriceOnline(domainName) {
     };
   }
 }
+// checkDomainPriceOnline('golagolasoft.com').then(console.log);
 
 module.exports = { checkDomainPriceOnline };

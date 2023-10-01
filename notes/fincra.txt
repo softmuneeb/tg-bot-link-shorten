@@ -1,3 +1,91 @@
+{
+  url: {
+    status: true,
+    message: 'Payment details fetched',
+    data: {
+      id: 431617,
+      businessId: '64c95e7366ea9f0b4a98dc2e',
+      paymentLinkId: null,
+      amount: 8860.75,
+      currency: 'NGN',
+      convertedAmount: 8860.75,
+      convertedCurrency: 'NGN',
+      paymentMethods: [Array],
+      defaultPaymentMethod: 'bank_transfer',
+      redirectUrl: 'https://nomadly-production.up.railway.app/bank-payment-for-subscription',
+      customUrl: null,
+      successMessage: null,
+      settlementDestination: 'wallet',
+      feeBearer: 'business',
+      reference: 'fcr-p-0a318c6b1a',
+      merchantReference: 'Q3R8a',
+      isDisabled: false,
+      metadata: null,
+      status: 'expired',
+      createdAt: '2023-09-29T22:32:59.896Z',
+      updatedAt: '2023-09-29T23:05:00.000Z',
+      customer: [Object],
+      business: [Object]
+    }
+  }
+}
+mzk@mzk tg-bot-link-shorten % node "/Users/mzk/Desktop/tg-bot-link-shorten/fincra.js"
+{
+  status: true,
+  message: 'Payment details fetched',
+  data: {
+    id: 431617,
+    businessId: '64c95e7366ea9f0b4a98dc2e',
+    paymentLinkId: null,
+    amount: 8860.75,
+    currency: 'NGN',
+    convertedAmount: 8860.75,
+    convertedCurrency: 'NGN',
+    paymentMethods: [ 'bank_transfer', 'card' ],
+    defaultPaymentMethod: 'bank_transfer',
+    redirectUrl: 'https://nomadly-production.up.railway.app/bank-payment-for-subscription',
+    customUrl: null,
+    successMessage: null,
+    settlementDestination: 'wallet',
+    feeBearer: 'business',
+    reference: 'fcr-p-0a318c6b1a',
+    merchantReference: 'Q3R8a',
+    isDisabled: false,
+    metadata: null,
+    status: 'expired',
+    createdAt: '2023-09-29T22:32:59.896Z',
+    updatedAt: '2023-09-29T23:05:00.000Z',
+    customer: {
+      name: 'VerifiedThomas0 test name',
+      email: 'kirkolseen@gmail.com',
+      phoneNumber: null
+    },
+    business: {
+      settings: [Object],
+      emailSettings: [Object],
+      checkoutSettings: [Object],
+      status: 'enabled',
+      countryCallingCode: '+234',
+      businessTag: 199681,
+      isKYCApproved: true,
+      isBlocked: false,
+      _id: '64c95e7366ea9f0b4a98dc2e',
+      name: 'Blue Space Technology LTD',
+      businessType: 'E-Commerce',
+      email: 'richard@bluespaced.com',
+      country: 'NG',
+      mobile: '7064588256',
+      businessKey: 'B-yH5vydrTyWtU',
+      createdAt: '2023-08-01T19:35:15.424Z',
+      updatedAt: '2023-10-01T04:50:11.586Z'
+    }
+  }
+}
+
+
+
+
+
 query: await fincra.business.getBusinessId()
 ans: {
   success: true,
