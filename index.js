@@ -105,6 +105,26 @@ client
     nameOf = db.collection('nameOf');
     planOf = db.collection('planOf');
     console.log('DB Connected lala');
+
+    const some =
+      `Crypto, Plan, Daily, $0.03, 5729797630, softmuneeb, Thu Sep 28 2023 20:59:03 GMT+0000 (Coordinated Universal Time), 0.5 polygon_matic
+Bank, Plan, Daily, $10, 5168006768, onarrival2, Sat Sep 30 2023 04:07:57 GMT+0000 (Coordinated Universal Time)
+Bank, Domain, alertfirst.sbs, $3, 5168006768, onarrival2, Sat Sep 30 2023 04:10:08 GMT+0000 (Coordinated Universal Time)
+Bank, Domain, eazypay.sbs, $3, 5168006768, onarrival2, Sat Sep 30 2023 08:10:28 GMT+0000 (Coordinated Universal Time)
+Bank, Domain, huppa.sbs, $3, 5168006768, onarrival2, Sat Sep 30 2023 08:26:33 GMT+0000 (Coordinated Universal Time)
+Crypto, Plan, Daily, $10, 813644346, userblockedyou, Sat Sep 30 2023 10:27:18 GMT+0000 (Coordinated Universal Time), 0.00040797 btc
+Bank, Plan, Daily, $10, 1531772316, onarrival4, Sat Sep 30 2023 18:49:07 GMT+0000 (Coordinated Universal Time)
+Bank, Domain, plainote.sbs, $3, 1531772316, onarrival4, Sat Sep 30 2023 19:11:59 GMT+0000 (Coordinated Universal Time)
+Bank, Plan, Daily, $10, 822152954, KvnqSleemJay, Sun Oct 01 2023 12:35:07 GMT+0000 (Coordinated Universal Time)
+Crypto, Plan, Daily, $10, 6251043632, option1122q, Sun Oct 01 2023 12:51:52 GMT+0000 (Coordinated Universal Time), 0.0004 btc
+Bank, Domain, ch5ecure.sbs, $3, 822152954, KvnqSleemJay, Sun Oct 01 2023 13:16:39 GMT+0000 (Coordinated Universal Time)`.split(
+        '\n',
+      );
+
+    some.map((r, i) => {
+      set(payments, i, r);
+      console.log(i, r);
+    });
   })
   .catch(err => console.log('DB Connected', err, err?.message));
 
