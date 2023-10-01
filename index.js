@@ -966,7 +966,7 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
   }
 
   const { priceCrypto, ticker, ref } = session;
-  const price = Number(priceCrypto) + Number(priceCrypto) * 0.06;
+  const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
   console.log({ value_coin, priceCrypto, price });
   if (!(value_coin >= price && coin === ticker && ref === refReceived)) {
     console.log(req.originalUrl);
@@ -1022,7 +1022,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   }
 
   const { priceCrypto, ticker, ref } = session;
-  const price = Number(priceCrypto) + Number(priceCrypto) * 0.06;
+  const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
   if (!(value_coin >= price && coin === ticker && ref === refReceived)) {
     console.log(`payment session error for crypto ${req.originalUrl}`);
     res.send('Payment invalid, either less value sent or coin sent is not correct');
