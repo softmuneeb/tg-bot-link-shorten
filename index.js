@@ -335,10 +335,6 @@ bot.on('message', async msg => {
   //
   //
   if (message === '🌐 Buy domain names') {
-    if (!(await isSubscribed(chatId))) {
-      bot.sendMessage(chatId, '📋 Subscribe first');
-      return;
-    }
     set(state, chatId, 'action', 'choose-domain-to-buy');
     bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase. e.g abcpay.com', bc);
     return;
