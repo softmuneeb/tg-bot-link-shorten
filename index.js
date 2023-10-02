@@ -1074,7 +1074,7 @@ Nomadly Bot`,
   const chosenDomainPrice = (await get(state, chatId))?.chosenDomainPrice;
   set(
     payments,
-    reference,
+    address_in,
     `Crypto, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${await get(
       nameOf,
       chatId,
