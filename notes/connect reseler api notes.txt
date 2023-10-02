@@ -1,3 +1,65 @@
+
+{
+  "responseMsg": {
+    "message": "Domain Available for Registration",
+    "id": 0,
+    "statusCode": 200
+  },
+  "responseData": {
+    "domainCheckResponce": [
+      {
+        "available": true,
+        "msg": "Command completed successfully.",
+        "msgCode": 1000,
+        "name": "bush.sbs",
+        "reason": null,
+        "costPrice": 0,
+        "creationFee": 24,
+        "renewalFee": 24,
+        "creationSellFee": 34,
+        "renewalSellFee": 34,
+        "premiumCategory": null,
+        "premium": false,
+        "registryPremium": true,
+        "creationfee": 0
+      }
+    ],
+    "errorList": []
+  }
+}
+
+checkDomainPriceOnline {
+  "responseMsg": {
+    "message": "Domain Available for Registration",
+    "id": 0,
+    "statusCode": 200
+  },
+  "responseData": {
+    "domainCheckResponce": [
+      {
+        "available": true,
+        "msg": "Command completed successfully.",
+        "msgCode": 1000,
+        "name": "bush.sbs",
+        "reason": null,
+        "costPrice": 0,
+        "creationFee": 24,
+        "renewalFee": 24,
+        "creationSellFee": 34,
+        "renewalSellFee": 34,
+        "premiumCategory": null,
+        "premium": false,
+        "registryPremium": true,
+        "creationfee": 0
+      }
+    ],
+    "errorList": []
+  }
+} 
+
+
+
+
 1. API checkDomain
 https://api.connectreseller.com/ConnectReseller/ESHOP/checkDomain?APIKey=${apiKey}&websiteName=${domainName}
 {
