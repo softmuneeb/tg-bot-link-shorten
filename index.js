@@ -861,6 +861,11 @@ app.get('/bank-payment-for-subscription', async (req, res) => {
   const chatId = await get(chatIdOfPayment, reference);
 
   const plan = (await get(state, chatId))?.chosenPlanForPayment;
+
+  log(`bank-payment-for-subscription reference: ${reference}`);
+  log(`bank-payment-for-subscription chatId: ${chatId}`);
+  log(`bank-payment-for-subscription chosenPlanForPayment: ${plan}`);
+
   if (!plan) {
     res.send('Payment already processed or not found');
     return;
@@ -892,6 +897,10 @@ app.get('/bank-payment-for-domain', async (req, res) => {
   const chatId = await get(chatIdOfPayment, reference);
   const info = await get(state, chatId);
   const domain = info?.chosenDomainForPayment;
+
+  log(`crypto-payment-for-domain reference: ${reference}`);
+  log(`crypto-payment-for-domain chatId: ${chatId}`);
+  log(`crypto-payment-for-domain domain: ${domain}`);
 
   if (!domain) {
     res.send('Payment already processed or not found');
@@ -948,8 +957,9 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
 
   const address_in = urlParams.get('address_in');
   const coin = urlParams.get('coin');
-  const refReceived = urlParams.get('ref');
+  const reference = urlParams.get('ref');
   const value_coin = Number(urlParams.get('value_coin'));
+  log(`crypto-payment-for-subscription reference: ${reference}`);
 
   if (!coin || !address_in || !value_coin) {
     log('Invalid payment data ' + req.originalUrl);
@@ -958,6 +968,7 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
   }
 
   const chatId = await get(chatIdOfPayment, address_in);
+  log(`crypto-payment-for-subscription chatId: ${chatId}`);
 
   const info = await get(state, chatId);
   const session = info?.cryptoPaymentSession;
@@ -971,13 +982,14 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
   const { priceCrypto, ticker, ref } = session;
   const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
   log({ value_coin, priceCrypto, price });
-  if (!(value_coin >= price && coin === ticker && ref === refReceived)) {
+  if (!(value_coin >= price && coin === ticker && ref === reference)) {
     log(req.originalUrl);
     res.send('Wrong coin or wrong price');
     return;
   }
 
   const plan = info?.chosenPlanForPayment;
+  log(`crypto-payment-for-subscription chosenPlanForPayment: ${plan}`);
   set(planEndingTime, chatId, Date.now() + timeOf[plan]);
   set(planOf, chatId, plan);
   bot.sendMessage(
@@ -1007,9 +1019,10 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   const urlParams = new URLSearchParams(req.originalUrl);
   const coin = urlParams.get('coin');
   const address_in = urlParams.get('address_in');
-  const refReceived = urlParams.get('ref');
+  const reference = urlParams.get('ref');
   const value_coin = Number(urlParams.get('value_coin'));
 
+  log(`crypto-payment-for-domain reference: ${reference}`);
   if (!coin || !address_in || !value_coin) {
     log('Invalid payment data ' + req.originalUrl);
     res.send('Invalid payment data');
@@ -1017,6 +1030,8 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   }
 
   const chatId = await get(chatIdOfPayment, address_in);
+  log(`crypto-payment-for-domain chatId: ${chatId}`);
+
   const info = await get(state, chatId);
   const session = info?.cryptoPaymentSession;
 
@@ -1027,13 +1042,14 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
 
   const { priceCrypto, ticker, ref } = session;
   const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
-  if (!(value_coin >= price && coin === ticker && ref === refReceived)) {
+  if (!(value_coin >= price && coin === ticker && ref === reference)) {
     log(`payment session error for crypto ${req.originalUrl}`);
     res.send('Payment invalid, either less value sent or coin sent is not correct');
     return;
   }
 
   const domain = info?.chosenDomainForPayment;
+  log(`crypto-payment-for-domain domain: ${domain}`);
   if (!domain) {
     res.send('Payment already processed or not found');
     return;
