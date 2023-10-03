@@ -1,3 +1,49 @@
+mzk@mzk tg-bot-link-shorten % node "/Users/mzk/Desktop/tg-bot-link-shorten/register-domain.test.js"
+buyDomain Response: {
+  "responseMsg": {
+    "message": "Domain Registration Failed(Invalid Nameservers or Invalid Authcode)",
+    "id": 0,
+    "statusCode": 404
+  },
+  "responseData": [
+    {
+      "message": "Contact already exists for contact id 184210 for domain softmuneeb.us!",
+      "id": 0,
+      "statusCode": 2302
+    }
+  ]
+}
+Issue in buying domain Domain Registration Failed(Invalid Nameservers or Invalid Authcode)
+mzk@mzk tg-bot-link-shorten % node "/Users/mzk/Desktop/tg-bot-link-shorten/register-domain.test.js"
+buyDomain Response: {
+  "responseMsg": {
+    "message": "Domain registered successfully",
+    "id": 0,
+    "statusCode": 200
+  },
+  "responseData": [
+    {
+      "domainCreateResponse": {
+        "creationDate": "2023-10-03 13:23:38",
+        "expiryDate": "2024-10-03 13:23:38",
+        "msg": "Command completed successfully",
+        "msgCode": 1000,
+        "name": "softmuneeb.us"
+      },
+      "contactsCreateRS": [
+        {
+          "message": "Contact Created Successfully for contact id OR_267766 for domain softmuneeb.us!",
+          "id": 0,
+          "statusCode": 1000
+        }
+      ],
+      "hostsCreateRS": [],
+      "error": null,
+      "sedoMsg": null
+    }
+  ]
+}
+
 
 {
   "responseMsg": {
