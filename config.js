@@ -89,7 +89,16 @@ const payBank = url => ({
   },
 });
 
+const html = `
+        <html>
+            <body>
+                <h2>Payment Processed Successfully! You can now close this window.</h2>
+            </body>
+        </html>
+    `;
+
 module.exports = {
+  html,
   linkOptions,
   payBank,
   linkType,
