@@ -822,7 +822,7 @@ async function backupPayments() {
   const data = await getAll(payments);
 
   log(data);
-  const head = 'A,B,C,D,E,F,G,H\n';
+  const head = 'Mode, Product, Name, Price, ChatId, User Name, Time,Currency\n';
   const backup = data.map(a => a.val).join('\n');
   fs.writeFileSync('payments.csv', head + backup, 'utf-8');
 }
@@ -873,14 +873,6 @@ app.get('/bank-payment-for-subscription', async (req, res) => {
 
   set(planOf, chatId, plan);
   set(planEndingTime, chatId, Date.now() + timeOf[plan]);
-  set(
-    payments,
-    reference,
-    `Bank, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${await get(nameOf, chatId)}, ${new Date()}`,
-  );
-  del(state, chatId);
-  del(chatIdOfPayment, reference);
-
   bot.sendMessage(
     chatId,
     `Your payment was successful, and you're now subscribed to our ${plan} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
@@ -889,6 +881,14 @@ Best,
 Nomadly Bot`,
     o,
   );
+
+  set(
+    payments,
+    reference,
+    `Bank, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${await get(nameOf, chatId)}, ${new Date()}`,
+  );
+  del(state, chatId);
+  del(chatIdOfPayment, reference);
 
   res.send(html);
 });
@@ -909,10 +909,11 @@ app.get('/bank-payment-for-domain', async (req, res) => {
   // take out this common code IsA
   const { error: buyDomainError } = await buyDomain(chatId, domain);
   if (buyDomainError) {
-    const message = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
-    log(message);
-    bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message);
-    bot.sendMessage(chatId, message, o);
+    const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
+    log(m);
+    bot.sendMessage(TELEGRAM_DEV_CHAT_ID, m);
+    bot.sendMessage(chatId, m, o);
+    res.send(m);
     return;
   }
   bot.sendMessage(
@@ -926,7 +927,9 @@ Nomadly Bot`,
 
   const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
   if (error) {
-    bot.sendMessage(chatId, `Error saving domain in server`, o);
+    const m = `Error saving domain in server`;
+    bot.sendMessage(chatId, m, o);
+    res.send(m);
     return;
   }
 
@@ -934,7 +937,9 @@ Nomadly Bot`,
   const { error: saveServerInDomainError } = await saveServerInDomain(domain, server);
 
   if (saveServerInDomainError) {
-    bot.sendMessage(chatId, `Error saving server in domain ${saveServerInDomainError}`, o);
+    const m = `Error saving server in domain ${saveServerInDomainError}`;
+    bot.sendMessage(chatId, m, o);
+    res.send(m);
     return;
   }
 
@@ -948,7 +953,6 @@ Nomadly Bot`,
     reference,
     `Bank, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${await get(nameOf, chatId)}, ${new Date()}`,
   );
-
   res.send(html);
 });
 app.get('/crypto-payment-for-subscription', async (req, res) => {
@@ -974,8 +978,8 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
   const session = info?.cryptoPaymentSession;
 
   if (!session) {
-    res.send('Payment issue, no crypto payment session found');
     log('No crypto payment session found ' + req.originalUrl);
+    res.send('Payment issue, no crypto payment session found');
     return;
   }
 
@@ -1057,10 +1061,11 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
 
   const { error: buyDomainError } = await buyDomain(chatId, domain);
   if (buyDomainError) {
-    const message = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
-    log(message);
-    bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message);
-    bot.sendMessage(chatId, message, o);
+    const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
+    log(m);
+    bot.sendMessage(TELEGRAM_DEV_CHAT_ID, m);
+    bot.sendMessage(chatId, m, o);
+    res.send(m);
     return;
   }
   bot.sendMessage(
@@ -1074,7 +1079,9 @@ Nomadly Bot`,
 
   const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
   if (error) {
-    bot.sendMessage(chatId, `Error saving domain in server, contact support`, o);
+    const m = `Error saving domain in server, contact support`;
+    bot.sendMessage(chatId, m, o);
+    res.send(m);
     return;
   }
 
@@ -1082,7 +1089,9 @@ Nomadly Bot`,
   const { error: saveServerInDomainError } = await saveServerInDomain(domain, server);
 
   if (saveServerInDomainError) {
-    bot.sendMessage(chatId, `Error saving server in domain ${saveServerInDomainError}`, o);
+    const m = `Error saving server in domain ${saveServerInDomainError}`;
+    bot.sendMessage(chatId, m, o);
+    res.send(m);
     return;
   }
 

@@ -21,7 +21,7 @@ const chooseSubscription = {
     keyboard: [...subscriptionOptions.map(a => [a]), ['Back', 'Cancel']],
   },
 };
-const cryptoTransferOptions = ['btc', 'eth', 'ltc', 'trc20_usdt', 'bep20_busd', 'polygon_matic'];
+const cryptoTransferOptions = ['btc', 'eth', 'bch', 'ltc', 'doge', 'trc20_usdt', 'bep20_busd', 'polygon_matic'];
 
 const aO = {
   reply_markup: {
