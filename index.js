@@ -1,10 +1,11 @@
 // TODO: keep in eye data types Number vs String may give bugs...
 
 const { getRegisteredDomainNames } = require('./get-purchased-domains.test.js');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient } = require('mongodb');
 const TelegramBot = require('node-telegram-bot-api');
 const { createCheckout } = require('./fincra.js');
 const { customAlphabet } = require('nanoid');
+const { log } = require('console');
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
@@ -26,6 +27,7 @@ const {
   linkType,
   payBank,
   linkOptions,
+  html,
 } = require('./config.js');
 const {
   isValidUrl,
@@ -43,17 +45,18 @@ const { saveDomainInServer } = require('./cr-rl-connect-domain-to-server.js');
 const { saveServerInDomain } = require('./cr-add-dns-record.js');
 const { buyDomainOnline } = require('./register-domain.test.js');
 const { get, set, del, increment, getAll } = require('./db.js');
-const { log } = require('console');
 const { checkDomainPriceOnline } = require('./cr-get-domain-price.js');
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);
 process.env['NTBA_FIX_350'] = 1;
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const SELF_URL = process.env.SELF_URL;
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME;
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_DEV_CHAT_ID = process.env.TELEGRAM_DEV_CHAT_ID;
+const TELEGRAM_ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID;
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
-console.log('Bot is running...');
+log('Bot is running...');
 
 // variables to implement core functionality
 let state = {};
@@ -78,7 +81,7 @@ let connect_reseller_working = false;
 // manually data add here or call methods
 
 let db;
-const dbName = 'domainSellBot16';
+const dbName = 'domainSellBot17';
 
 const client = new MongoClient(process.env.MONGO_URL);
 
@@ -104,14 +107,14 @@ client
     chatIdOf = db.collection('chatIdOf');
     nameOf = db.collection('nameOf');
     planOf = db.collection('planOf');
-    console.log('DB Connected lala');
+    log('DB Connected lala');
   })
-  .catch(err => console.log('DB Connected', err, err?.message));
+  .catch(err => log('DB Connected', err, err?.message));
 
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
   const message = msg.text;
-  console.log('command\t' + message + '\t' + chatId + '\t' + msg.from.username);
+  log('command\t' + message + '\t' + chatId + '\t' + msg.from.username);
 
   if (!db) {
     bot.sendMessage(chatId, 'Bot starting, please wait');
@@ -141,7 +144,8 @@ bot.on('message', async msg => {
     set(chatIdOf, username, chatId);
   }
 
-  const action = (await get(state, chatId))?.action;
+  const info = await get(state, chatId);
+  const action = info?.action;
 
   const firstSteps = ['block-user', 'unblock-user', 'choose-domain', 'choose-domain-to-buy', 'choose-subscription'];
 
@@ -287,8 +291,8 @@ bot.on('message', async msg => {
       return;
     }
 
-    const url = (await get(state, chatId))?.url;
-    const domain = (await get(state, chatId))?.selectedDomain;
+    const url = info?.url;
+    const domain = info?.selectedDomain;
     const shortenedURL = domain + '/' + nanoid();
     if (await get(fullUrlOf, shortenedURL)) {
       bot.sendMessage(chatId, `Link already exists. Please send 'ok' to try another.`);
@@ -308,8 +312,8 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', 'choose-link-type');
     }
 
-    const url = (await get(state, chatId))?.url;
-    const domain = (await get(state, chatId))?.selectedDomain;
+    const url = info?.url;
+    const domain = info?.selectedDomain;
     const shortenedURL = domain + '/' + message;
 
     if (!isValidUrl('https://' + shortenedURL)) {
@@ -391,8 +395,8 @@ bot.on('message', async msg => {
     return;
   }
   if (action === 'bank-transfer-payment-domain') {
-    const price = (await get(state, chatId))?.chosenDomainPrice;
-    const domain = (await get(state, chatId))?.chosenDomainForPayment;
+    const price = info?.chosenDomainPrice;
+    const domain = info?.chosenDomainForPayment;
     if (message === 'Back') {
       bot.sendMessage(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, pay);
       set(state, chatId, 'action', 'domain-name-payment');
@@ -430,8 +434,8 @@ Nomadly Bot`,
   }
   if (action === 'crypto-transfer-payment-domain') {
     const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
-    const priceUSD = (await get(state, chatId))?.chosenDomainPrice;
-    const domain = (await get(state, chatId))?.chosenDomainForPayment;
+    const priceUSD = info?.chosenDomainPrice;
+    const domain = info?.chosenDomainForPayment;
     const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
     if (message === 'Back') {
       bot.sendMessage(chatId, `Price of ${domain} subscription is ${priceUSD} USD. Choose payment method.`, pay);
@@ -480,7 +484,7 @@ Nomadly Bot`;
         caption: 'Here is your QR code!',
       })
       .then(() => fs.unlinkSync('image.png'))
-      .catch(console.error);
+      .catch(log);
     return;
   }
   //
@@ -538,7 +542,7 @@ Nomadly Bot`;
     return;
   }
   if (action === 'bank-transfer-payment-subscription') {
-    const plan = (await get(state, chatId))?.chosenPlanForPayment;
+    const plan = info?.chosenPlanForPayment;
     if (message === 'Back') {
       bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
       set(state, chatId, 'action', 'subscription-payment');
@@ -575,7 +579,7 @@ Nomadly Bot`,
     return;
   }
   if (action === 'crypto-transfer-payment') {
-    const plan = (await get(state, chatId))?.chosenPlanForPayment;
+    const plan = info?.chosenPlanForPayment;
     const priceUSD = priceOf[plan];
 
     if (message === 'Back') {
@@ -627,7 +631,7 @@ Nomadly Bot`;
         caption: 'Here is your QR code!',
       })
       .then(() => fs.unlinkSync('image.png'))
-      .catch(console.error);
+      .catch(log);
     return;
   }
   //
@@ -788,9 +792,9 @@ function restoreData() {
     Object.assign(planEndingTime, restoredData.planEndingTime);
     Object.assign(chatIdOfPayment, restoredData.chatIdOfPayment);
     Object.assign(totalShortLinks, restoredData.totalShortLinks);
-    console.log('Data restored.');
+    log('Data restored.');
   } catch (error) {
-    console.error('Error restoring data:', error.message);
+    log('Error restoring data:', error.message);
   }
 }
 
@@ -817,7 +821,7 @@ async function backupTheData() {
 async function backupPayments() {
   const data = await getAll(payments);
 
-  console.log(data);
+  log(data);
   const head = 'A,B,C,D,E,F,G,H\n';
   const backup = data.map(a => a.val).join('\n');
   fs.writeFileSync('payments.csv', head + backup, 'utf-8');
@@ -881,25 +885,13 @@ Nomadly Bot`,
     o,
   );
 
-  const html = `
-        <html>
-            <body>
-                <h1>Payment Processed Successfully!</h1>
-                <script>
-                    setTimeout(function() {
-                        window.close();
-                    }, 3000);
-                </script>
-            </body>
-        </html>
-    `;
   res.send(html);
-  // res.send('Payment processed successfully, You can now close this window');
 });
 app.get('/bank-payment-for-domain', async (req, res) => {
   const reference = req.query.reference;
   const chatId = await get(chatIdOfPayment, reference);
-  const domain = (await get(state, chatId))?.chosenDomainForPayment;
+  const info = await get(state, chatId);
+  const domain = info?.chosenDomainForPayment;
 
   if (!domain) {
     res.send('Payment already processed or not found');
@@ -908,7 +900,10 @@ app.get('/bank-payment-for-domain', async (req, res) => {
   // take out this common code IsA
   const { error: buyDomainError } = await buyDomain(chatId, domain);
   if (buyDomainError) {
-    bot.sendMessage(chatId, 'Domain purchase fails, try another name.', o);
+    const message = 'Domain purchase fails, try another name. ' + buyDomainError;
+    log(message);
+    bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message);
+    bot.sendMessage(chatId, message, o);
     return;
   }
   bot.sendMessage(
@@ -936,7 +931,7 @@ Nomadly Bot`,
 
   bot.sendMessage(chatId, `Your domain ${domain} is now linked to your account while DNS propagates. 🚀`);
 
-  const chosenDomainPrice = (await get(state, chatId))?.chosenDomainPrice;
+  const chosenDomainPrice = info?.chosenDomainPrice;
   del(state, chatId);
   del(chatIdOfPayment, reference);
   set(
@@ -945,7 +940,7 @@ Nomadly Bot`,
     `Bank, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${await get(nameOf, chatId)}, ${new Date()}`,
   );
 
-  res.send('Payment processed successfully, You can now close this window');
+  res.send(html);
 });
 app.get('/crypto-payment-for-subscription', async (req, res) => {
   // handle multiple invocations of the same url
@@ -957,30 +952,32 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
   const value_coin = Number(urlParams.get('value_coin'));
 
   if (!coin || !address_in || !value_coin) {
-    console.log('Invalid payment data ' + req.originalUrl);
+    log('Invalid payment data ' + req.originalUrl);
     res.send('Invalid payment data');
     return;
   }
 
   const chatId = await get(chatIdOfPayment, address_in);
-  const session = (await get(state, chatId))?.cryptoPaymentSession;
+
+  const info = await get(state, chatId);
+  const session = info?.cryptoPaymentSession;
 
   if (!session) {
     res.send('Payment issue, no crypto payment session found');
-    console.log('No crypto payment session found ' + req.originalUrl);
+    log('No crypto payment session found ' + req.originalUrl);
     return;
   }
 
   const { priceCrypto, ticker, ref } = session;
   const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
-  console.log({ value_coin, priceCrypto, price });
+  log({ value_coin, priceCrypto, price });
   if (!(value_coin >= price && coin === ticker && ref === refReceived)) {
-    console.log(req.originalUrl);
+    log(req.originalUrl);
     res.send('Wrong coin or wrong price');
     return;
   }
 
-  const plan = (await get(state, chatId))?.chosenPlanForPayment;
+  const plan = info?.chosenPlanForPayment;
   set(planEndingTime, chatId, Date.now() + timeOf[plan]);
   set(planOf, chatId, plan);
   bot.sendMessage(
@@ -1003,7 +1000,7 @@ Nomadly Bot`,
 
   del(state, chatId);
   del(chatIdOfPayment, address_in);
-  res.send('Payment processed successfully, You can now close this window');
+  res.send(html);
 });
 
 app.get('/crypto-payment-for-domain', async (req, res) => {
@@ -1014,13 +1011,14 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   const value_coin = Number(urlParams.get('value_coin'));
 
   if (!coin || !address_in || !value_coin) {
-    console.log('Invalid payment data ' + req.originalUrl);
+    log('Invalid payment data ' + req.originalUrl);
     res.send('Invalid payment data');
     return;
   }
 
   const chatId = await get(chatIdOfPayment, address_in);
-  const session = (await get(state, chatId))?.cryptoPaymentSession;
+  const info = await get(state, chatId);
+  const session = info?.cryptoPaymentSession;
 
   if (!session) {
     res.send('Payment session not found, please try again or contact support');
@@ -1030,12 +1028,12 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   const { priceCrypto, ticker, ref } = session;
   const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
   if (!(value_coin >= price && coin === ticker && ref === refReceived)) {
-    console.log(`payment session error for crypto ${req.originalUrl}`);
+    log(`payment session error for crypto ${req.originalUrl}`);
     res.send('Payment invalid, either less value sent or coin sent is not correct');
     return;
   }
 
-  const domain = (await get(state, chatId))?.chosenDomainForPayment;
+  const domain = info?.chosenDomainForPayment;
   if (!domain) {
     res.send('Payment already processed or not found');
     return;
@@ -1043,7 +1041,10 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
 
   const { error: buyDomainError } = await buyDomain(chatId, domain);
   if (buyDomainError) {
-    bot.sendMessage(chatId, 'Domain purchase fails, try another name.', o);
+    const message = 'Domain purchase fails, try another name. ' + buyDomainError;
+    log(message);
+    bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message);
+    bot.sendMessage(chatId, message, o);
     return;
   }
   bot.sendMessage(
@@ -1071,7 +1072,7 @@ Nomadly Bot`,
 
   bot.sendMessage(chatId, `Your domain ${domain} is now linked to your account while DNS propagates. 🚀`);
 
-  const chosenDomainPrice = (await get(state, chatId))?.chosenDomainPrice;
+  const chosenDomainPrice = info?.chosenDomainPrice;
   set(
     payments,
     address_in,
@@ -1083,9 +1084,9 @@ Nomadly Bot`,
 
   del(state, chatId);
   del(chatIdOfPayment, address_in);
-  res.send('Payment processed successfully, You can now close this window');
+  res.send(html);
 });
-app.get('/json', async (req, res) => {
+app.get('/json1444', async (req, res) => {
   await backupTheData();
   const fileName = 'backup.json';
   res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
@@ -1137,12 +1138,11 @@ app.get('/:id', async (req, res) => {
 const startServer = () => {
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
-    console.log(`Server is running on port http://localhost:${port}`);
+    log(`Server is running on port http://localhost:${port}`);
   });
 };
 startServer();
 
-const TELEGRAM_DEV_CHAT_ID = process.env.TELEGRAM_DEV_CHAT_ID;
 const tryConnectReseller = async () => {
   try {
     await getRegisteredDomainNames();
@@ -1151,12 +1151,12 @@ const tryConnectReseller = async () => {
     //
     axios.get('https://api.ipify.org/').then(ip => {
       const message = `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
-      console.log(message);
+      log(message);
       TELEGRAM_DEV_CHAT_ID &&
         bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message, {
           parse_mode: 'markdown',
         });
-      bot.sendMessage(process.env.TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'markdown' }, aO);
+      bot.sendMessage(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'markdown' }, aO);
     });
     //
   }
