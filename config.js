@@ -39,12 +39,12 @@ const o = {
   reply_markup: {
     keyboard: [
       ['🔗 URL Shortener'],
-      ['🔍 View shortened links'],
-      ['🌐 Buy domain names'],
-      ['👀 View domain names'],
-      ['📋 Subscribe here'],
-      ['🔍 View subscription plan'],
-      ['🛠️ Get support'],
+      ['🔍 View Analytics'],
+      ['🌐 Buy Domain Names'],
+      ['👀 Manage Domain Names'],
+      ['📋 Subscribe Here'],
+      ['🔍 My Plan'],
+      ['🛠️ Get Support'],
     ],
   },
   disable_web_page_preview: true,

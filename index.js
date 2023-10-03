@@ -338,7 +338,7 @@ bot.on('message', async msg => {
   }
   //
   //
-  if (message === '🌐 Buy domain names') {
+  if (message === '🌐 Buy Domain Names') {
     set(state, chatId, 'action', 'choose-domain-to-buy');
     bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase. e.g abcpay.com', bc);
     return;
@@ -489,7 +489,7 @@ Nomadly Bot`;
   }
   //
   //
-  if (message === '📋 Subscribe here') {
+  if (message === '📋 Subscribe Here') {
     if (await isSubscribed(chatId)) {
       bot.sendMessage(chatId, 'You are currently enrolled in a subscription plan.', o);
       return;
@@ -636,7 +636,7 @@ Nomadly Bot`;
   }
   //
   //
-  if (message === '🔍 View subscription plan') {
+  if (message === '🔍 My Plan') {
     const subscribedPlan = await get(planOf, chatId);
 
     if (subscribedPlan) {
@@ -660,7 +660,7 @@ Nomadly Bot`;
     bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
     return;
   }
-  if (message === '🔍 View shortened links') {
+  if (message === '🔍 View Analytics') {
     const links = await getShortLinks(chatId);
     if (links.length === 0) {
       bot.sendMessage(chatId, 'You have no shortened links yet.');
@@ -671,7 +671,7 @@ Nomadly Bot`;
     bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
     return;
   }
-  if (message === '👀 View domain names') {
+  if (message === '👀 Manage Domain Names') {
     const purchasedDomains = await getPurchasedDomains(chatId);
     if (purchasedDomains.length === 0) {
       bot.sendMessage(chatId, 'You have no purchased domains yet.');
@@ -719,7 +719,7 @@ Nomadly Bot`;
     bot.sendMessage(chatId, `Analytics Data:\n${analyticsData.join('\n')}`);
     return;
   }
-  if (message === '🛠️ Get support') {
+  if (message === '🛠️ Get Support') {
     bot.sendMessage(chatId, `Please contact ${SUPPORT_USERNAME}`);
     return;
   }
