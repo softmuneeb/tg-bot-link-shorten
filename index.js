@@ -49,6 +49,7 @@ const { checkDomainPriceOnline } = require('./cr-get-domain-price.js');
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);
 process.env['NTBA_FIX_350'] = 1;
+const DB_NAME = process.env.DB_NAME;
 const SELF_URL = process.env.SELF_URL;
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -81,14 +82,13 @@ let connect_reseller_working = false;
 // manually data add here or call methods
 
 let db;
-const dbName = 'domainSellBot17';
 
 const client = new MongoClient(process.env.MONGO_URL);
 
 client
   .connect()
   .then(async () => {
-    db = client.db(dbName);
+    db = client.db(DB_NAME);
 
     // variables to implement core functionality
     state = db.collection('state');
