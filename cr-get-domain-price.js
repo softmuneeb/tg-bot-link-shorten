@@ -14,6 +14,8 @@ async function checkDomainPriceOnline(domainName) {
     const statusCode = response?.data?.responseMsg?.statusCode;
 
     if (statusCode === 200) {
+      const premiumPrice = response?.data?.responseData?.domainCheckResponce?.[0]?.creationSellFee;
+      if (premiumPrice) return { available: true, price: premiumPrice };
       const [domainId] = Object.keys(response.data.responseData);
       const price1Year = Number(
         response?.data?.responseData[domainId]
@@ -22,7 +24,6 @@ async function checkDomainPriceOnline(domainName) {
       );
 
       const price = Math.ceil(price1Year * PERCENT_INCREASE_DOMAIN);
-      // const price = 0.2; //20% profit
       return { available: true, price: price > 5 ? price : 6 };
     } else if (statusCode === 400) {
       return {
