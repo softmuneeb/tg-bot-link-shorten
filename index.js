@@ -900,7 +900,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
   // take out this common code IsA
   const { error: buyDomainError } = await buyDomain(chatId, domain);
   if (buyDomainError) {
-    const message = 'Domain purchase fails, try another name. ' + buyDomainError;
+    const message = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
     log(message);
     bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message);
     bot.sendMessage(chatId, message, o);
@@ -1041,7 +1041,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
 
   const { error: buyDomainError } = await buyDomain(chatId, domain);
   if (buyDomainError) {
-    const message = 'Domain purchase fails, try another name. ' + buyDomainError;
+    const message = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
     log(message);
     bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message);
     bot.sendMessage(chatId, message, o);
