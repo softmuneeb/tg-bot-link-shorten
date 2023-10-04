@@ -826,7 +826,6 @@ async function backupTheData() {
 async function backupPayments() {
   const data = await getAll(payments);
 
-  log(data);
   const head = 'Mode, Product, Name, Price, ChatId, User Name, Time,Currency\n';
   const backup = data.map(a => a.val).join('\n');
   fs.writeFileSync('payments.csv', head + backup, 'utf-8');
