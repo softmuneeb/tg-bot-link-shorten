@@ -18,7 +18,8 @@ const {
   o,
   paymentOptions,
   subscriptionOptions,
-  cryptoTransferOptions,
+  tickerViews,
+  tickerOf,
   timeOf,
   chooseSubscription,
   rem,
@@ -134,7 +135,7 @@ bot.on('message', async msg => {
 
   const blocked = await get(chatIdBlocked, chatId);
   if (blocked) {
-    bot.sendMessage(chatId, `You are currently blocked from using the bot. Please contact ${SUPPORT_USERNAME}`, rem);
+    bot.sendMessage(chatId, `You are currently blocked from using the bot. Please contact support ${SUPPORT_USERNAME}`, rem);
     return;
   }
 
@@ -163,7 +164,7 @@ bot.on('message', async msg => {
   //
   if (message === 'Cancel' || (firstSteps.includes(action) && message === 'Back')) {
     set(state, chatId, 'action', 'none');
-    bot.sendMessage(chatId, `User has Pressed Cancel Button.`, o);
+    bot.sendMessage(chatId, `User has Pressed ${message} Button.`, o);
     return;
   }
   //
@@ -376,14 +377,14 @@ bot.on('message', async msg => {
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
-      bot.sendMessage(chatId, 'Please choose a valid payment option', o);
+      bot.sendMessage(chatId, 'Please choose a valid payment option');
       return;
     }
 
     if (paymentOption === 'Crypto') {
       bot.sendMessage(chatId, `Please choose a crypto currency`, {
         reply_markup: {
-          keyboard: [...cryptoTransferOptions.map(d => [d.toUpperCase()]), ['Back', 'Cancel']],
+          keyboard: [...tickerViews.map(a => [a]), ['Back', 'Cancel']],
         },
       });
       set(state, chatId, 'action', 'crypto-transfer-payment-domain');
@@ -433,17 +434,19 @@ Nomadly Bot`,
     return;
   }
   if (action === 'crypto-transfer-payment-domain') {
-    const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
+    const tickerView = message;
+    const ticker = tickerOf[tickerView];
+    if (!ticker) {
+      bot.sendMessage(chatId, 'Please choose a valid crypto currency');
+      return;
+    }
+
     const priceUSD = info?.chosenDomainPrice;
     const domain = info?.chosenDomainForPayment;
     const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
     if (message === 'Back') {
       bot.sendMessage(chatId, `Price of ${domain} subscription is ${priceUSD} USD. Choose payment method.`, pay);
       set(state, chatId, 'action', 'domain-name-payment');
-      return;
-    }
-    if (!cryptoTransferOptions.includes(ticker)) {
-      bot.sendMessage(chatId, 'Please choose a valid crypto currency', o);
       return;
     }
 
@@ -462,7 +465,7 @@ Nomadly Bot`,
       ref,
     });
 
-    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to\n\n<code>${address}</code>
+    const text = `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
 
 Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
 
@@ -491,7 +494,7 @@ Nomadly Bot`;
   //
   if (message === '📋 Subscribe Here') {
     if (await isSubscribed(chatId)) {
-      bot.sendMessage(chatId, 'You are currently enrolled in a subscription plan.', o);
+      bot.sendMessage(chatId, 'You are currently enrolled in a subscription plan.');
       return;
     }
 
@@ -523,7 +526,7 @@ Nomadly Bot`;
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
-      bot.sendMessage(chatId, 'Please choose a valid payment option', o);
+      bot.sendMessage(chatId, 'Please choose a valid payment option');
       return;
     }
 
@@ -535,7 +538,7 @@ Nomadly Bot`;
 
     bot.sendMessage(chatId, `Please choose a crypto currency`, {
       reply_markup: {
-        keyboard: [...cryptoTransferOptions.map(d => [d.toUpperCase()]), ['Back', 'Cancel']],
+        keyboard: [...tickerViews.map(a => [a]), ['Back', 'Cancel']],
       },
     });
     set(state, chatId, 'action', 'crypto-transfer-payment');
@@ -587,13 +590,15 @@ Nomadly Bot`,
       set(state, chatId, 'action', 'subscription-payment');
       return;
     }
-    const ticker = message.toLowerCase(); // https://blockbee.io/cryptocurrencies
 
-    const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
-    if (!cryptoTransferOptions.includes(ticker)) {
-      bot.sendMessage(chatId, 'Please choose a valid crypto currency', o);
+    const tickerView = message;
+    const ticker = tickerOf[tickerView];
+    if (!ticker) {
+      bot.sendMessage(chatId, 'Please choose a valid crypto currency');
       return;
     }
+
+    const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
 
     const ref = nanoid();
     const { address, bb } = await getCryptoDepositAddress(
@@ -609,7 +614,7 @@ Nomadly Bot`,
       ref,
     });
 
-    const text = `Please remit ${priceCrypto} ${ticker.toUpperCase()} to\n\n<code>${address}</code>
+    const text = `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
 
 Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
 
@@ -720,7 +725,7 @@ Nomadly Bot`;
     return;
   }
   if (message === '🛠️ Get Support') {
-    bot.sendMessage(chatId, `Please contact ${SUPPORT_USERNAME}`);
+    bot.sendMessage(chatId, `Please contact support ${SUPPORT_USERNAME}`);
     return;
   }
   // else {
@@ -853,7 +858,7 @@ app.get('/', (req, res) => {
   res.send(
     `Keep your eyes on this space! We're gearing up to launch our URL shortening application that will make your links short, sweet, and to the point. Stay tuned for our big reveal!
 
-Support @nomadly_private at Telegram.`,
+Support ${SUPPORT_USERNAME} at Telegram.`,
   );
 });
 app.get('/bank-payment-for-subscription', async (req, res) => {
@@ -879,7 +884,6 @@ app.get('/bank-payment-for-subscription', async (req, res) => {
 
 Best,
 Nomadly Bot`,
-    o,
   );
 
   set(
@@ -912,7 +916,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
     const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
     log(m);
     bot.sendMessage(TELEGRAM_DEV_CHAT_ID, m);
-    bot.sendMessage(chatId, m, o);
+    bot.sendMessage(chatId, m);
     res.send(m);
     return;
   }
@@ -922,13 +926,12 @@ app.get('/bank-payment-for-domain', async (req, res) => {
 
 Best,
 Nomadly Bot`,
-    o,
   );
 
   const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
   if (error) {
     const m = `Error saving domain in server`;
-    bot.sendMessage(chatId, m, o);
+    bot.sendMessage(chatId, m);
     res.send(m);
     return;
   }
@@ -938,7 +941,7 @@ Nomadly Bot`,
 
   if (saveServerInDomainError) {
     const m = `Error saving server in domain ${saveServerInDomainError}`;
-    bot.sendMessage(chatId, m, o);
+    bot.sendMessage(chatId, m);
     res.send(m);
     return;
   }
@@ -985,7 +988,6 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
 
   const { priceCrypto, ticker, ref } = session;
   const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
-  log({ value_coin, priceCrypto, price });
   if (!(value_coin >= price && coin === ticker && ref === reference)) {
     log(req.originalUrl);
     res.send('Wrong coin or wrong price');
@@ -1002,7 +1004,6 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
 
 Best,
 Nomadly Bot`,
-    o,
   );
 
   set(
@@ -1040,7 +1041,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   const session = info?.cryptoPaymentSession;
 
   if (!session) {
-    res.send('Payment session not found, please try again or contact support');
+    res.send(`Payment session not found, please try again or contact support ${SUPPORT_USERNAME}`);
     return;
   }
 
@@ -1064,7 +1065,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
     const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
     log(m);
     bot.sendMessage(TELEGRAM_DEV_CHAT_ID, m);
-    bot.sendMessage(chatId, m, o);
+    bot.sendMessage(chatId, m);
     res.send(m);
     return;
   }
@@ -1074,13 +1075,12 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
 
 Best,
 Nomadly Bot`,
-    o,
   );
 
   const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
   if (error) {
-    const m = `Error saving domain in server, contact support`;
-    bot.sendMessage(chatId, m, o);
+    const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}`;
+    bot.sendMessage(chatId, m);
     res.send(m);
     return;
   }
@@ -1090,7 +1090,7 @@ Nomadly Bot`,
 
   if (saveServerInDomainError) {
     const m = `Error saving server in domain ${saveServerInDomainError}`;
-    bot.sendMessage(chatId, m, o);
+    bot.sendMessage(chatId, m);
     res.send(m);
     return;
   }
@@ -1181,7 +1181,7 @@ const tryConnectReseller = async () => {
         bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message, {
           parse_mode: 'markdown',
         });
-      bot.sendMessage(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'markdown' }, aO);
+      bot.sendMessage(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'markdown' });
     });
     //
   }

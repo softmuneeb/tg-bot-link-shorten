@@ -1,21 +1,3 @@
-function getAnalyticsData(clicksOf) {
-  let res = `Total short links: ${totalShortLinks}\n`;
-  for (const key in clicksOf) {
-    res += `Clicks in ${key}: ${clicksOf[key]}\n`;
-  }
-  return res;
-}
-
-const increment = async (c, key) => {
-  try {
-    const count = ((await get(c, key)) || 0) + 1;
-    await set(c, key, count);
-  } catch (error) {
-    console.error(`Error increment ${key} from ${c.collectionName}:`, error);
-    return null;
-  }
-};
-
 // function get(table, key) {
 //   return table[key];
 // }
@@ -29,13 +11,23 @@ const increment = async (c, key) => {
 //   return true;
 // }
 
+const increment = async (c, key) => {
+  try {
+    const count = ((await get(c, key)) || 0) + 1;
+    await set(c, key, count);
+  } catch (error) {
+    console.error(`Error db increment ${key} from ${c.collectionName}:`, error);
+    return null;
+  }
+};
+
 async function get(c, key) {
   try {
     const result = await c.findOne({ _id: key });
     // console.log({ findIn: c.collectionName, key, result });
     return result?.val || result || undefined;
   } catch (error) {
-    console.error(`Error getting ${key} from ${c.collectionName}:`, error);
+    console.error(`Error db getting ${key} from ${c.collectionName}:`, error);
     return null;
   }
 }
@@ -45,7 +37,7 @@ async function getAll(c) {
     const result = await c.find({}).toArray();
     return result;
   } catch (error) {
-    console.error(`Error getting all documents from ${c}:`, error);
+    console.error(`Error db getting all documents from ${c}:`, error);
     return null;
   }
 }
@@ -63,7 +55,7 @@ async function set(c, key, value, valueInside) {
     a = a === undefined ? '' : ` ${a}`;
     // console.log(`${key}: ${JSON.stringify(value)}${a} set in ${c.collectionName}`);
   } catch (error) {
-    console.error(`Error setting ${key} -> ${JSON.stringify(value)} in ${c.collectionName}:`, error);
+    console.error(`Error db setting ${key} -> ${JSON.stringify(value)} in ${c.collectionName}:`, error);
   }
 }
 
@@ -73,9 +65,9 @@ async function del(c, chatId) {
     // console.log(`Deleted ${result.deletedCount >= 1 ? 'True' : 'False'} in ${c.collectionName} for ${chatId}`);
     return result.deletedCount === 1;
   } catch (error) {
-    console.error('Error deleting user state:', error);
+    console.error('Error db deleting user state:', error);
     return false;
   }
 }
 
-module.exports = { getAnalyticsData, increment, get, set, del, getAll };
+module.exports = { increment, get, set, del, getAll };

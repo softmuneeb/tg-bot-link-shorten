@@ -21,7 +21,18 @@ const chooseSubscription = {
     keyboard: [...subscriptionOptions.map(a => [a]), ['Back', 'Cancel']],
   },
 };
-const cryptoTransferOptions = ['btc', 'eth', 'bch', 'ltc', 'doge', 'trc20_usdt', 'bep20_busd', 'polygon_matic'];
+
+const tickerOf = {
+  BTC: 'btc',
+  ETH: 'eth',
+  BCH: 'bch',
+  LTC: 'ltc',
+  DOGE: 'doge',
+  'USDT Tron': 'trc20_usdt',
+  BUSD: 'bep20_busd',
+  POLYGON: 'polygon_matic',
+};
+const tickerViews = Object.keys(tickerOf);
 
 const aO = {
   reply_markup: {
@@ -98,6 +109,8 @@ const html = `
     `;
 
 module.exports = {
+  tickerOf,
+  tickerViews,
   html,
   linkOptions,
   payBank,
@@ -106,7 +119,6 @@ module.exports = {
   bc,
   rem,
   chooseSubscription,
-  cryptoTransferOptions,
   subscriptionOptions,
   priceOf,
   paymentOptions,
