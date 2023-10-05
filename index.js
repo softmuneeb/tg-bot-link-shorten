@@ -135,7 +135,11 @@ bot.on('message', async msg => {
 
   const blocked = await get(chatIdBlocked, chatId);
   if (blocked) {
-    bot.sendMessage(chatId, `You are currently blocked from using the bot. Please contact support ${SUPPORT_USERNAME}`, rem);
+    bot.sendMessage(
+      chatId,
+      `You are currently blocked from using the bot. Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+      rem,
+    );
     return;
   }
 
@@ -725,7 +729,7 @@ Nomadly Bot`;
     return;
   }
   if (message === '🛠️ Get Support') {
-    bot.sendMessage(chatId, `Please contact support ${SUPPORT_USERNAME}`);
+    bot.sendMessage(chatId, `Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`);
     return;
   }
   // else {
@@ -1040,7 +1044,9 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   const session = info?.cryptoPaymentSession;
 
   if (!session) {
-    res.send(`Payment session not found, please try again or contact support ${SUPPORT_USERNAME}`);
+    res.send(
+      `Payment session not found, please try again or contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+    );
     return;
   }
 
@@ -1078,7 +1084,7 @@ Nomadly Bot`,
 
   const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
   if (error) {
-    const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}`;
+    const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`;
     bot.sendMessage(chatId, m);
     res.send(m);
     return;
