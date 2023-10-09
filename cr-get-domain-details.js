@@ -1,22 +1,31 @@
 require('dotenv').config();
 const axios = require('axios');
 
-const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
-const domainName = 'softlink.sbs'; // Replace with the domain name you want to fetch details for
+const getDomainDetails = async websiteName => {
+  try {
+    const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
+    const URL = 'https://api.connectreseller.com/ConnectReseller/ESHOP/ViewDomain';
 
-const apiUrl = `https://api.connectreseller.com/ConnectReseller/ESHOP/ViewDomain?APIKey=${API_KEY}&websiteName=${domainName}`;
+    const params = {
+      APIKey: API_KEY,
+      websiteName: websiteName,
+    };
 
-axios
-  .get(apiUrl)
-  .then(response => {
-    // Handle the response here
+    const response = await axios.get(URL, { params });
+
     if (response?.status === 200) {
       const domainDetails = response.data;
       console.log('Domain Details:', domainDetails);
+      return domainDetails;
     } else {
       console.error('Failed to fetch domain details');
+      return null;
     }
-  })
-  .catch(error => {
+  } catch (error) {
     console.error('Error:', error);
-  });
+    throw error;
+  }
+};
+
+const websiteId = 'softlink.sbs';
+getDomainDetails(websiteId);
