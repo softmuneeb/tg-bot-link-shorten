@@ -1,3 +1,148 @@
+get-dns-records.js"      
+API Response: {
+  responseMsg: { message: 'List viewed', id: 0, statusCode: 200 },
+  responseData: [
+    {
+      recordPort: null,
+      recordWeieght: null,
+      recordName: 'softlink.sbs',
+      recordType: 'SOA',
+      recordContent: '8307.dns1.managedns.org hello@ivrpod.com 2023090107 10800 3600 604800 3600',
+      recordTTL: 3600,
+      dnszoneRecordID: 1112759357,
+      dnszoneID: 150663,
+      recordPriority: null,
+      recordChangeDate: 1693553759000,
+      isLocked: 1,
+      isDelete: 0,
+      statusID: 1,
+      statusName: 'Active',
+      priority: null
+    },
+    {
+      recordPort: null,
+      recordWeieght: null,
+      recordName: 'softlink.sbs',
+      recordType: 'NS',
+      recordContent: '8307.dns1.managedns.org',
+      recordTTL: 3600,
+      dnszoneRecordID: 1112759358,
+      dnszoneID: 150663,
+      recordPriority: null,
+      recordChangeDate: 1693553759000,
+      isLocked: 1,
+      isDelete: 0,
+      statusID: 1,
+      statusName: 'Active',
+      priority: null
+    },
+    {
+      recordPort: null,
+      recordWeieght: null,
+      recordName: 'softlink.sbs',
+      recordType: 'NS',
+      recordContent: '8307.dns2.managedns.org',
+      recordTTL: 3600,
+      dnszoneRecordID: 1112759359,
+      dnszoneID: 150663,
+      recordPriority: null,
+      recordChangeDate: 1693553759000,
+      isLocked: 1,
+      isDelete: 0,
+      statusID: 1,
+      statusName: 'Active',
+      priority: null
+    },
+    {
+      recordPort: null,
+      recordWeieght: null,
+      recordName: 'softlink.sbs',
+      recordType: 'NS',
+      recordContent: '8307.dns3.managedns.org',
+      recordTTL: 3600,
+      dnszoneRecordID: 1112759360,
+      dnszoneID: 150663,
+      recordPriority: null,
+      recordChangeDate: 1693553759000,
+      isLocked: 1,
+      isDelete: 0,
+      statusID: 1,
+      statusName: 'Active',
+      priority: null
+    },
+    {
+      recordPort: null,
+      recordWeieght: null,
+      recordName: 'softlink.sbs',
+      recordType: 'NS',
+      recordContent: '8307.dns4.managedns.org',
+      recordTTL: 3600,
+      dnszoneRecordID: 1112759361,
+      dnszoneID: 150663,
+      recordPriority: null,
+      recordChangeDate: 1693553759000,
+      isLocked: 1,
+      isDelete: 0,
+      statusID: 1,
+      statusName: 'Active',
+      priority: null
+    },
+    {
+      recordPort: null,
+      recordWeieght: null,
+      recordName: 'softlink.sbs',
+      recordType: 'A',
+      recordContent: '103.173.197.50',
+      recordTTL: 24000,
+      dnszoneRecordID: 1112759505,
+      dnszoneID: 150663,
+      recordPriority: null,
+      recordChangeDate: 1693568207000,
+      isLocked: 0,
+      isDelete: 0,
+      statusID: 1,
+      statusName: 'Active',
+      priority: null
+    },
+    {
+      recordPort: null,
+      recordWeieght: null,
+      recordName: 'www.softlink.sbs',
+      recordType: 'A',
+      recordContent: '103.173.197.50',
+      recordTTL: 24000,
+      dnszoneRecordID: 1112759506,
+      dnszoneID: 150663,
+      recordPriority: null,
+      recordChangeDate: 1693568207000,
+      isLocked: 0,
+      isDelete: 0,
+      statusID: 1,
+      statusName: 'Active',
+      priority: null
+    },
+    {
+      recordPort: null,
+      recordWeieght: null,
+      recordName: 'softlink.sbs',
+      recordType: 'CNAME',
+      recordContent: '1aj9h7mx.up.railway.app',
+      recordTTL: 30,
+      dnszoneRecordID: 1112765460,
+      dnszoneID: 150663,
+      recordPriority: null,
+      recordChangeDate: 1694775623000,
+      isLocked: 0,
+      isDelete: 0,
+      statusID: 1,
+      statusName: 'Active',
+      priority: null
+    }
+  ]
+}
+
+
+
 mzk@mzk tg-bot-link-shorten % node "/Users/mzk/Desktop/tg-bot-link-shorten/register-domain.test.js"
 buyDomain Response: {
   "responseMsg": {
