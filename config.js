@@ -1,9 +1,13 @@
 require('dotenv').config();
 
+const PRICE_DAILY = Number(process.env.PRICE_DAILY_SUBSCRIPTION);
+const PRICE_WEEKLY = Number(process.env.PRICE_WEEKLY_SUBSCRIPTION);
+const PRICE_MONTHLY = Number(process.env.PRICE_MONTHLY_SUBSCRIPTION);
+
 const priceOf = {
-  Daily: Number(process.env.PRICE_DAILY_SUBSCRIPTION),
-  Weekly: Number(process.env.PRICE_WEEKLY_SUBSCRIPTION),
-  Monthly: Number(process.env.PRICE_MONTHLY_SUBSCRIPTION),
+  Daily: PRICE_DAILY,
+  Weekly: PRICE_WEEKLY,
+  Monthly: PRICE_MONTHLY,
 };
 
 const timeOf = {
@@ -20,6 +24,15 @@ const chooseSubscription = {
   reply_markup: {
     keyboard: [...subscriptionOptions.map(a => [a]), ['Back', 'Cancel']],
   },
+};
+
+const t = {
+  chooseSubscription: `Select the perfect subscription plan for you:
+Daily ${PRICE_DAILY}$  (2 free domain names)
+Weekly ${PRICE_WEEKLY}$  (3 free domain names)
+Monthly ${PRICE_MONTHLY}$  (5 free domain names)
+
+(offer is only for “.sbs” domain names)`,
 };
 
 const tickerOf = {
@@ -109,6 +122,7 @@ const html = `
     `;
 
 module.exports = {
+  t,
   tickerOf,
   tickerViews,
   html,

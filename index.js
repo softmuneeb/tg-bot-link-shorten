@@ -29,6 +29,7 @@ const {
   payBank,
   linkOptions,
   html,
+  t,
 } = require('./config.js');
 const {
   isValidUrl,
@@ -152,17 +153,54 @@ bot.on('message', async msg => {
   const info = await get(state, chatId);
   const action = info?.action;
 
-  const firstSteps = ['block-user', 'unblock-user', 'choose-domain', 'choose-domain-to-buy', 'choose-subscription'];
+  const firstSteps = [
+    'block-user',
+    'unblock-user',
+    'choose-url-to-shorten',
+    'choose-domain-to-buy',
+    'choose-subscription',
+  ];
+  const goto = {
+    'domain-name-payment': (domain, price) => {
+      bot.sendMessage(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, pay);
+      set(state, chatId, 'action', 'domain-name-payment');
+    },
+    'choose-domain-to-buy': () => {
+      set(state, chatId, 'action', 'choose-domain-to-buy');
+      bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase. e.g abcpay.com', bc);
+    },
+    'subscription-payment': plan => {
+      bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
+      set(state, chatId, 'action', 'subscription-payment');
+    },
+    'choose-subscription': () => {
+      set(state, chatId, 'action', 'choose-subscription');
+      bot.sendMessage(chatId, t.chooseSubscription, chooseSubscription);
+    },
+    'choose-url-to-shorten': () => {
+      set(state, chatId, 'action', 'choose-url-to-shorten');
+      const m = 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com';
+      bot.sendMessage(chatId, m, bc);
+    },
+    'choose-domain-with-shorten': domains => {
+      const keyboard = [...domains.map(d => [d]), ['Back', 'Cancel']];
+      bot.sendMessage(chatId, `Please select the domain you would like to connect with your shortened link.`, {
+        reply_markup: {
+          keyboard,
+        },
+      });
+      set(state, chatId, 'action', 'choose-domain-with-shorten');
+    },
+    'choose-link-type': () => {
+      bot.sendMessage(chatId, `Choose link type:`, linkType);
+      set(state, chatId, 'action', 'choose-link-type');
+    },
+  };
 
   if (message === '/start') {
-    if (isAdmin(chatId)) {
-      bot.sendMessage(chatId, 'Hello, Admin! Please select an option:', aO);
-    } else if (isDeveloper(chatId)) {
-      bot.sendMessage(chatId, 'Welcome, Developer! Choose an option:', dO);
-    } else {
-      bot.sendMessage(chatId, 'Thank you for choosing the URL Shortener Bot! Please choose an option:', o);
-    }
-
+    if (isAdmin(chatId)) bot.sendMessage(chatId, 'Hello, Admin! Please select an option:', aO);
+    else if (isDeveloper(chatId)) bot.sendMessage(chatId, 'Welcome, Developer! Choose an option:', dO);
+    else bot.sendMessage(chatId, 'Thank you for choosing the URL Shortener Bot! Please choose an option:', o);
     return;
   }
   //
@@ -177,22 +215,17 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
       return;
     }
-
     bot.sendMessage(chatId, 'Please share the username of the user that needs to be blocked.', bc);
-
     set(state, chatId, 'action', 'block-user');
     return;
   }
   if (action === 'block-user') {
     const userToBlock = message;
-
     const chatIdToBlock = await get(chatIdOf, userToBlock);
-
     if (!chatIdToBlock) {
       bot.sendMessage(chatId, `User ${userToBlock} not found`, bc);
       return;
     }
-
     set(chatIdBlocked, chatIdToBlock, true);
     bot.sendMessage(chatId, `User ${userToBlock} has been blocked.`, aO);
     set(state, chatId, 'action', 'none');
@@ -204,10 +237,8 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
       return;
     }
-
     bot.sendMessage(chatId, 'Please share the username of the user that needs to be unblocked.', bc);
     set(state, chatId, 'action', 'unblock-user');
-
     return;
   }
   if (action === 'unblock-user') {
@@ -217,7 +248,6 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, `User ${userToUnblock} not found`, bc);
       return;
     }
-
     set(chatIdBlocked, chatIdToUnblock, false);
     bot.sendMessage(chatId, `User ${userToUnblock} has been unblocked.`, aO);
     set(state, chatId, 'action', 'none');
@@ -234,68 +264,50 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, '🌐 Buy domain names first');
       return;
     }
-    set(state, chatId, 'action', 'choose-domain');
-    bot.sendMessage(chatId, 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com', bc);
+    goto['choose-url-to-shorten']();
     return;
   }
-  if (action === 'choose-domain') {
+  if (action === 'choose-url-to-shorten') {
     if (!isValidUrl(message)) {
       bot.sendMessage(chatId, 'Please provide a valid URL. e.g https://google.com', bc);
       return;
     }
-
-    const domains = await getPurchasedDomains(chatId);
-    const keyboard = [...domains.map(d => [d]), ['Back', 'Cancel']];
-    bot.sendMessage(chatId, `Please select the domain you would like to connect with your shortened link.`, {
-      reply_markup: {
-        keyboard,
-      },
-    });
-    set(state, chatId, 'action', 'shorten');
     set(state, chatId, 'url', message);
+    const domains = await getPurchasedDomains(chatId);
+    goto['choose-domain-with-shorten'](domains);
     return;
   }
-  if (action === 'shorten') {
+  if (action === 'choose-domain-with-shorten') {
     if (message === 'Back') {
-      set(state, chatId, 'action', 'choose-domain');
-      bot.sendMessage(chatId, `Please choose the URL to shorten.`, bc);
+      goto['choose-url-to-shorten']();
       return;
     }
-
     const domains = await getPurchasedDomains(chatId);
     if (!domains.includes(message)) {
       bot.sendMessage(chatId, 'Please choose a valid domain', bc);
       return;
     }
     set(state, chatId, 'selectedDomain', message);
-
-    bot.sendMessage(chatId, `Choose link type:`, linkType);
-    set(state, chatId, 'action', 'choose-link-type');
+    goto['choose-link-type']();
     return;
   }
   if (action === 'choose-link-type') {
     if (message === 'Back') {
       const domains = await getPurchasedDomains(chatId);
-      const keyboard = [...domains.map(d => [d]), ['Back', 'Cancel']];
-      bot.sendMessage(chatId, `Please select the domain you would like to connect with your shortened link.`, {
-        reply_markup: {
-          keyboard,
-        },
-      });
-      set(state, chatId, 'action', 'shorten');
+      goto['choose-domain-with-shorten'](domains);
       return;
     }
-
     if (!linkOptions.includes(message)) {
       bot.sendMessage(chatId, `?`);
+      return;
     }
-
     if (message === 'Custom Link') {
       set(state, chatId, 'action', 'shorten-custom');
       bot.sendMessage(chatId, `Please tell your us preferred short link extension: e.g payer`, bc);
       return;
     }
 
+    // Random Link
     const url = info?.url;
     const domain = info?.selectedDomain;
     const shortenedURL = domain + '/' + nanoid();
@@ -307,14 +319,13 @@ bot.on('message', async msg => {
     bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
     set(fullUrlOf, shortenedURL.replace('.', '@'), url);
     set(linksOf, chatId, shortenedURL.replace('.', '@'), url);
-    totalShortLinks++;
+    increment(totalShortLinks);
     set(state, chatId, 'action', 'none');
     return;
   }
   if (action === 'shorten-custom') {
     if (message === 'Back') {
-      bot.sendMessage(chatId, `Choose link type:`, linkType);
-      set(state, chatId, 'action', 'choose-link-type');
+      goto['choose-link-type']();
     }
 
     const url = info?.url;
@@ -336,7 +347,7 @@ bot.on('message', async msg => {
 
     set(linksOf, chatId, shortenedURL.replace('.', '@'), url);
 
-    totalShortLinks++;
+    increment(totalShortLinks);
 
     set(state, chatId, 'action', 'none');
     return;
@@ -344,8 +355,7 @@ bot.on('message', async msg => {
   //
   //
   if (message === '🌐 Buy Domain Names') {
-    set(state, chatId, 'action', 'choose-domain-to-buy');
-    bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase. e.g abcpay.com', bc);
+    goto['choose-domain-to-buy']();
     return;
   }
   if (action === 'choose-domain-to-buy') {
@@ -364,17 +374,15 @@ bot.on('message', async msg => {
       return;
     }
 
-    bot.sendMessage(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, pay);
+    goto['domain-name-payment'](domain, price);
 
     set(state, chatId, 'chosenDomainPrice', price);
-    set(state, chatId, 'action', 'domain-name-payment');
     set(state, chatId, 'chosenDomainForPayment', domain);
     return;
   }
   if (action === 'domain-name-payment') {
     if (message === 'Back') {
-      set(state, chatId, 'action', 'choose-domain-to-buy');
-      bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase. e.g abcpay.com', bc);
+      goto['choose-domain-to-buy']();
       return;
     }
 
@@ -403,8 +411,7 @@ bot.on('message', async msg => {
     const price = info?.chosenDomainPrice;
     const domain = info?.chosenDomainForPayment;
     if (message === 'Back') {
-      bot.sendMessage(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, pay);
-      set(state, chatId, 'action', 'domain-name-payment');
+      goto['domain-name-payment'](domain, price);
       return;
     }
     const email = message;
@@ -447,10 +454,9 @@ Nomadly Bot`,
 
     const priceUSD = info?.chosenDomainPrice;
     const domain = info?.chosenDomainForPayment;
-    const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
+
     if (message === 'Back') {
-      bot.sendMessage(chatId, `Price of ${domain} subscription is ${priceUSD} USD. Choose payment method.`, pay);
-      set(state, chatId, 'action', 'domain-name-payment');
+      goto['domain-name-payment'](domain, priceUSD);
       return;
     }
 
@@ -463,6 +469,8 @@ Nomadly Bot`,
     );
 
     set(chatIdOfPayment, address, chatId);
+
+    const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
     set(state, chatId, 'cryptoPaymentSession', {
       priceCrypto,
       ticker,
@@ -501,9 +509,7 @@ Nomadly Bot`;
       bot.sendMessage(chatId, 'You are currently enrolled in a subscription plan.');
       return;
     }
-
-    set(state, chatId, 'action', 'choose-subscription');
-    bot.sendMessage(chatId, 'Select the perfect subscription plan for you:', chooseSubscription);
+    goto['choose-subscription']();
     return;
   }
   if (action === 'choose-subscription') {
@@ -516,15 +522,13 @@ Nomadly Bot`;
 
     set(state, chatId, 'chosenPlanForPayment', plan);
 
-    bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
+    goto['subscription-payment'](plan);
 
-    set(state, chatId, 'action', 'subscription-payment');
     return;
   }
   if (action === 'subscription-payment') {
     if (message === 'Back') {
-      set(state, chatId, 'action', 'choose-subscription');
-      bot.sendMessage(chatId, 'Select the perfect subscription plan for you:', chooseSubscription);
+      goto['choose-subscription']();
       return;
     }
     const paymentOption = message;
@@ -551,8 +555,7 @@ Nomadly Bot`;
   if (action === 'bank-transfer-payment-subscription') {
     const plan = info?.chosenPlanForPayment;
     if (message === 'Back') {
-      bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
-      set(state, chatId, 'action', 'subscription-payment');
+      goto['subscription-payment'](plan);
       return;
     }
     const email = message;
@@ -590,8 +593,7 @@ Nomadly Bot`,
     const priceUSD = priceOf[plan];
 
     if (message === 'Back') {
-      bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceUSD} USD. Choose payment method.`, pay);
-      set(state, chatId, 'action', 'subscription-payment');
+      goto['subscription-payment'](plan);
       return;
     }
 
@@ -676,7 +678,7 @@ Nomadly Bot`;
       return;
     }
 
-    const linksText = formatLinks(links);
+    const linksText = formatLinks(links).join('\n\n');
     bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
     return;
   }
@@ -755,7 +757,7 @@ async function getUsers() {
 async function getAnalytics() {
   let ans = await getAll(clicksOf);
   if (!ans) return [];
-  return ans.map(a => `${a._id}  ${a.val} click${a.val === 1 ? '' : 's'}`);
+  return ans.map(a => `${a._id}: ${a.val} click${a.val === 1 ? '' : 's'}`);
 }
 
 async function getShortLinks(chatId) {
@@ -851,7 +853,7 @@ async function buyDomain(chatId, domain) {
 }
 
 const formatLinks = links => {
-  return links.map(d => `${d.clicks} ${d.clicks ? 'click' : 'clicks'} → ${d.shorter} → ${d.url}\n`);
+  return links.map(d => `${d.clicks} ${d.clicks === 1 ? 'click' : 'clicks'} → ${d.shorter} → ${d.url}`);
 };
 
 const app = express();
