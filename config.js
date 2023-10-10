@@ -33,18 +33,20 @@ const paymentOptions = ['Crypto', 'Bank ₦aira + Card🌐︎'];
 const linkOptions = ['Random Link', 'Custom Link'];
 
 const chooseSubscription = {
+  parse_mode: 'HTML',
   reply_markup: {
     keyboard: [...subscriptionOptions.map(a => [a]), ['Back', 'Cancel']],
   },
 };
 
 const t = {
-  chooseSubscription: `Select the perfect subscription plan for you:
-Daily $${PRICE_DAILY} (2 free domain names)
-Weekly $${PRICE_WEEKLY} (3 free domain names)
-Monthly $${PRICE_MONTHLY} (5 free domain names)
+  chooseSubscription: `<b>Elevate Your Brand with Our Subscription Plans!</b>
 
-(offer is only for ".sbs" domain names)`,
+- <b>Daily:</b> $${PRICE_DAILY} with 2 free ".sbs" domains.
+- <b>Weekly:</b> $${PRICE_WEEKLY} with 3 free ".sbs" domains.
+- <b>Monthly:</b> $${PRICE_MONTHLY} with 5 free ".sbs" domains.
+
+(Exclusive to ".sbs" domains.)`,
 
   planSubscribed: `Your payment was successful, and you're now subscribed to our {{plan}} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
 
@@ -53,7 +55,7 @@ Nomadly Bot`,
 
   payError: `Payment session not found, please try again or contact support {{support}}. Discover more @Nomadly.`,
 
-  chooseFreeDomainText: `You can avail this domain for free. Are you sure to book this domain?`,
+  chooseFreeDomainText: `<b>Great News!</b> This domain is available for free with your subscription. Would you like to claim it?`,
 
   greet: `Keep your eyes on this space! We're gearing up to launch our URL shortening application that will make your links short, sweet, and to the point. Stay tuned for our big reveal!
 
@@ -106,12 +108,14 @@ const rem = {
 };
 
 const bc = {
+  parse_mode: 'HTML',
   reply_markup: {
     keyboard: [['Back', 'Cancel']],
   },
   disable_web_page_preview: true,
 };
 const yes_no = {
+  parse_mode: 'HTML',
   reply_markup: {
     keyboard: [
       ['Yes', 'No'],

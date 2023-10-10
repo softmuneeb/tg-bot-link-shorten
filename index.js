@@ -174,11 +174,18 @@ bot.on('message', async msg => {
       if (await isSubscribed(chatId)) {
         const plan = await get(planOf, chatId);
         const available = (await get(freeDomainNamesAvailableFor, chatId)) || 0;
-        const s = available === 1 ? 'name is' : 'names are';
-        text = available <= 0 ? `` : `\n\n(Wohoo! ${available} free ".sbs" domain ${s} available in your ${plan} plan)`;
+        const s = available === 1 ? '' : 's';
+        text =
+          available <= 0
+            ? ``
+            : ` Remember, your ${plan} plan includes ${available} free ".sbs" domain${s}. Let's get your domain today!`;
       }
       set(state, chatId, 'action', 'choose-domain-to-buy');
-      bot.sendMessage(chatId, `Please provide the domain name you would like to purchase. e.g abcpay.com${text}`, bc);
+      bot.sendMessage(
+        chatId,
+        `<b>Claim Your Corner of the Web!</b>  Please share the domain name you wish to purchase, like "abcpay.com".${text}`,
+        bc,
+      );
     },
     'subscription-payment': plan => {
       bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
@@ -1127,13 +1134,10 @@ const tryConnectReseller = async () => {
   } catch (error) {
     //
     axios.get('https://api.ipify.org/').then(ip => {
-      const message = `Please add \`\`\`${ip.data}\`\`\` to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
+      const message = `Please add <code>${ip.data}</code> to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
       log(message);
-      TELEGRAM_DEV_CHAT_ID &&
-        bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message, {
-          parse_mode: 'markdown',
-        });
-      bot.sendMessage(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'markdown' });
+      TELEGRAM_DEV_CHAT_ID && bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' });
+      bot.sendMessage(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' });
     });
     //
   }
