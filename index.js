@@ -795,11 +795,11 @@ async function getUsers() {
 
   return ans.map(a => a._id);
 }
-
+// new Date('2023-9-5'), new Date('2023-9'), new Date('2023')
 async function getAnalytics() {
   let ans = await getAll(clicksOf);
   if (!ans) return [];
-  return ans.map(a => `${a._id}: ${a.val} click${a.val === 1 ? '' : 's'}`);
+  return ans.map(a => `${a._id}: ${a.val} click${a.val === 1 ? '' : 's'}`).sort((a, b) => a.localeCompare(b));
 }
 
 async function getShortLinks(chatId) {
@@ -981,7 +981,10 @@ app.get('/bank-payment-for-domain', async (req, res) => {
 
   // Buy Domain
   const error = await buyDomainFullProcess(chatId, domain);
-  if (error) res.send(error);
+  if (error) {
+    res.send(error);
+    return;
+  }
 
   // Logs
   res.send(html);
@@ -1046,7 +1049,10 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
 
   // Buy Domain
   const error = await buyDomainFullProcess(chatId, domain);
-  if (error) res.send(error);
+  if (error) {
+    res.send(error);
+    return;
+  }
 
   // Logs
   res.send(html);
