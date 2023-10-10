@@ -2,7 +2,7 @@ const axios = require('axios');
 const { log } = require('console');
 require('dotenv').config();
 
-const createCheckout = async (amount, reference, redirectPath, email, name) => {
+const createCheckout = async (amount, redirectPath, email, name) => {
   const options = {
     method: 'POST',
     url: `https://${process.env.FINCRA_ENDPOINT}/checkout/payments`,
@@ -19,7 +19,6 @@ const createCheckout = async (amount, reference, redirectPath, email, name) => {
       paymentMethods: ['bank_transfer', 'card'],
       amount,
       redirectUrl: `${process.env.SELF_URL}${redirectPath}`,
-      reference,
       feeBearer: 'business', // 'customer',
       settlementDestination: 'wallet',
       defaultPaymentMethod: 'bank_transfer',
@@ -72,7 +71,7 @@ const getBusinessId = async () => {
 };
 
 // getBusinessId();
-// createCheckout('1', 'txId12', '/success').then(console.log);
+// createCheckout('1', '/success?a=b&ref=tx1234').then(console.log);
 // getBankDepositAddress('100', '1234567');
 // getBankDepositAddress('100', '55667788');
 // getAmountsPaid('64c95e7366ea9f0b4a98dc2e', '64c95e7316ea9f0b4a98dc2e');

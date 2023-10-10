@@ -4,10 +4,22 @@ const PRICE_DAILY = Number(process.env.PRICE_DAILY_SUBSCRIPTION);
 const PRICE_WEEKLY = Number(process.env.PRICE_WEEKLY_SUBSCRIPTION);
 const PRICE_MONTHLY = Number(process.env.PRICE_MONTHLY_SUBSCRIPTION);
 
+const DAILY_PLAN_FREE_DOMAINS = Number(process.env.DAILY_PLAN_FREE_DOMAINS);
+const WEEKLY_PLAN_FREE_DOMAINS = Number(process.env.WEEKLY_PLAN_FREE_DOMAINS);
+const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS);
+
+const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME;
+
 const priceOf = {
   Daily: PRICE_DAILY,
   Weekly: PRICE_WEEKLY,
   Monthly: PRICE_MONTHLY,
+};
+
+const freeDomainsOf = {
+  Daily: DAILY_PLAN_FREE_DOMAINS,
+  Weekly: WEEKLY_PLAN_FREE_DOMAINS,
+  Monthly: MONTHLY_PLAN_FREE_DOMAINS,
 };
 
 const timeOf = {
@@ -28,11 +40,24 @@ const chooseSubscription = {
 
 const t = {
   chooseSubscription: `Select the perfect subscription plan for you:
-Daily ${PRICE_DAILY}$  (2 free domain names)
-Weekly ${PRICE_WEEKLY}$  (3 free domain names)
-Monthly ${PRICE_MONTHLY}$  (5 free domain names)
+Daily $${PRICE_DAILY} (2 free domain names)
+Weekly $${PRICE_WEEKLY} (3 free domain names)
+Monthly $${PRICE_MONTHLY} (5 free domain names)
 
-(offer is only for “.sbs” domain names)`,
+(offer is only for ".sbs" domain names)`,
+
+  planSubscribed: `Your payment was successful, and you're now subscribed to our {{plan}} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
+
+Best,
+Nomadly Bot`,
+
+  payError: `Payment session not found, please try again or contact support {{support}}. Discover more @Nomadly.`,
+
+  chooseFreeDomainText: `You can avail this domain for free. Are you sure to book this domain?`,
+
+  greet: `Keep your eyes on this space! We're gearing up to launch our URL shortening application that will make your links short, sweet, and to the point. Stay tuned for our big reveal!
+
+Support ${SUPPORT_USERNAME} at Telegram.`,
 };
 
 const tickerOf = {
@@ -86,6 +111,15 @@ const bc = {
   },
   disable_web_page_preview: true,
 };
+const yes_no = {
+  reply_markup: {
+    keyboard: [
+      ['Yes', 'No'],
+      ['Back', 'Cancel'],
+    ],
+  },
+  disable_web_page_preview: true,
+};
 
 const pay = {
   reply_markup: {
@@ -122,6 +156,8 @@ const html = `
     `;
 
 module.exports = {
+  yes_no,
+  freeDomainsOf,
   t,
   tickerOf,
   tickerViews,

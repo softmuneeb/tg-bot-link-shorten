@@ -24,7 +24,7 @@ async function checkDomainPriceOnline(domainName) {
       );
 
       const price = Math.ceil(price1Year * PERCENT_INCREASE_DOMAIN);
-      return { available: true, price: price > 5 ? price : 6 };
+      return { available: true, originalPrice: price1Year, price: price > 5 ? price : 6 };
     } else if (statusCode === 400) {
       return {
         available: false,

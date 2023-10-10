@@ -11,9 +11,19 @@
 //   return true;
 // }
 
-const increment = async (c, key) => {
+const increment = async (c, key, val = 1) => {
   try {
-    const count = ((await get(c, key)) || 0) + 1;
+    const count = (await get(c, key)) || 0;
+    await set(c, key, count + val);
+  } catch (error) {
+    console.error(`Error db increment ${key} from ${c.collectionName}:`, error);
+    return null;
+  }
+};
+
+const decrement = async (c, key) => {
+  try {
+    const count = ((await get(c, key)) || 0) - 1;
     await set(c, key, count);
   } catch (error) {
     console.error(`Error db increment ${key} from ${c.collectionName}:`, error);
@@ -25,6 +35,8 @@ async function get(c, key) {
   try {
     const result = await c.findOne({ _id: key });
     // console.log({ findIn: c.collectionName, key, result });
+    if (result?.val === 0) return 0;
+
     return result?.val || result || undefined;
   } catch (error) {
     console.error(`Error db getting ${key} from ${c.collectionName}:`, error);
@@ -51,8 +63,8 @@ async function set(c, key, value, valueInside) {
       await c.updateOne({ _id: key }, { $set: { [value]: valueInside } }, { upsert: true });
     }
 
-    let a = JSON.stringify(valueInside);
-    a = a === undefined ? '' : ` ${a}`;
+    // let a = JSON.stringify(valueInside);
+    // a = a === undefined ? '' : ` ${a}`;
     // console.log(`${key}: ${JSON.stringify(value)}${a} set in ${c.collectionName}`);
   } catch (error) {
     console.error(`Error db setting ${key} -> ${JSON.stringify(value)} in ${c.collectionName}:`, error);
@@ -70,4 +82,4 @@ async function del(c, chatId) {
   }
 }
 
-module.exports = { increment, get, set, del, getAll };
+module.exports = { increment, decrement, get, set, del, getAll };

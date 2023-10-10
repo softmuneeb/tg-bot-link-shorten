@@ -30,6 +30,8 @@ const {
   linkOptions,
   html,
   t,
+  freeDomainsOf,
+  yes_no,
 } = require('./config.js');
 const {
   isValidUrl,
@@ -46,7 +48,7 @@ const { getCryptoDepositAddress, convertUSDToCrypto } = require('./blockbee.js')
 const { saveDomainInServer } = require('./cr-rl-connect-domain-to-server.js');
 const { saveServerInDomain } = require('./cr-add-dns-record.js');
 const { buyDomainOnline } = require('./register-domain.test.js');
-const { get, set, del, increment, getAll } = require('./db.js');
+const { get, set, del, increment, getAll, decrement } = require('./db.js');
 const { checkDomainPriceOnline } = require('./cr-get-domain-price.js');
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);
@@ -69,7 +71,8 @@ let domainsOf = {};
 let chatIdBlocked = {};
 let planEndingTime = {};
 let chatIdOfPayment = {};
-let totalShortLinks = { count: 0 };
+let totalShortLinks = {};
+let freeDomainNamesAvailableFor = {};
 
 // variables to view system information
 let payments = {};
@@ -101,6 +104,7 @@ client
     planEndingTime = db.collection('planEndingTime');
     chatIdOfPayment = db.collection('chatIdOfPayment');
     totalShortLinks = db.collection('totalShortLinks');
+    freeDomainNamesAvailableFor = db.collection('freeDomainNamesAvailableFor');
 
     // variables to view system information
     payments = db.collection('payments');
@@ -165,9 +169,16 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, pay);
       set(state, chatId, 'action', 'domain-name-payment');
     },
-    'choose-domain-to-buy': () => {
+    'choose-domain-to-buy': async () => {
+      let text = ``;
+      if (await isSubscribed(chatId)) {
+        const plan = await get(planOf, chatId);
+        const available = (await get(freeDomainNamesAvailableFor, chatId)) || 0;
+        const s = available === 1 ? 'name is' : 'names are';
+        text = available <= 0 ? `` : `\n\n(Wohoo! ${available} free ".sbs" domain ${s} available in your ${plan} plan)`;
+      }
       set(state, chatId, 'action', 'choose-domain-to-buy');
-      bot.sendMessage(chatId, 'Please provide the domain name you would like to purchase. e.g abcpay.com', bc);
+      bot.sendMessage(chatId, `Please provide the domain name you would like to purchase. e.g abcpay.com${text}`, bc);
     },
     'subscription-payment': plan => {
       bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
@@ -194,6 +205,10 @@ bot.on('message', async msg => {
     'choose-link-type': () => {
       bot.sendMessage(chatId, `Choose link type:`, linkType);
       set(state, chatId, 'action', 'choose-link-type');
+    },
+    'get-free-domain': () => {
+      bot.sendMessage(chatId, t.chooseFreeDomainText, yes_no);
+      set(state, chatId, 'action', 'get-free-domain');
     },
   };
 
@@ -367,17 +382,25 @@ bot.on('message', async msg => {
       return;
     }
 
-    const { available, price } = await checkDomainPriceOnline(domain);
+    const { available, price, originalPrice } = await checkDomainPriceOnline(domain);
 
     if (!available) {
       bot.sendMessage(chatId, 'Domain is not available. Please try another domain name.', rem);
       return;
     }
 
-    goto['domain-name-payment'](domain, price);
+    set(state, chatId, 'chosenDomainForPayment', domain);
+
+    if (originalPrice <= 2 && (await isSubscribed(chatId))) {
+      const available = (await get(freeDomainNamesAvailableFor, chatId)) || 0;
+      if (available > 0) {
+        goto['get-free-domain']();
+        return;
+      }
+    }
 
     set(state, chatId, 'chosenDomainPrice', price);
-    set(state, chatId, 'chosenDomainForPayment', domain);
+    goto['domain-name-payment'](domain, price);
     return;
   }
   if (action === 'domain-name-payment') {
@@ -422,10 +445,10 @@ bot.on('message', async msg => {
     }
 
     const priceNGN = Number(await convertUSDToNaira(price));
-    const reference = nanoid();
-    set(chatIdOfPayment, reference, chatId);
-    const { url, error } = await createCheckout(priceNGN, reference, '/bank-payment-for-domain', email, username);
-
+    const ref = nanoid();
+    log({ ref });
+    set(chatIdOfPayment, ref, chatId);
+    const { url, error } = await createCheckout(priceNGN, `/bank-payment-for-domain?a=b&ref=${ref}&`, email, username);
     if (error) {
       bot.sendMessage(chatId, error, o);
       set(state, chatId, 'action', 'none');
@@ -461,14 +484,15 @@ Nomadly Bot`,
     }
 
     const ref = nanoid();
+    log({ ref });
     const { address, bb } = await getCryptoDepositAddress(
       ticker,
       chatId,
       SELF_URL,
-      `/crypto-payment-for-domain?a=b&ref=${ref}`,
+      `/crypto-payment-for-domain?a=b&ref=${ref}&`,
     );
 
-    set(chatIdOfPayment, address, chatId);
+    set(chatIdOfPayment, ref, chatId);
 
     const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
     set(state, chatId, 'cryptoPaymentSession', {
@@ -500,6 +524,24 @@ Nomadly Bot`;
       })
       .then(() => fs.unlinkSync('image.png'))
       .catch(log);
+    return;
+  }
+  if (action === 'get-free-domain') {
+    if (message === 'Back' || message === 'No') {
+      goto['choose-domain-to-buy']();
+      return;
+    }
+    if (message !== 'Yes') {
+      bot.sendMessage(chatId, `?`);
+      return;
+    }
+
+    set(state, chatId, 'action', 'none');
+
+    const domain = info?.chosenDomainForPayment;
+    const error = await buyDomainFullProcess(chatId, domain);
+    if (!error) decrement(freeDomainNamesAvailableFor, chatId);
+
     return;
   }
   //
@@ -566,10 +608,10 @@ Nomadly Bot`;
     }
 
     const priceNGN = Number(await convertUSDToNaira(priceOf[plan]));
-    const reference = nanoid();
-    set(chatIdOfPayment, reference, chatId);
-    const { url, error } = await createCheckout(priceNGN, reference, '/bank-payment-for-subscription', email, username);
-
+    const ref = nanoid();
+    log({ ref });
+    set(chatIdOfPayment, ref, chatId);
+    const { url, error } = await createCheckout(priceNGN, `/bank-payment-for-plan?a=b&ref=${ref}&`, email, username);
     if (error) {
       bot.sendMessage(chatId, error, o);
       set(state, chatId, 'action', 'none');
@@ -607,13 +649,14 @@ Nomadly Bot`,
     const priceCrypto = await convertUSDToCrypto(priceUSD, ticker);
 
     const ref = nanoid();
+    log({ ref });
     const { address, bb } = await getCryptoDepositAddress(
       ticker,
       chatId,
       SELF_URL,
-      `/crypto-payment-for-subscription?a=b&ref=${ref}`,
+      `/crypto-payment-for-subscription?a=b&ref=${ref}&`,
     );
-    set(chatIdOfPayment, address, chatId);
+    set(chatIdOfPayment, ref, chatId);
     set(state, chatId, 'cryptoPaymentSession', {
       priceCrypto,
       ticker,
@@ -734,9 +777,8 @@ Nomadly Bot`;
     bot.sendMessage(chatId, `Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`);
     return;
   }
-  // else {
-  //   bot.sendMessage(chatId, "I'm sorry, I didn't understand that command.");
-  // }
+
+  bot.sendMessage(chatId, `?`);
 });
 
 async function getPurchasedDomains(chatId) {
@@ -803,6 +845,7 @@ function restoreData() {
     Object.assign(planEndingTime, restoredData.planEndingTime);
     Object.assign(chatIdOfPayment, restoredData.chatIdOfPayment);
     Object.assign(totalShortLinks, restoredData.totalShortLinks);
+    Object.assign(freeDomainNamesAvailableFor, restoredData.freeDomainNamesAvailableFor);
     log('Data restored.');
   } catch (error) {
     log('Error restoring data:', error.message);
@@ -819,6 +862,7 @@ async function backupTheData() {
     planEndingTime: await getAll(planEndingTime),
     chatIdOfPayment: await getAll(chatIdOfPayment),
     totalShortLinks: await getAll(totalShortLinks),
+    freeDomainNamesAvailableFor: await getAll(freeDomainNamesAvailableFor),
     payments: await getAll(payments),
     clicksOf: await getAll(clicksOf),
     clicksOn: await getAll(clicksOn),
@@ -838,7 +882,7 @@ async function backupPayments() {
 }
 
 async function buyDomain(chatId, domain) {
-  // Reference https://www.mongodb.com/docs/manual/core/dot-dollar-considerations
+  // ref https://www.mongodb.com/docs/manual/core/dot-dollar-considerations
   const domainSanitizedForDb = domain.replace('.', '@');
 
   // set(domainsOf, chatId, domainSanitizedForDb, true);
@@ -856,267 +900,162 @@ const formatLinks = links => {
   return links.map(d => `${d.clicks} ${d.clicks === 1 ? 'click' : 'clicks'} → ${d.shorter} → ${d.url}`);
 };
 
-const app = express();
-app.use(cors());
-app.set('json spaces', 2);
-app.get('/', (req, res) => {
-  res.send(
-    `Keep your eyes on this space! We're gearing up to launch our URL shortening application that will make your links short, sweet, and to the point. Stay tuned for our big reveal!
-
-Support ${SUPPORT_USERNAME} at Telegram.`,
-  );
-});
-app.get('/bank-payment-for-subscription', async (req, res) => {
-  const reference = req.query.reference;
-  const chatId = await get(chatIdOfPayment, reference);
-
-  const plan = (await get(state, chatId))?.chosenPlanForPayment;
-
-  log(`bank-payment-for-subscription reference: ${reference}`);
-  log(`bank-payment-for-subscription chatId: ${chatId}`);
-  log(`bank-payment-for-subscription chosenPlanForPayment: ${plan}`);
-
-  if (!plan) {
-    res.send('Payment already processed or not found');
-    return;
-  }
-
-  set(planOf, chatId, plan);
-  set(planEndingTime, chatId, Date.now() + timeOf[plan]);
-  bot.sendMessage(
-    chatId,
-    `Your payment was successful, and you're now subscribed to our ${plan} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
-
-Best,
-Nomadly Bot`,
-  );
-
-  set(
-    payments,
-    reference,
-    `Bank, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${await get(nameOf, chatId)}, ${new Date()}`,
-  );
-  del(state, chatId);
-  del(chatIdOfPayment, reference);
-
-  res.send(html);
-});
-app.get('/bank-payment-for-domain', async (req, res) => {
-  const reference = req.query.reference;
-  const chatId = await get(chatIdOfPayment, reference);
-  const info = await get(state, chatId);
-  const domain = info?.chosenDomainForPayment;
-
-  log(`crypto-payment-for-domain reference: ${reference}`);
-  log(`crypto-payment-for-domain chatId: ${chatId}`);
-  log(`crypto-payment-for-domain domain: ${domain}`);
-
-  if (!domain) {
-    res.send('Payment already processed or not found');
-    return;
-  }
-  // take out this common code IsA
+const buyDomainFullProcess = async (chatId, domain) => {
   const { error: buyDomainError } = await buyDomain(chatId, domain);
   if (buyDomainError) {
     const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
     log(m);
     bot.sendMessage(TELEGRAM_DEV_CHAT_ID, m);
     bot.sendMessage(chatId, m);
-    res.send(m);
-    return;
+    return m;
   }
   bot.sendMessage(
     chatId,
-    `Your payment is processed and domain ${domain} is now yours. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain} Thank you for choosing us.
+    `Domain ${domain} is now yours. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain} Thank you for choosing us.
 
 Best,
 Nomadly Bot`,
-  );
-
-  const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
-  if (error) {
-    const m = `Error saving domain in server`;
-    bot.sendMessage(chatId, m);
-    res.send(m);
-    return;
-  }
-
-  bot.sendMessage(chatId, `Linking domain with your account...`); // save railway in domain
-  const { error: saveServerInDomainError } = await saveServerInDomain(domain, server);
-
-  if (saveServerInDomainError) {
-    const m = `Error saving server in domain ${saveServerInDomainError}`;
-    bot.sendMessage(chatId, m);
-    res.send(m);
-    return;
-  }
-
-  bot.sendMessage(chatId, `Your domain ${domain} is now linked to your account while DNS propagates. 🚀`);
-
-  const chosenDomainPrice = info?.chosenDomainPrice;
-  del(state, chatId);
-  del(chatIdOfPayment, reference);
-  set(
-    payments,
-    reference,
-    `Bank, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${await get(nameOf, chatId)}, ${new Date()}`,
-  );
-  res.send(html);
-});
-app.get('/crypto-payment-for-subscription', async (req, res) => {
-  // handle multiple invocations of the same url
-  const urlParams = new URLSearchParams(req.originalUrl);
-
-  const address_in = urlParams.get('address_in');
-  const coin = urlParams.get('coin');
-  const reference = urlParams.get('ref');
-  const value_coin = Number(urlParams.get('value_coin'));
-  log(`crypto-payment-for-subscription reference: ${reference}`);
-
-  if (!coin || !address_in || !value_coin) {
-    log('Invalid payment data ' + req.originalUrl);
-    res.send('Invalid payment data');
-    return;
-  }
-
-  const chatId = await get(chatIdOfPayment, address_in);
-  log(`crypto-payment-for-subscription chatId: ${chatId}`);
-
-  const info = await get(state, chatId);
-  const session = info?.cryptoPaymentSession;
-
-  if (!session) {
-    log('No crypto payment session found ' + req.originalUrl);
-    res.send('Payment issue, no crypto payment session found');
-    return;
-  }
-
-  const { priceCrypto, ticker, ref } = session;
-  const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
-  if (!(value_coin >= price && coin === ticker && ref === reference)) {
-    log(req.originalUrl);
-    res.send('Wrong coin or wrong price');
-    return;
-  }
-
-  const plan = info?.chosenPlanForPayment;
-  log(`crypto-payment-for-subscription chosenPlanForPayment: ${plan}`);
-  set(planEndingTime, chatId, Date.now() + timeOf[plan]);
-  set(planOf, chatId, plan);
-  bot.sendMessage(
-    chatId,
-    `Your payment was successful, and you're now subscribed to our ${plan} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
-
-Best,
-Nomadly Bot`,
-  );
-
-  set(
-    payments,
-    address_in,
-    `Crypto, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${await get(
-      nameOf,
-      chatId,
-    )}, ${new Date()}, ${value_coin} ${coin}`,
-  );
-
-  del(state, chatId);
-  del(chatIdOfPayment, address_in);
-  res.send(html);
-});
-
-app.get('/crypto-payment-for-domain', async (req, res) => {
-  const urlParams = new URLSearchParams(req.originalUrl);
-  const coin = urlParams.get('coin');
-  const address_in = urlParams.get('address_in');
-  const reference = urlParams.get('ref');
-  const value_coin = Number(urlParams.get('value_coin'));
-
-  log(`crypto-payment-for-domain reference: ${reference}`);
-  if (!coin || !address_in || !value_coin) {
-    log('Invalid payment data ' + req.originalUrl);
-    res.send('Invalid payment data');
-    return;
-  }
-
-  const chatId = await get(chatIdOfPayment, address_in);
-  log(`crypto-payment-for-domain chatId: ${chatId}`);
-
-  const info = await get(state, chatId);
-  const session = info?.cryptoPaymentSession;
-
-  if (!session) {
-    res.send(
-      `Payment session not found, please try again or contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
-    );
-    return;
-  }
-
-  const { priceCrypto, ticker, ref } = session;
-  const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
-  if (!(value_coin >= price && coin === ticker && ref === reference)) {
-    log(`payment session error for crypto ${req.originalUrl}`);
-    res.send('Payment invalid, either less value sent or coin sent is not correct');
-    return;
-  }
-
-  const domain = info?.chosenDomainForPayment;
-  log(`crypto-payment-for-domain domain: ${domain}`);
-  if (!domain) {
-    res.send('Payment already processed or not found');
-    return;
-  }
-
-  const { error: buyDomainError } = await buyDomain(chatId, domain);
-  if (buyDomainError) {
-    const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
-    log(m);
-    bot.sendMessage(TELEGRAM_DEV_CHAT_ID, m);
-    bot.sendMessage(chatId, m);
-    res.send(m);
-    return;
-  }
-  bot.sendMessage(
-    chatId,
-    `Your payment is processed and domain ${domain} is now yours. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain} Thank you for choosing us.
-
-Best,
-Nomadly Bot`,
+    o,
   );
 
   const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
   if (error) {
     const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`;
     bot.sendMessage(chatId, m);
-    res.send(m);
-    return;
+    return m;
   }
-
   bot.sendMessage(chatId, `Linking domain with your account...`); // save railway in domain
-  const { error: saveServerInDomainError } = await saveServerInDomain(domain, server);
 
+  const { error: saveServerInDomainError } = await saveServerInDomain(domain, server);
   if (saveServerInDomainError) {
     const m = `Error saving server in domain ${saveServerInDomainError}`;
     bot.sendMessage(chatId, m);
-    res.send(m);
+    return m;
+  }
+  bot.sendMessage(chatId, `Your domain ${domain} is now linked to your account while DNS propagates. 🚀`);
+
+  return false; // error = false
+};
+
+const app = express();
+app.use(cors());
+app.set('json spaces', 2);
+app.get('/', (req, res) => {
+  res.send(t.greet);
+});
+app.get('/bank-payment-for-plan', async (req, res) => {
+  // Validations
+  const { ref } = req?.query;
+  const chatId = await get(chatIdOfPayment, ref);
+  const plan = (await get(state, chatId))?.chosenPlanForPayment;
+  log(`bank-payment-for-plan ref: ${ref} chatId: ${chatId} plan: ${plan}`);
+  if (!plan) {
+    res.send('Payment already processed or not found');
     return;
   }
 
-  bot.sendMessage(chatId, `Your domain ${domain} is now linked to your account while DNS propagates. 🚀`);
+  // Subscribe Plan
+  set(planOf, chatId, plan);
+  set(planEndingTime, chatId, Date.now() + timeOf[plan]);
+  increment(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
+  bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan));
 
-  const chosenDomainPrice = info?.chosenDomainPrice;
-  set(
-    payments,
-    address_in,
-    `Crypto, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${await get(
-      nameOf,
-      chatId,
-    )}, ${new Date()}, ${value_coin} ${coin}`,
-  );
-
-  del(state, chatId);
-  del(chatIdOfPayment, address_in);
+  // Logs
   res.send(html);
+  del(state, chatId);
+  del(chatIdOfPayment, ref);
+  const name = await get(nameOf, chatId);
+  set(payments, ref, `Bank, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${name}, ${new Date()}`);
+});
+app.get('/bank-payment-for-domain', async (req, res) => {
+  // Validations
+  const { ref } = req?.query;
+  const chatId = await get(chatIdOfPayment, ref);
+  const info = await get(state, chatId);
+  const domain = info?.chosenDomainForPayment;
+  log(`bank-payment-for-domain ref: ${ref} chatId: ${chatId} domain: ${domain}`);
+  if (!domain) {
+    res.send('Payment already processed or not found');
+    return;
+  }
+
+  // Buy Domain
+  const error = await buyDomainFullProcess(chatId, domain);
+  if (error) res.send(error);
+
+  // Logs
+  res.send(html);
+  del(state, chatId);
+  del(chatIdOfPayment, ref);
+  const name = await get(nameOf, chatId);
+  const chosenDomainPrice = info?.chosenDomainPrice;
+  set(payments, ref, `Bank, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${name}, ${new Date()}`);
+});
+app.get('/crypto-payment-for-subscription', async (req, res) => {
+  // Validations
+  const { ref, coin, value_coin } = req?.query;
+  const chatId = await get(chatIdOfPayment, ref);
+  const info = await get(state, chatId);
+  const session = info?.cryptoPaymentSession;
+  const plan = info?.chosenPlanForPayment;
+  log(`crypto-payment-for-subscription ref: ${ref} chatId: ${chatId} plan: ${plan}`);
+  if (!plan) {
+    res.send(t.payError.replace('{{support}}', SUPPORT_USERNAME));
+    return;
+  }
+  const { priceCrypto, ticker } = session;
+  const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
+  if (!(Number(value_coin) >= price && coin === ticker)) {
+    res.send('Wrong coin or wrong price');
+    return;
+  }
+
+  // Subscribe Plan
+  set(planOf, chatId, plan);
+  set(planEndingTime, chatId, Date.now() + timeOf[plan]);
+  increment(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
+  bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan));
+
+  // Logs
+  res.send(html);
+  del(state, chatId);
+  const date = new Date();
+  del(chatIdOfPayment, ref);
+  const name = await get(nameOf, chatId);
+  set(payments, ref, `Crypto, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${name}, ${date}, ${value_coin} ${coin}`);
+});
+
+app.get('/crypto-payment-for-domain', async (req, res) => {
+  // Validations
+  const { ref, coin, value_coin } = req?.query;
+  const chatId = await get(chatIdOfPayment, ref);
+  const info = await get(state, chatId);
+  const session = info?.cryptoPaymentSession;
+  const domain = info?.chosenDomainForPayment;
+  log(`crypto-payment-for-domain ref: ${ref} chatId: ${chatId} domain: ${domain}`);
+  if (!domain) {
+    res.send(t.payError.replace('{{support}}', SUPPORT_USERNAME));
+    return;
+  }
+  const { priceCrypto, ticker } = session;
+  const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
+  if (!(Number(value_coin) >= price && coin === ticker)) {
+    res.send('Payment invalid, either less value sent or coin sent is not correct');
+    return;
+  }
+
+  // Buy Domain
+  const error = await buyDomainFullProcess(chatId, domain);
+  if (error) res.send(error);
+
+  // Logs
+  res.send(html);
+  del(state, chatId);
+  const date = new Date();
+  del(chatIdOfPayment, ref);
+  const name = await get(nameOf, chatId);
+  const chosenDomainPrice = info?.chosenDomainPrice;
+  set(payments, ref, `Crypto,Domain,${domain},$${chosenDomainPrice},${chatId},${name},${date},${value_coin} ${coin}`);
 });
 app.get('/json1444', async (req, res) => {
   await backupTheData();
