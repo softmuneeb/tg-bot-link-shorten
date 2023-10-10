@@ -114,6 +114,13 @@ client
     nameOf = db.collection('nameOf');
     planOf = db.collection('planOf');
     log('DB Connected lala');
+
+    const chatId = 5168006768;
+    const plan = 'Daily';
+    set(planOf, chatId, plan);
+    set(planEndingTime, chatId, Date.now() + timeOf[plan]);
+    increment(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
+    bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan)).catch(() => {});
   })
   .catch(err => log('DB Connected', err, err?.message));
 
@@ -1136,7 +1143,7 @@ const tryConnectReseller = async () => {
     axios.get('https://api.ipify.org/').then(ip => {
       const message = `Please add <code>${ip.data}</code> to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
       log(message);
-      TELEGRAM_DEV_CHAT_ID && bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' });
+      bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' }).catch(() => {});
       bot.sendMessage(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' });
     });
     //
