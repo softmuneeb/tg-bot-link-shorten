@@ -172,7 +172,7 @@ const html = (text = t.successPayment) => {
   return `
         <html>
             <body>
-                <h3>${text}</h3>
+                <p style="font-family: 'system-ui';" >${text}</p>
             </body>
         </html>
     `;
