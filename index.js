@@ -120,7 +120,7 @@ client
     planOf = db.collection('planOf');
     log('DB Connected lala');
 
-    set(freeShortLinksOf, 5729797630, 2);
+    set(freeShortLinksOf, 6687923716, 2);
     adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
     // const chatId = 5168006768;
     // const plan = 'Daily';
