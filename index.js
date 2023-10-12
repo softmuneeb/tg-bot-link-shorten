@@ -59,6 +59,7 @@ const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_DEV_CHAT_ID = process.env.TELEGRAM_DEV_CHAT_ID;
 const TELEGRAM_ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID;
+const TELEGRAM_DOMAINS_SHOW_CHAT_ID = Number(process.env.TELEGRAM_DOMAINS_SHOW_CHAT_ID);
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 log('Bot is running...');
@@ -72,6 +73,7 @@ let chatIdBlocked = {};
 let planEndingTime = {};
 let chatIdOfPayment = {};
 let totalShortLinks = {};
+let freeShortLinksOf = {};
 let freeDomainNamesAvailableFor = {};
 
 // variables to view system information
@@ -82,6 +84,7 @@ let chatIdOf = {};
 let nameOf = {};
 let planOf = {};
 
+let adminDomains;
 let connect_reseller_working = false;
 // restoreData();
 // manually data add here or call methods
@@ -104,6 +107,7 @@ client
     planEndingTime = db.collection('planEndingTime');
     chatIdOfPayment = db.collection('chatIdOfPayment');
     totalShortLinks = db.collection('totalShortLinks');
+    freeShortLinksOf = db.collection('freeShortLinksOf');
     freeDomainNamesAvailableFor = db.collection('freeDomainNamesAvailableFor');
 
     // variables to view system information
@@ -115,19 +119,21 @@ client
     planOf = db.collection('planOf');
     log('DB Connected lala');
 
-    const chatId = 5168006768;
-    const plan = 'Daily';
-    set(planOf, chatId, plan);
-    set(planEndingTime, chatId, Date.now() + timeOf[plan]);
-    increment(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
-    bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan)).catch(() => {});
+    adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
+    // const chatId = 5168006768;
+    // const plan = 'Daily';
+    // set(planOf, chatId, plan);
+    // set(planEndingTime, chatId, Date.now() + timeOf[plan]);
+    // increment(freeShortLinksOf, chatId, 2); // freeShortLinksForNewUser
+    // increment(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
+    // bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan)).catch(() => {});
   })
   .catch(err => log('DB Connected', err, err?.message));
 
 bot.on('message', async msg => {
-  const chatId = msg.chat.id;
-  const message = msg.text;
-  log('command\t' + message + '\t' + chatId + '\t' + msg.from.username);
+  const chatId = msg?.chat?.id;
+  const message = msg?.text;
+  log('command\t' + message + '\t' + chatId + '\t' + msg?.from?.username);
 
   if (!db) {
     bot.sendMessage(chatId, 'Bot starting, please wait');
@@ -143,7 +149,7 @@ bot.on('message', async msg => {
   }
 
   const nameOfChatId = await get(nameOf, chatId);
-  const username = nameOfChatId || msg.from.username || nanoid();
+  const username = nameOfChatId || msg?.from?.username || nanoid();
 
   const blocked = await get(chatIdBlocked, chatId);
   if (blocked) {
@@ -156,9 +162,12 @@ bot.on('message', async msg => {
   }
 
   if (!nameOfChatId) {
-    // set(state, chatId, {});
     set(nameOf, chatId, username);
     set(chatIdOf, username, chatId);
+  }
+
+  if ((await get(freeShortLinksOf, chatId)) === undefined) {
+    set(freeShortLinksOf, chatId, 2);
   }
 
   const info = await get(state, chatId);
@@ -227,15 +236,16 @@ bot.on('message', async msg => {
   };
 
   if (message === '/start') {
+    set(state, chatId, 'action', 'none');
     if (isAdmin(chatId)) bot.sendMessage(chatId, 'Hello, Admin! Please select an option:', aO);
     else if (isDeveloper(chatId)) bot.sendMessage(chatId, 'Welcome, Developer! Choose an option:', dO);
     else bot.sendMessage(chatId, 'Thank you for choosing the URL Shortener Bot! Please choose an option:', o);
     return;
   }
   //
-  if (message === 'Cancel' || (firstSteps.includes(action) && message === 'Back')) {
+  if (message.toLowerCase() === 'cancel' || (firstSteps.includes(action) && message === 'Back')) {
     set(state, chatId, 'action', 'none');
-    bot.sendMessage(chatId, `User has Pressed ${message} Button.`, o);
+    bot.sendMessage(chatId, `User has Pressed ${message} Button.`, isAdmin(chatId) ? aO : o);
     return;
   }
   //
@@ -285,14 +295,11 @@ bot.on('message', async msg => {
   //
   //
   if (message === '🔗 URL Shortener') {
-    if (!(await isSubscribed(chatId))) {
+    if (!((await freeLinksAvailable(chatId)) || ((await isSubscribed(chatId)) && (await ownsDomainName(chatId))))) {
       bot.sendMessage(chatId, '📋 Subscribe first');
       return;
     }
-    if (!(await ownsDomainName(chatId))) {
-      bot.sendMessage(chatId, '🌐 Buy domain names first');
-      return;
-    }
+
     goto['choose-url-to-shorten']();
     return;
   }
@@ -302,8 +309,14 @@ bot.on('message', async msg => {
       return;
     }
     set(state, chatId, 'url', message);
-    const domains = await getPurchasedDomains(chatId);
-    goto['choose-domain-with-shorten'](domains);
+
+    if ((await isSubscribed(chatId)) && (await ownsDomainName(chatId))) {
+      const domains = await getPurchasedDomains(chatId);
+      goto['choose-domain-with-shorten'](domains);
+      return;
+    }
+
+    goto['choose-domain-with-shorten'](adminDomains);
     return;
   }
   if (action === 'choose-domain-with-shorten') {
@@ -311,8 +324,9 @@ bot.on('message', async msg => {
       goto['choose-url-to-shorten']();
       return;
     }
+    const domain = message;
     const domains = await getPurchasedDomains(chatId);
-    if (!domains.includes(message)) {
+    if (!(domains.includes(domain) || adminDomains.includes(domain))) {
       bot.sendMessage(chatId, 'Please choose a valid domain', bc);
       return;
     }
@@ -345,11 +359,12 @@ bot.on('message', async msg => {
       return;
     }
 
-    bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
-    set(fullUrlOf, shortenedURL.replace('.', '@'), url);
-    set(linksOf, chatId, shortenedURL.replace('.', '@'), url);
     increment(totalShortLinks);
     set(state, chatId, 'action', 'none');
+    set(fullUrlOf, shortenedURL.replace('.', '@'), url);
+    set(linksOf, chatId, shortenedURL.replace('.', '@'), url);
+    bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
+    if (adminDomains.includes(domain)) decrement(freeShortLinksOf, chatId);
     return;
   }
   if (action === 'shorten-custom') {
@@ -371,14 +386,12 @@ bot.on('message', async msg => {
       return;
     }
 
-    set(fullUrlOf, shortenedURL.replace('.', '@'), url);
-    bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
-
-    set(linksOf, chatId, shortenedURL.replace('.', '@'), url);
-
     increment(totalShortLinks);
-
     set(state, chatId, 'action', 'none');
+    set(fullUrlOf, shortenedURL.replace('.', '@'), url);
+    set(linksOf, chatId, shortenedURL.replace('.', '@'), url);
+    bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
+    if (adminDomains.includes(domain)) decrement(freeShortLinksOf, chatId);
     return;
   }
   //
@@ -842,6 +855,10 @@ async function isSubscribed(chatId) {
   const time = await get(planEndingTime, chatId);
   return time && time > Date.now();
 }
+async function freeLinksAvailable(chatId) {
+  const freeLinks = (await get(freeShortLinksOf, chatId)) || 0;
+  return freeLinks > 0;
+}
 
 function restoreData() {
   try {
@@ -859,6 +876,7 @@ function restoreData() {
     Object.assign(planEndingTime, restoredData.planEndingTime);
     Object.assign(chatIdOfPayment, restoredData.chatIdOfPayment);
     Object.assign(totalShortLinks, restoredData.totalShortLinks);
+    Object.assign(freeShortLinksOf, restoredData.freeShortLinksOf);
     Object.assign(freeDomainNamesAvailableFor, restoredData.freeDomainNamesAvailableFor);
     log('Data restored.');
   } catch (error) {
@@ -876,6 +894,7 @@ async function backupTheData() {
     planEndingTime: await getAll(planEndingTime),
     chatIdOfPayment: await getAll(chatIdOfPayment),
     totalShortLinks: await getAll(totalShortLinks),
+    freeShortLinksOf: await getAll(freeShortLinksOf),
     freeDomainNamesAvailableFor: await getAll(freeDomainNamesAvailableFor),
     payments: await getAll(payments),
     clicksOf: await getAll(clicksOf),

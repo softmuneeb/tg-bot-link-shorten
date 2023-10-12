@@ -23,10 +23,10 @@ const increment = async (c, key, val = 1) => {
 
 const decrement = async (c, key) => {
   try {
-    const count = ((await get(c, key)) || 0) - 1;
-    await set(c, key, count);
+    const count = (await get(c, key)) || 0;
+    await set(c, key, count - 1);
   } catch (error) {
-    console.error(`Error db increment ${key} from ${c.collectionName}:`, error);
+    console.error(`Error db decrement ${key} from ${c.collectionName}:`, error);
     return null;
   }
 };

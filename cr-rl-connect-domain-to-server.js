@@ -66,7 +66,7 @@ async function isRailwayAPIWorking() {
   );
   const error = response?.data?.errors?.[0]?.message;
 
-  console.log('isRailwayAPIWorking GraphQL Response:', JSON.stringify(response.data, null, 2));
+  console.log('isRailwayAPIWorking');
 
   if (error) {
     console.error('Error query me', error);

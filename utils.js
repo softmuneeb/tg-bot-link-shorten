@@ -14,7 +14,7 @@ function isNormalUser(chatId) {
 }
 
 function isDeveloper(chatId) {
-  return chatId === process.env.TELEGRAM_DEVELOPER_CHAT_ID; // Replace with the actual developer's chat ID
+  return chatId === Number(process.env.TELEGRAM_DEVELOPER_CHAT_ID); // Replace with the actual developer's chat ID
 }
 
 function isAdmin(chatId) {
