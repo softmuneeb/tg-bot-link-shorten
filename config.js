@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const FREE_LINKS = Number(process.env.FREE_LINKS);
+const FREE_LINKS_HOURS = Number(process.env.FREE_LINKS_TIME_SECONDS) / 60 / 60;
 const PRICE_DAILY = Number(process.env.PRICE_DAILY_SUBSCRIPTION);
 const PRICE_WEEKLY = Number(process.env.PRICE_WEEKLY_SUBSCRIPTION);
 const PRICE_MONTHLY = Number(process.env.PRICE_MONTHLY_SUBSCRIPTION);
@@ -23,7 +25,6 @@ const freeDomainsOf = {
 };
 
 const timeOf = {
-  Day: 120 * 1000,
   Daily: 86400 * 1000,
   Weekly: 7 * 86400 * 1000,
   Monthly: 30 * 86400 * 1000,
@@ -54,13 +55,28 @@ const t = {
 Best,
 Nomadly Bot`,
 
-  payError: `Payment session not found, please try again or contact support {{support}}. Discover more @Nomadly.`,
+  payError: `Payment session not found, please try again or contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
 
   chooseFreeDomainText: `<b>Great News!</b> This domain is available for free with your subscription. Would you like to claim it?`,
 
   greet: `Keep your eyes on this space! We're gearing up to launch our URL shortening application that will make your links short, sweet, and to the point. Stay tuned for our big reveal!
 
 Support ${SUPPORT_USERNAME} at Telegram.`,
+
+  linkExpired: `Your Nomadly trial has ended and your short link is deactivated. We invite you to subscribe to maintain access to our URL service and free domain names. Choose a suitable plan and follow the instructions to subscribe. Please Contact us for any queries.  
+Best,  
+Nomadly Team
+Discover more: t.me/nomadly`,
+
+  successPayment: `Payment Processed Successfully! You can now close this window.`,
+
+  welcome: `Thank you for choosing the URL Shortener Bot! Please choose an option:`,
+
+  welcomeFreeTrial: `Welcome to Nomadly! Enjoy our one-time free trial - shorten ${FREE_LINKS} URLs, active for ${FREE_LINKS_HOURS} hours. Experience the Nomadly difference!`,
+
+  unknownCommand: `Command not found. Press /start or Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+
+  support: `Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
 };
 
 const tickerOf = {
@@ -152,13 +168,15 @@ const payBank = url => ({
   },
 });
 
-const html = `
+const html = (text = t.successPayment) => {
+  return `
         <html>
             <body>
-                <h2>Payment Processed Successfully! You can now close this window.</h2>
+                <h3>${text}</h3>
             </body>
         </html>
     `;
+};
 
 module.exports = {
   yes_no,

@@ -3,13 +3,8 @@
 // }
 // function set(table, key, value) {
 //   table[key] = value;
-// }
-// function del(table, key) {
-//   if (!table[key]) return false;
-
-//   delete table[key];
-//   return true;
-// }
+// } 
+// del should be some mark X instead of del
 
 const increment = async (c, key, val = 1) => {
   try {
@@ -55,7 +50,6 @@ async function getAll(c) {
   }
 }
 
-// done these things to keep same way in changing db to memory variables (and memory variables back to db, easily)
 async function set(c, key, value, valueInside) {
   try {
     if (!valueInside) {
