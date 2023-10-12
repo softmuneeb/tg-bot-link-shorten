@@ -85,7 +85,7 @@ let chatIdOf = {};
 let nameOf = {};
 let planOf = {};
 
-let adminDomains;
+let adminDomains = ['alertfirst.sbs', 'confirm0.sbs', 'eazypay.sbs', 'roadsup.sbs', 'paylert.sbs'];
 let connect_reseller_working = false;
 // restoreData();
 // manually data add here or call methods
@@ -123,7 +123,7 @@ client
 
     set(freeShortLinksOf, 6687923716, FREE_LINKS);
     set(freeShortLinksOf, 1531772316, FREE_LINKS);
-    adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
+    // adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
     // const chatId = 5168006768;
     // const plan = 'Daily';
     // set(planOf, chatId, plan);
