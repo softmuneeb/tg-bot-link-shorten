@@ -862,7 +862,9 @@ async function ownsDomainName(chatId) {
 
 async function isValid(link) {
   const time = await get(expiryOf, link);
-  return time && time > Date.now();
+  if (time === undefined) return true;
+
+  return time > Date.now();
 }
 async function isSubscribed(chatId) {
   const time = await get(planEndingTime, chatId);
