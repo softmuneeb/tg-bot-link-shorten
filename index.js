@@ -1152,7 +1152,7 @@ app.get('/:id', async (req, res) => {
     return;
   }
 
-  if (await isValid(shortUrlSanitized)) {
+  if (!(await isValid(shortUrlSanitized))) {
     res.status(404).send('Free short link is expired, Please subscribe to Nomadly bot to shorten links.');
     return;
   }
