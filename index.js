@@ -551,7 +551,7 @@ Nomadly Bot`;
     set(state, chatId, 'action', 'none');
 
     // send QR Code Image
-    const qrCode = await bb.getQrcode(null, 256);
+    const qrCode = await bb.getQrcode();
     const buffer = Buffer.from(qrCode?.qr_code, 'base64');
     fs.writeFileSync('image.png', buffer);
     bot
@@ -713,7 +713,7 @@ Nomadly Bot`;
     set(state, chatId, 'action', 'none');
 
     // send QR Code Image
-    const qrCode = await bb.getQrcode(null, 256);
+    const qrCode = await bb.getQrcode();
     const buffer = Buffer.from(qrCode?.qr_code, 'base64');
     fs.writeFileSync('image.png', buffer);
     bot

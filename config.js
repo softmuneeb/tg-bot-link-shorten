@@ -23,7 +23,7 @@ const freeDomainsOf = {
 };
 
 const timeOf = {
-  Day: 20 * 1000,
+  Day: 120 * 1000,
   Daily: 86400 * 1000,
   Weekly: 7 * 86400 * 1000,
   Monthly: 30 * 86400 * 1000,
