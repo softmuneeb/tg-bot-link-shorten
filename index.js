@@ -156,7 +156,6 @@ bot.on('message', async msg => {
   const username = nameOfChatId || msg?.from?.username || nanoid();
 
   const blocked = await get(chatIdBlocked, chatId);
-  log({ blocked, chatId });
   if (blocked) {
     bot.sendMessage(
       chatId,
@@ -171,7 +170,8 @@ bot.on('message', async msg => {
     set(chatIdOf, username, chatId);
   }
 
-  if ((await get(freeShortLinksOf, chatId)) === undefined) {
+  const freeLinks = await get(freeShortLinksOf, chatId);
+  if (freeLinks === null || freeLinks === undefined) {
     set(freeShortLinksOf, chatId, FREE_LINKS);
   }
 
