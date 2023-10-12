@@ -101,6 +101,7 @@ client
     // variables to implement core functionality
     state = db.collection('state');
     linksOf = db.collection('linksOf');
+    expiryOf = db.collection('expiryOf');
     fullUrlOf = db.collection('fullUrlOf');
     domainsOf = db.collection('domainsOf');
     chatIdBlocked = db.collection('chatIdBlocked');
@@ -119,6 +120,7 @@ client
     planOf = db.collection('planOf');
     log('DB Connected lala');
 
+    set(freeShortLinksOf, 5729797630, 2);
     adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
     // const chatId = 5168006768;
     // const plan = 'Daily';
@@ -152,14 +154,15 @@ bot.on('message', async msg => {
   const username = nameOfChatId || msg?.from?.username || nanoid();
 
   const blocked = await get(chatIdBlocked, chatId);
-  if (blocked) {
-    bot.sendMessage(
-      chatId,
-      `You are currently blocked from using the bot. Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
-      rem,
-    );
-    return;
-  }
+  log({ blocked, chatId });
+  // if (blocked) {
+  //   bot.sendMessage(
+  //     chatId,
+  //     `You are currently blocked from using the bot. Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+  //     rem,
+  //   );
+  //   return;
+  // }
 
   if (!nameOfChatId) {
     set(nameOf, chatId, username);
@@ -353,18 +356,22 @@ bot.on('message', async msg => {
     // Random Link
     const url = info?.url;
     const domain = info?.selectedDomain;
-    const shortenedURL = domain + '/' + nanoid();
-    if (await get(fullUrlOf, shortenedURL)) {
-      bot.sendMessage(chatId, `Link already exists. Please send 'ok' to try another.`);
+    const shortUrl = domain + '/' + nanoid();
+    if (await get(fullUrlOf, shortUrl)) {
+      bot.sendMessage(chatId, `Link already exists. Please type 'ok' to try another.`);
       return;
     }
 
+    const shortUrlSanitized = shortUrl.replace('.', '@');
     increment(totalShortLinks);
     set(state, chatId, 'action', 'none');
-    set(fullUrlOf, shortenedURL.replace('.', '@'), url);
-    set(linksOf, chatId, shortenedURL.replace('.', '@'), url);
-    bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
-    if (adminDomains.includes(domain)) decrement(freeShortLinksOf, chatId);
+    set(fullUrlOf, shortUrlSanitized, url);
+    set(linksOf, chatId, shortUrlSanitized, url);
+    bot.sendMessage(chatId, `Your shortened URL is: ${shortUrl}`, o);
+    if (adminDomains.includes(domain)) {
+      decrement(freeShortLinksOf, chatId);
+      set(expiryOf, shortUrlSanitized, Date.now() + timeOf.Day);
+    }
     return;
   }
   if (action === 'shorten-custom') {
@@ -374,24 +381,26 @@ bot.on('message', async msg => {
 
     const url = info?.url;
     const domain = info?.selectedDomain;
-    const shortenedURL = domain + '/' + message;
-
-    if (!isValidUrl('https://' + shortenedURL)) {
+    const shortUrl = domain + '/' + message;
+    if (!isValidUrl('https://' + shortUrl)) {
       bot.sendMessage(chatId, 'Please provide a valid URL. e.g https://google.com');
       return;
     }
-
-    if (await get(fullUrlOf, shortenedURL)) {
+    if (await get(fullUrlOf, shortUrl)) {
       bot.sendMessage(chatId, `Link already exists. Please try another.`);
       return;
     }
 
+    const shortUrlSanitized = shortUrl.replace('.', '@');
     increment(totalShortLinks);
     set(state, chatId, 'action', 'none');
-    set(fullUrlOf, shortenedURL.replace('.', '@'), url);
-    set(linksOf, chatId, shortenedURL.replace('.', '@'), url);
-    bot.sendMessage(chatId, `Your shortened URL is: ${shortenedURL}`, o);
-    if (adminDomains.includes(domain)) decrement(freeShortLinksOf, chatId);
+    set(fullUrlOf, shortUrlSanitized, url);
+    set(linksOf, chatId, shortUrlSanitized, url);
+    bot.sendMessage(chatId, `Your shortened URL is: ${shortUrl}`, o);
+    if (adminDomains.includes(domain)) {
+      decrement(freeShortLinksOf, chatId);
+      set(expiryOf, shortUrlSanitized, Date.now() + timeOf.Day);
+    }
     return;
   }
   //
@@ -851,6 +860,10 @@ async function ownsDomainName(chatId) {
   return (await getPurchasedDomains(chatId)).length > 0;
 }
 
+async function isValid(link) {
+  const time = await get(expiryOf, link);
+  return time && time > Date.now();
+}
 async function isSubscribed(chatId) {
   const time = await get(planEndingTime, chatId);
   return time && time > Date.now();
@@ -866,6 +879,7 @@ function restoreData() {
     const restoredData = JSON.parse(backupJSON);
     Object.assign(state, restoredData.state);
     Object.assign(linksOf, restoredData.linksOf);
+    Object.assign(expiryOf, restoredData.expiryOf);
     Object.assign(clicksOf, restoredData.clicksOf);
     Object.assign(clicksOn, restoredData.clicksOn);
     Object.assign(fullUrlOf, restoredData.fullUrlOf);
@@ -888,6 +902,7 @@ async function backupTheData() {
   const backupData = {
     state: await getAll(state),
     linksOf: await getAll(linksOf),
+    expiryOf: await getAll(expiryOf),
     fullUrlOf: await getAll(fullUrlOf),
     domainsOf: await getAll(domainsOf),
     chatIdBlocked: await getAll(chatIdBlocked),
@@ -1127,10 +1142,16 @@ app.get('/:id', async (req, res) => {
     return;
   }
   const shortUrl = `${req.hostname}/${id}`;
-  const url = await get(fullUrlOf, shortUrl.replace('.', '@'));
+  const shortUrlSanitized = shortUrl.replace('.', '@');
+  const url = await get(fullUrlOf, shortUrlSanitized);
 
   if (!url) {
     res.status(404).send('Link not found');
+    return;
+  }
+
+  if (await isValid(shortUrlSanitized)) {
+    res.status(404).send('Free short link is expired, Please subscribe to Nomadly bot to shorten links.');
     return;
   }
 
@@ -1142,8 +1163,7 @@ app.get('/:id', async (req, res) => {
   increment(clicksOf, month());
   increment(clicksOf, year());
 
-  const sanitizeShort = shortUrl.replace('.', '@');
-  increment(clicksOn, sanitizeShort);
+  increment(clicksOn, shortUrlSanitized);
 });
 const startServer = () => {
   const port = process.env.PORT || 3000;

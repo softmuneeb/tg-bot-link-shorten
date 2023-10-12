@@ -36,6 +36,7 @@ async function get(c, key) {
     const result = await c.findOne({ _id: key });
     // console.log({ findIn: c.collectionName, key, result });
     if (result?.val === 0) return 0;
+    if (result?.val === false) return false;
 
     return result?.val || result || undefined;
   } catch (error) {
