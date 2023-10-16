@@ -1,5 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
+const { log } = require('console');
 const API_TOKEN = process.env.API_KEY_RAILWAY;
 const ENVIRONMENT_ID = process.env.RAILWAY_ENVIRONMENT_ID;
 const SERVICE_ID = process.env.RAILWAY_SERVICE_ID;
@@ -31,8 +32,8 @@ async function saveDomainInServer(domain) {
   const error = response?.data?.errors?.[0]?.message;
 
   if (error) {
-    console.error('Error saveDomainInServer', error);
-    console.log('GraphQL Response:', JSON.stringify(response.data, null, 2));
+    log('Error saveDomainInServer', error);
+    log('domain', domain, 'GraphQL Response:', JSON.stringify(response.data, null, 2));
     return { error };
   }
 
@@ -66,16 +67,16 @@ async function isRailwayAPIWorking() {
   );
   const error = response?.data?.errors?.[0]?.message;
 
-  console.log('isRailwayAPIWorking');
+  log('isRailwayAPIWorking');
 
   if (error) {
-    console.error('Error query me', error);
+    log('Error query me', error);
     return { error };
   }
 
   return response.data;
 }
 
-isRailwayAPIWorking();
-// saveDomainInServer('lemon-is-json-15.sbs');
+// isRailwayAPIWorking();
+// saveDomainInServer('softmuneeba.com').then(log);
 module.exports = { saveDomainInServer, isRailwayAPIWorking };
