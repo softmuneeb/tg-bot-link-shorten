@@ -77,6 +77,12 @@ Discover more: t.me/nomadly`,
   unknownCommand: `Command not found. Press /start or Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
 
   support: `Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+
+  dnsPropagated: `DNS Propagation Completed 🚀 Now your short links linked with {{domain}} will work seamlessly.`,
+
+  dnsNotPropagated: ` DNS propagation for {{domain}} is in progress, We will update you soon`,
+
+  domainBought: `Your domain {{domain}} is now linked to your account while DNS propagates 🚀. We will update you shorty about status of DNS propagation`,
 };
 
 const tickerOf = {

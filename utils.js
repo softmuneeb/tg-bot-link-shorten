@@ -1,6 +1,9 @@
 require('dotenv').config();
 const axios = require('axios');
+const resolveDns = require('./resolveCName');
+const { t } = require('./config');
 
+const UPDATE_DNS_INTERVAL = Number(process.env.UPDATE_DNS_INTERVAL || 60);
 const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE;
 const PERCENT_INCREASE_USD_TO_NAIRA = Number(process.env.PERCENT_INCREASE_USD_TO_NAIRA);
 
@@ -69,8 +72,21 @@ function isValidEmail(email) {
   return regex.test(email);
 }
 
+const regularCheckDns = (bot, chatId, domain) => {
+  const checkDnsPropagation = async () => {
+    if (await resolveDns(domain)) {
+      bot.sendMessage(chatId, t.dnsPropagated.replace('{{domain}}', domain));
+      clearInterval(intervalDnsPropagation);
+      return;
+    }
+    bot.sendMessage(chatId, t.dnsNotPropagated.replace('{{domain}}', domain));
+  };
+  const intervalDnsPropagation = setInterval(checkDnsPropagation, UPDATE_DNS_INTERVAL * 1000);
+};
+
 // convertUSDToNaira(1)
 module.exports = {
+  regularCheckDns,
   isValidEmail,
   today,
   week,

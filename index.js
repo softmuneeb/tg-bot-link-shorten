@@ -42,6 +42,7 @@ const {
   month,
   year,
   isValidEmail,
+  regularCheckDns,
 } = require('./utils.js');
 const { getCryptoDepositAddress, convertUSDToCrypto } = require('./blockbee.js');
 const { saveDomainInServer } = require('./cr-rl-connect-domain-to-server.js');
@@ -515,18 +516,18 @@ Nomadly Bot`,
     return;
   }
   if (action === 'crypto-transfer-payment-domain') {
-    const tickerView = message;
-    const ticker = tickerOf[tickerView];
-    if (!ticker) {
-      bot.sendMessage(chatId, 'Please choose a valid crypto currency');
-      return;
-    }
-
     const priceUSD = info?.chosenDomainPrice;
     const domain = info?.chosenDomainForPayment;
 
     if (message === 'Back') {
       goto['domain-name-payment'](domain, priceUSD);
+      return;
+    }
+
+    const tickerView = message;
+    const ticker = tickerOf[tickerView];
+    if (!ticker) {
+      bot.sendMessage(chatId, 'Please choose a valid crypto currency');
       return;
     }
 
@@ -993,8 +994,8 @@ Nomadly Bot`,
     bot.sendMessage(chatId, m);
     return m;
   }
-  bot.sendMessage(chatId, `Your domain ${domain} is now linked to your account while DNS propagates. 🚀`);
-
+  bot.sendMessage(chatId, t.domainBought.replace('{{domain}}', domain));
+  regularCheckDns(bot, chatId, domain);
   return false; // error = false
 };
 
@@ -1003,6 +1004,10 @@ app.use(cors());
 app.set('json spaces', 2);
 app.get('/', (req, res) => {
   res.send(html(t.greet));
+});
+app.get('/health', (req, res) => {
+  tryConnectReseller();
+  res.send(html('ok'));
 });
 app.get('/bank-payment-for-plan', async (req, res) => {
   // Validations
@@ -1145,6 +1150,7 @@ app.get('/uptime', (req, res) => {
   let uptimeInMilliseconds = now - serverStartTime;
   let uptimeInHours = uptimeInMilliseconds / (1000 * 60 * 60);
 
+  tryConnectReseller();
   res.send(html(`Server has been running for ${uptimeInHours.toFixed(2)} hours.`));
 });
 
@@ -1190,6 +1196,7 @@ const tryConnectReseller = async () => {
   try {
     await getRegisteredDomainNames();
     connect_reseller_working = true;
+    bot.sendMessage(TELEGRAM_DEV_CHAT_ID, `WL is okay`).catch(() => {});
   } catch (error) {
     //
     axios.get('https://api.ipify.org/').then(ip => {
