@@ -78,7 +78,7 @@ Discover more: t.me/nomadly`,
 
   support: `Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
 
-  dnsPropagated: `DNS Propagation Completed 🚀 Now your short links linked with {{domain}} will work seamlessly.`,
+  dnsPropagated: `DNS Propagation for {{domain}} is completed for unlimited URL Shortening.`,
 
   dnsNotPropagated: ` DNS propagation for {{domain}} is in progress, We will update you soon`,
 
