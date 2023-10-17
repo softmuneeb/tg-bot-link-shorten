@@ -86,7 +86,7 @@ let chatIdOf = {};
 let nameOf = {};
 let planOf = {};
 
-let adminDomains = ['alertfirst.sbs', 'confirm0.sbs', 'eazypay.sbs', 'roadsup.sbs', 'paylert.sbs'];
+let adminDomains = ['holytrail.sbs', 'paylert.sbs', 's300ftp.us', 'roadsup.sbs', 'plainote.sbs'];
 let connect_reseller_working = false;
 // restoreData();
 // manually data add here or call methods
