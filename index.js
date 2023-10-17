@@ -140,6 +140,8 @@ bot.on('message', async msg => {
   const message = msg?.text;
   log('command\t' + message + '\t' + chatId + '\t' + msg?.from?.username);
 
+  tryConnectReseller(); // our ip may change on railway hosting so make sure its correct
+
   if (!db) {
     bot.sendMessage(chatId, 'Bot starting, please wait');
     return;
@@ -1149,8 +1151,6 @@ app.get('/uptime', (req, res) => {
   let now = new Date();
   let uptimeInMilliseconds = now - serverStartTime;
   let uptimeInHours = uptimeInMilliseconds / (1000 * 60 * 60);
-
-  tryConnectReseller();
   res.send(html(`Server has been running for ${uptimeInHours.toFixed(2)} hours.`));
 });
 
@@ -1196,7 +1196,6 @@ const tryConnectReseller = async () => {
   try {
     await getRegisteredDomainNames();
     connect_reseller_working = true;
-    bot.sendMessage(TELEGRAM_DEV_CHAT_ID, `WL is okay`).catch(() => {});
   } catch (error) {
     //
     axios.get('https://api.ipify.org/').then(ip => {
