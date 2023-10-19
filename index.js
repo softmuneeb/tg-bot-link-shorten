@@ -360,7 +360,7 @@ bot.on('message', async msg => {
 
     if ((await isSubscribed(chatId)) && (await ownsDomainName(chatId))) {
       const domains = await getPurchasedDomains(chatId);
-      goto['choose-domain-with-shorten'](domains);
+      goto['choose-domain-with-shorten']([...domains, ...adminDomains]);
       return;
     }
 
