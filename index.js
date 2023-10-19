@@ -89,7 +89,7 @@ let chatIdOf = {};
 let nameOf = {};
 let planOf = {};
 
-let adminDomains = ['holytrail.sbs', 'paylert.sbs', 's300ftp.us', 'roadsup.sbs', 'plainote.sbs'];
+let adminDomains = [];
 let connect_reseller_working = false;
 // restoreData();
 // manually data add here or call methods
@@ -127,7 +127,7 @@ client
 
     set(freeShortLinksOf, 6687923716, FREE_LINKS);
     set(freeShortLinksOf, 1531772316, FREE_LINKS);
-    adminDomains = [...adminDomains, ...(await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID))];
+    adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
 
     // const chatId = 5168006768;
     // const plan = 'Daily';
@@ -224,10 +224,11 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', 'choose-subscription');
       bot.sendMessage(chatId, t.chooseSubscription, chooseSubscription);
     },
-    'choose-url-to-shorten': () => {
+    'choose-url-to-shorten': async () => {
       set(state, chatId, 'action', 'choose-url-to-shorten');
       const m = 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com';
       bot.sendMessage(chatId, m, bc);
+      adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
     },
     'choose-domain-with-shorten': domains => {
       bot.sendMessage(chatId, t.chooseDomainWithShortener, show(domains));
