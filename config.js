@@ -106,6 +106,7 @@ Discover more: t.me/nomadly`,
   // dnsRecordSaved: `Added Record. Want to Add More Records?`,
   dnsRecordSaved: `Record Added`,
   dnsRecordDeleted: `Record Deleted`,
+  dnsRecordUpdated: `Record Updated`,
 };
 
 const tickerOf = {
@@ -139,7 +140,7 @@ const o = {
       ['🔍 View Analytics'],
       ['🌐 Buy Domain Names'],
       ['👀 My Domain Names'],
-      // ['😎 DNS Management'],
+      ['😎 DNS Management'],
       ['📋 Subscribe Here'],
       ['🔍 My Plan'],
       ['🛠️ Get Support'],

@@ -34,8 +34,9 @@ const viewDNSRecords = async domain => {
     return;
   }
 
-  const d = await getDNSRecords(websiteId);
-  return d;
+  const records = await getDNSRecords(websiteId);
+
+  return records.filter(r => r.recordType !== 'SOA');
 };
 
 // viewDNSRecords('glasso.sbs').then(log);

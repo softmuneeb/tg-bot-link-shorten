@@ -53,6 +53,7 @@ const { get, set, del, increment, getAll, decrement } = require('./db.js');
 const { checkDomainPriceOnline } = require('./cr-get-domain-price.js');
 const viewDNSRecords = require('./cr-view-dns-records.js');
 const { deleteDNSRecord } = require('./cr-del-dns-record.js');
+const { updateDNSRecord } = require('./cr-dns-record-update.js');
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);
 process.env['NTBA_FIX_350'] = 1;
@@ -129,6 +130,7 @@ client
     set(freeShortLinksOf, 1531772316, FREE_LINKS);
     adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
 
+    // Seed Code // Code to allocate subscriptions, domains and resources to admins, developers, testers
     // const chatId = 5168006768;
     // const plan = 'Daily';
     // set(planOf, chatId, plan);
@@ -257,7 +259,11 @@ bot.on('message', async msg => {
     'choose-dns-action': async domain => {
       const detail = await viewDNSRecords(domain);
 
-      const toSave = detail.map(({ dnszoneID, dnszoneRecordID }) => ({ dnszoneID, dnszoneRecordID }));
+      const toSave = detail.map(({ dnszoneID, dnszoneRecordID, recordType }) => ({
+        dnszoneID,
+        dnszoneRecordID,
+        recordType,
+      }));
       const viewDnsRecords = detail
         .map(({ recordType, recordContent }, i) => `${i + 1}\t${recordType}\t${recordContent}`)
         .join('\n');
@@ -272,6 +278,16 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, t.askDnsContent, bc);
       set(state, chatId, 'recordType', recordType);
       set(state, chatId, 'action', 'type-dns-record-data-to-add');
+    },
+
+    'select-dns-record-id-to-update': () => {
+      bot.sendMessage(chatId, t.updateDnsTxt, bc);
+      set(state, chatId, 'action', 'select-dns-record-id-to-update');
+    },
+    'type-dns-record-data-to-update': id => {
+      bot.sendMessage(chatId, t.askDnsContent);
+      set(state, chatId, 'dnsRecordIdToUpdate', id);
+      set(state, chatId, 'action', 'type-dns-record-data-to-update');
     },
   };
 
@@ -810,8 +826,7 @@ Nomadly Bot`;
     }
 
     if (message === t.updateDns) {
-      set(state, chatId, 'action', 'select-dns-record-id-to-update');
-      bot.sendMessage(chatId, t.updateDnsTxt, bc);
+      goto['select-dns-record-id-to-update']();
       return;
     }
 
@@ -828,7 +843,7 @@ Nomadly Bot`;
       goto['choose-dns-action'](domain);
       return;
     }
-    const dnsRecords = (await get(state, chatId))?.dnsRecords;
+    const dnsRecords = info?.dnsRecords;
     let id = Number(message);
     if (isNaN(id) || !(id > 0 && id <= dnsRecords.length)) {
       bot.sendMessage(chatId, `select valid option`);
@@ -839,12 +854,13 @@ Nomadly Bot`;
     const { dnszoneID, dnszoneRecordID } = dnsRecords[id];
     const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID);
     if (error) {
-      const m = `Error deleting dns record ${error}`;
+      const m = `Error deleting dns record, ${error}, Provide value again`;
       bot.sendMessage(chatId, m, o);
       return m;
     }
 
     bot.sendMessage(chatId, t.dnsRecordDeleted, o);
+    goto['choose-dns-action'](domain);
     return;
   }
   //
@@ -875,12 +891,13 @@ Nomadly Bot`;
 
     const { error } = await saveServerInDomain(domain, recordContent, t[recordType]);
     if (error) {
-      const m = `Error saving dns record ${error}`;
+      const m = `Error saving dns record, ${error}, Provide value again`;
       bot.sendMessage(chatId, m, o);
       return m;
     }
 
     bot.sendMessage(chatId, t.dnsRecordSaved, o);
+    goto['choose-dns-action'](domain);
     return;
   }
   //
@@ -890,12 +907,40 @@ Nomadly Bot`;
       goto['choose-dns-action'](domain);
       return;
     }
+
+    const dnsRecords = info?.dnsRecords;
+    let id = Number(message);
+    if (isNaN(id) || !(id > 0 && id <= dnsRecords.length)) {
+      bot.sendMessage(chatId, `select valid option`);
+      return;
+    }
+    id--; // User See id as 1,2,3 and we see as 0,1,2
+
+    goto['type-dns-record-data-to-update'](id);
+    return;
   }
   if (action === 'type-dns-record-data-to-update') {
     if (message === 'Back') {
       goto['select-dns-record-id-to-update']();
       return;
     }
+
+    const recordContent = message;
+    const dnsRecords = info?.dnsRecords;
+    const domain = info?.domainToManage;
+    const id = info?.dnsRecordIdToUpdate;
+
+    const { dnszoneID, dnszoneRecordID, recordType } = dnsRecords[id];
+    const { error } = await updateDNSRecord(dnszoneID, dnszoneRecordID, domain, recordType, recordContent);
+    if (error) {
+      const m = `Error update dns record, ${error}, Provide value again`;
+      bot.sendMessage(chatId, m, o);
+      return m;
+    }
+
+    bot.sendMessage(chatId, t.dnsRecordUpdated, o);
+    goto['choose-dns-action'](domain);
+    return;
   }
 
   //
