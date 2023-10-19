@@ -80,9 +80,9 @@ Discover more: t.me/nomadly`,
 
   dnsPropagated: `DNS Propagation for {{domain}} is completed for unlimited URL Shortening.`,
 
-  dnsNotPropagated: ` DNS propagation for {{domain}} is in progress, We will update you soon`,
+  dnsNotPropagated: `DNS propagation for {{domain}} is in progress and you will be updated once it completes. ✅`,
 
-  domainBought: `Your domain {{domain}} is now linked to your account while DNS propagates 🚀. We will update you shorty about status of DNS propagation`,
+  domainBought: `Your domain {{domain}} is now linked to your account while DNS propagates. You will be updated automatically about the status momentarily.🚀`,
 
   chooseDomainToManage: `Please select the domain you want to manage DNS`,
 
