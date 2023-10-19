@@ -83,6 +83,29 @@ Discover more: t.me/nomadly`,
   dnsNotPropagated: ` DNS propagation for {{domain}} is in progress, We will update you soon`,
 
   domainBought: `Your domain {{domain}} is now linked to your account while DNS propagates 🚀. We will update you shorty about status of DNS propagation`,
+
+  chooseDomainToManage: `Please select the domain you want to manage DNS`,
+
+  chooseDomainWithShortener: `Please select the domain you would like to connect with your shortened link.`,
+
+  viewDnsRecords: `Here are DNS Records for {{domain}}`,
+
+  addDns: 'Add DNS Record',
+  updateDns: 'Update DNS Record',
+  deleteDns: 'Delete DNS Record',
+  addDnsTxt: 'Which record you want to add:',
+  updateDnsTxt: 'Type the record id to update.',
+  deleteDnsTxt: 'Type the record id to delete.',
+  a: 'A Record',
+  cname: 'CNAME Record',
+  ns: 'NS Record',
+  'A Record': 'A',
+  'CNAME Record': 'CNAME',
+  'NS Record': 'NS',
+  askDnsContent: `Provide the content of dns record`,
+  // dnsRecordSaved: `Added Record. Want to Add More Records?`,
+  dnsRecordSaved: `Record Added`,
+  dnsRecordDeleted: `Record Deleted`,
 };
 
 const tickerOf = {
@@ -115,7 +138,8 @@ const o = {
       ['🔗 URL Shortener'],
       ['🔍 View Analytics'],
       ['🌐 Buy Domain Names'],
-      ['👀 Manage Domain Names'],
+      ['👀 My Domain Names'],
+      ['😎 DNS Management'],
       ['📋 Subscribe Here'],
       ['🔍 My Plan'],
       ['🛠️ Get Support'],
@@ -134,6 +158,21 @@ const bc = {
   parse_mode: 'HTML',
   reply_markup: {
     keyboard: [['Back', 'Cancel']],
+  },
+  disable_web_page_preview: true,
+};
+
+const dns = {
+  parse_mode: 'HTML',
+  reply_markup: {
+    keyboard: [[t.addDns], [t.updateDns], [t.deleteDns], ['Back', 'Cancel']],
+  },
+  disable_web_page_preview: true,
+};
+const dnsRecordType = {
+  parse_mode: 'HTML',
+  reply_markup: {
+    keyboard: [[t.cname], [t.a], [t.ns], ['Back', 'Cancel']],
   },
   disable_web_page_preview: true,
 };
@@ -158,6 +197,12 @@ const linkType = {
     keyboard: [linkOptions, ['Back', 'Cancel']],
   },
 };
+
+const show = domains => ({
+  reply_markup: {
+    keyboard: [...domains.map(d => [d]), ['Back', 'Cancel']],
+  },
+});
 
 const payBank = url => ({
   reply_markup: {
@@ -185,6 +230,9 @@ const html = (text = t.successPayment) => {
 };
 
 module.exports = {
+  dnsRecordType,
+  dns,
+  show,
   yes_no,
   freeDomainsOf,
   t,

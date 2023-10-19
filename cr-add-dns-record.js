@@ -1,9 +1,11 @@
 require('dotenv').config();
 const axios = require('axios');
+const { log } = require('console');
 
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
 
-const saveServerInDomain = async (domainName, server) => {
+const saveServerInDomain = async (domainName, server, RecordType = 'CNAME') => {
+  log(`saveServerInDomain ${domainName} ${server} ${RecordType}`);
   let dnsZoneId;
   let websiteId;
 
@@ -66,13 +68,13 @@ const saveServerInDomain = async (domainName, server) => {
       APIKey: API_KEY,
       DNSZoneID: dnsZoneId,
       RecordName: RECORD_NAME,
-      RecordType: 'CNAME',
+      RecordType,
       RecordValue: RECORD_VALUE,
       RecordTTL: RECORD_TTL,
     };
     const response = await axios.get(url, { params });
     const success = 200 === response?.data?.responseData?.statusCode;
-    return { success };
+    return success ? { success } : { error: response?.data?.responseData?.message };
   } catch (error) {
     console.error('Error saveServerInDomain 3', error?.message, error?.response?.data);
     return { error: `${error?.message} ${error?.response?.data}` };

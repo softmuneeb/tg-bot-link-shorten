@@ -1,10 +1,12 @@
 require('dotenv').config();
 const axios = require('axios');
+const getDomainDetails = require('./cr-get-domain-details');
+const { log } = require('console');
 
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
 const URL = 'https://api.connectreseller.com/ConnectReseller/ESHOP/ViewDNSRecord';
 
-async function viewDNSRecord(websiteId) {
+async function getDNSRecords(websiteId) {
   try {
     const params = {
       APIKey: API_KEY,
@@ -14,7 +16,7 @@ async function viewDNSRecord(websiteId) {
 
     // Check the response status code
     if (response.status === 200) {
-      return response.data;
+      return response?.data?.responseData;
     } else {
       throw new Error(`Error fetching DNS records. Status Code: ${response.status}`);
     }
@@ -23,8 +25,19 @@ async function viewDNSRecord(websiteId) {
   }
 }
 
-// Example usage
-const websiteId = '1933107'; // Replace with actual website ID
-viewDNSRecord(websiteId)
-  .then(data => console.log(data))
-  .catch(error => console.error(error.message));
+const viewDNSRecords = async domain => {
+  const details = await getDomainDetails(domain);
+
+  const websiteId = details?.responseData?.websiteId;
+  if (!websiteId) {
+    log('No websiteId,', details?.responseMsg?.message);
+    return;
+  }
+
+  const d = await getDNSRecords(websiteId);
+  return d;
+};
+
+// viewDNSRecords('glasso.sbs').then(log);
+
+module.exports = viewDNSRecords;

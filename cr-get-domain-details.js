@@ -1,5 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
+const { log } = require('console');
 
 const getDomainDetails = async websiteName => {
   try {
@@ -15,7 +16,7 @@ const getDomainDetails = async websiteName => {
 
     if (response?.status === 200) {
       const domainDetails = response.data;
-      console.log('Domain Details:', domainDetails);
+      // console.log('Domain Details:', domainDetails);
       return domainDetails;
     } else {
       console.error('Failed to fetch domain details');
@@ -27,5 +28,6 @@ const getDomainDetails = async websiteName => {
   }
 };
 
-const websiteId = 'softlink.sbs';
-getDomainDetails(websiteId);
+// const websiteName = 'ibrism.sbs';
+// getDomainDetails(websiteName).then(log);
+module.exports = getDomainDetails;

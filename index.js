@@ -1,5 +1,3 @@
-// TODO: keep in eye data types Number vs String may give bugs...
-
 const { getRegisteredDomainNames } = require('./get-purchased-domains.test.js');
 const { MongoClient } = require('mongodb');
 const TelegramBot = require('node-telegram-bot-api');
@@ -31,6 +29,9 @@ const {
   t,
   freeDomainsOf,
   yes_no,
+  show,
+  dns,
+  dnsRecordType,
 } = require('./config.js');
 const {
   isValidUrl,
@@ -50,6 +51,8 @@ const { saveServerInDomain } = require('./cr-add-dns-record.js');
 const { buyDomainOnline } = require('./register-domain.test.js');
 const { get, set, del, increment, getAll, decrement } = require('./db.js');
 const { checkDomainPriceOnline } = require('./cr-get-domain-price.js');
+const viewDNSRecords = require('./cr-view-dns-records.js');
+const { deleteDNSRecord } = require('./cr-del-dns-record.js');
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);
 process.env['NTBA_FIX_350'] = 1;
@@ -188,6 +191,7 @@ bot.on('message', async msg => {
     'choose-url-to-shorten',
     'choose-domain-to-buy',
     'choose-subscription',
+    'choose-domain-to-manage',
   ];
   const goto = {
     'domain-name-payment': (domain, price) => {
@@ -226,12 +230,7 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, m, bc);
     },
     'choose-domain-with-shorten': domains => {
-      const keyboard = [...domains.map(d => [d]), ['Back', 'Cancel']];
-      bot.sendMessage(chatId, `Please select the domain you would like to connect with your shortened link.`, {
-        reply_markup: {
-          keyboard,
-        },
-      });
+      bot.sendMessage(chatId, t.chooseDomainWithShortener, show(domains));
       set(state, chatId, 'action', 'choose-domain-with-shorten');
     },
     'choose-link-type': () => {
@@ -241,6 +240,37 @@ bot.on('message', async msg => {
     'get-free-domain': () => {
       bot.sendMessage(chatId, t.chooseFreeDomainText, yes_no);
       set(state, chatId, 'action', 'get-free-domain');
+    },
+
+    'choose-domain-to-manage': async () => {
+      const domains = await getPurchasedDomains(chatId);
+      bot.sendMessage(chatId, t.chooseDomainToManage, show(domains));
+      set(state, chatId, 'action', 'choose-domain-to-manage');
+    },
+
+    'select-dns-record-id-to-delete': () => {
+      set(state, chatId, 'action', 'select-dns-record-id-to-delete');
+      bot.sendMessage(chatId, t.deleteDnsTxt, bc);
+    },
+
+    'choose-dns-action': async domain => {
+      const detail = await viewDNSRecords(domain);
+
+      const toSave = detail.map(({ dnszoneID, dnszoneRecordID }) => ({ dnszoneID, dnszoneRecordID }));
+      const viewDnsRecords = detail
+        .map(({ recordType, recordContent }, i) => `${i + 1}\t${recordType}\t${recordContent}`)
+        .join('\n');
+
+      bot.sendMessage(chatId, `${t.viewDnsRecords.replace('{{domain}}', domain)}\n${viewDnsRecords}`, dns);
+      set(state, chatId, 'action', 'choose-dns-action');
+      set(state, chatId, 'domainToManage', domain);
+      set(state, chatId, 'dnsRecords', toSave);
+    },
+
+    'type-dns-record-data-to-add': recordType => {
+      bot.sendMessage(chatId, t.askDnsContent, bc);
+      set(state, chatId, 'recordType', recordType);
+      set(state, chatId, 'action', 'type-dns-record-data-to-add');
     },
   };
 
@@ -342,7 +372,7 @@ bot.on('message', async msg => {
       goto['choose-url-to-shorten']();
       return;
     }
-    const domain = message;
+    const domain = message.toLowerCase();
     const domains = await getPurchasedDomains(chatId);
     if (!(domains.includes(domain) || adminDomains.includes(domain))) {
       bot.sendMessage(chatId, 'Please choose a valid domain', bc);
@@ -741,6 +771,134 @@ Nomadly Bot`;
   }
   //
   //
+  if (message === '😎 DNS Management') {
+    if (!(await ownsDomainName(chatId))) {
+      bot.sendMessage(chatId, 'No domain names found');
+      return;
+    }
+    goto['choose-domain-to-manage']();
+    return;
+  }
+  if (action === 'choose-domain-to-manage') {
+    const domain = message.toLowerCase();
+
+    // if he not owns that domain then return
+    const domains = await getPurchasedDomains(chatId);
+    if (!domains.includes(domain)) {
+      bot.sendMessage(chatId, 'Please choose a valid domain', bc);
+      return;
+    }
+
+    goto['choose-dns-action'](domain);
+    return;
+  }
+  if (action === 'choose-dns-action') {
+    if (message === 'Back') {
+      goto['choose-domain-to-manage']();
+      return;
+    }
+
+    if (![t.addDns, t.updateDns, t.deleteDns].includes(message)) {
+      bot.sendMessage(chatId, `select valid option`);
+      return;
+    }
+
+    if (message === t.deleteDns) {
+      goto['select-dns-record-id-to-delete']();
+      return;
+    }
+
+    if (message === t.updateDns) {
+      set(state, chatId, 'action', 'select-dns-record-id-to-update');
+      bot.sendMessage(chatId, t.updateDnsTxt, bc);
+      return;
+    }
+
+    if (message === t.addDns) {
+      set(state, chatId, 'action', 'select-dns-record-type-to-add');
+      bot.sendMessage(chatId, t.addDnsTxt, dnsRecordType);
+      return;
+    }
+  }
+  //
+  if (action === 'select-dns-record-id-to-delete') {
+    const domain = info?.domainToManage;
+    if (message === 'Back') {
+      goto['choose-dns-action'](domain);
+      return;
+    }
+    const dnsRecords = (await get(state, chatId))?.dnsRecords;
+    let id = Number(message);
+    if (isNaN(id) || !(id > 0 && id <= dnsRecords.length)) {
+      bot.sendMessage(chatId, `select valid option`);
+      return;
+    }
+    id--; // User See id as 1,2,3 and we see as 0,1,2
+
+    const { dnszoneID, dnszoneRecordID } = dnsRecords[id];
+    const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID);
+    if (error) {
+      const m = `Error deleting dns record ${error}`;
+      bot.sendMessage(chatId, m, o);
+      return m;
+    }
+
+    bot.sendMessage(chatId, t.dnsRecordDeleted, o);
+    return;
+  }
+  //
+  if (action === 'select-dns-record-type-to-add') {
+    const domain = info?.domainToManage;
+    if (message === 'Back') {
+      goto['choose-dns-action'](domain);
+      return;
+    }
+    const recordType = message;
+
+    if (![t.cname, t.ns, t.a].includes(recordType)) {
+      bot.sendMessage(chatId, `select valid option`);
+      return;
+    }
+
+    goto['type-dns-record-data-to-add'](recordType);
+    return;
+  }
+  if (action === 'type-dns-record-data-to-add') {
+    const domain = info?.domainToManage;
+    const recordType = info?.recordType;
+    if (message === 'Back') {
+      goto['select-dns-record-type-to-add'](recordType);
+      return;
+    }
+    const recordContent = message;
+
+    const { error } = await saveServerInDomain(domain, recordContent, t[recordType]);
+    if (error) {
+      const m = `Error saving dns record ${error}`;
+      bot.sendMessage(chatId, m, o);
+      return m;
+    }
+
+    bot.sendMessage(chatId, t.dnsRecordSaved, o);
+    return;
+  }
+  //
+  if (action === 'select-dns-record-id-to-update') {
+    const domain = info?.domainToManage;
+    if (message === 'Back') {
+      goto['choose-dns-action'](domain);
+      return;
+    }
+  }
+  if (action === 'type-dns-record-data-to-update') {
+    if (message === 'Back') {
+      goto['select-dns-record-id-to-update']();
+      return;
+    }
+  }
+
+  //
+  //
   if (message === '🔍 My Plan') {
     const subscribedPlan = await get(planOf, chatId);
 
@@ -776,7 +934,7 @@ Nomadly Bot`;
     bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
     return;
   }
-  if (message === '👀 Manage Domain Names') {
+  if (message === '👀 My Domain Names') {
     const purchasedDomains = await getPurchasedDomains(chatId);
     if (purchasedDomains.length === 0) {
       bot.sendMessage(chatId, 'You have no purchased domains yet.');
