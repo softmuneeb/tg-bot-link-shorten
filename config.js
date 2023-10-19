@@ -139,7 +139,7 @@ const o = {
       ['🔍 View Analytics'],
       ['🌐 Buy Domain Names'],
       ['👀 My Domain Names'],
-      ['😎 DNS Management'],
+      // ['😎 DNS Management'],
       ['📋 Subscribe Here'],
       ['🔍 My Plan'],
       ['🛠️ Get Support'],
