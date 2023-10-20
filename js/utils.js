@@ -1,7 +1,7 @@
 require('dotenv').config();
 const axios = require('axios');
-const resolveDns = require('./resolveCName');
 const { t } = require('./config');
+const resolveDns = require('./resolve-cname.js');
 
 const UPDATE_DNS_INTERVAL = Number(process.env.UPDATE_DNS_INTERVAL || 60);
 const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE;

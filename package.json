@@ -1,10 +1,10 @@
 {
   "name": "tg-bot-link-shorten",
   "version": "1.0.0",
-  "description": "Telegram link shortener bot that sells domain names",
-  "main": "index.js",
+  "description": "Telegram link shortener bot that sells domain names and phone number leads",
+  "main": "js/index.js",
   "scripts": {
-    "start": "node startBot.js",
+    "start": "node js/start-bot.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

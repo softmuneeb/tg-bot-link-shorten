@@ -1,7 +1,7 @@
-const { getRegisteredDomainNames } = require('./get-purchased-domains.test.js');
+const { getRegisteredDomainNames } = require('./cr-domain-purchased-get.js');
 const { MongoClient } = require('mongodb');
 const TelegramBot = require('node-telegram-bot-api');
-const { createCheckout } = require('./fincra.js');
+const { createCheckout } = require('./pay-fincra.js');
 const { customAlphabet } = require('nanoid');
 const { log } = require('console');
 const express = require('express');
@@ -45,14 +45,14 @@ const {
   isValidEmail,
   regularCheckDns,
 } = require('./utils.js');
-const { getCryptoDepositAddress, convertUSDToCrypto } = require('./blockbee.js');
-const { saveDomainInServer } = require('./cr-rl-connect-domain-to-server.js');
-const { saveServerInDomain } = require('./cr-add-dns-record.js');
-const { buyDomainOnline } = require('./register-domain.test.js');
+const { getCryptoDepositAddress, convertUSDToCrypto } = require('./pay-blockbee.js');
+const { saveDomainInServer } = require('./rl-save-domain-in-server.js');
+const { saveServerInDomain } = require('./cr-dns-record-add.js');
+const { buyDomainOnline } = require('./cr-domain-register.js');
 const { get, set, del, increment, getAll, decrement } = require('./db.js');
-const { checkDomainPriceOnline } = require('./cr-get-domain-price.js');
+const { checkDomainPriceOnline } = require('./cr-domain-price-get.js');
 const viewDNSRecords = require('./cr-view-dns-records.js');
-const { deleteDNSRecord } = require('./cr-del-dns-record.js');
+const { deleteDNSRecord } = require('./cr-dns-record-del.js');
 const { updateDNSRecord } = require('./cr-dns-record-update.js');
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);

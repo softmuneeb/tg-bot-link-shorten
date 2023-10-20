@@ -1,6 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
-const getDomainDetails = require('./cr-get-domain-details');
+const getDomainDetails = require('./cr-domain-details-get');
 const { log } = require('console');
 
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
