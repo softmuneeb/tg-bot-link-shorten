@@ -20,7 +20,7 @@ const runBot = async () => {
     await isRailwayAPIWorking();
     console.log('working, railway api, now starting the bot');
 
-    require('./index.js');
+    require('./_index.js');
   } catch (error) {
     console.error('Error is:', error);
     console.error(
