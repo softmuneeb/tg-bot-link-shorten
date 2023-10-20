@@ -3,7 +3,7 @@
 // }
 // function set(table, key, value) {
 //   table[key] = value;
-// } 
+// }
 // del should be some mark X instead of del
 
 const increment = async (c, key, val = 1) => {
@@ -53,7 +53,7 @@ async function getAll(c) {
 
 async function set(c, key, value, valueInside) {
   try {
-    if (!valueInside) {
+    if (valueInside === undefined) {
       await c.updateOne({ _id: key }, { $set: { val: value } }, { upsert: true });
     } else {
       await c.updateOne({ _id: key }, { $set: { [value]: valueInside } }, { upsert: true });

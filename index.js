@@ -275,7 +275,7 @@ bot.on('message', async msg => {
     },
 
     'type-dns-record-data-to-add': recordType => {
-      bot.sendMessage(chatId, t.askDnsContent, bc);
+      bot.sendMessage(chatId, t.askDnsContent[recordType], bc);
       set(state, chatId, 'recordType', recordType);
       set(state, chatId, 'action', 'type-dns-record-data-to-add');
     },
@@ -284,10 +284,15 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, t.updateDnsTxt, bc);
       set(state, chatId, 'action', 'select-dns-record-id-to-update');
     },
-    'type-dns-record-data-to-update': id => {
-      bot.sendMessage(chatId, t.askDnsContent);
+    'type-dns-record-data-to-update': (id, recordType) => {
       set(state, chatId, 'dnsRecordIdToUpdate', id);
       set(state, chatId, 'action', 'type-dns-record-data-to-update');
+      bot.sendMessage(chatId, t.askDnsContent[recordType]);
+    },
+
+    'select-dns-record-type-to-add': () => {
+      set(state, chatId, 'action', 'select-dns-record-type-to-add');
+      bot.sendMessage(chatId, t.addDnsTxt, dnsRecordType);
     },
   };
 
@@ -916,7 +921,7 @@ Nomadly Bot`;
     }
     id--; // User See id as 1,2,3 and we see as 0,1,2
 
-    goto['type-dns-record-data-to-update'](id);
+    goto['type-dns-record-data-to-update'](id, dnsRecords[id]?.recordType);
     return;
   }
   if (action === 'type-dns-record-data-to-update') {
