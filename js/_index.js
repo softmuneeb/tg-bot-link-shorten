@@ -365,7 +365,7 @@ bot.on('message', async msg => {
   //
   //
   if (message === '🔗 URL Shortener') {
-    if (!((await freeLinksAvailable(chatId)) || ((await isSubscribed(chatId)) && (await ownsDomainName(chatId))))) {
+    if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId)))) {
       bot.sendMessage(chatId, '📋 Subscribe first');
       return;
     }
@@ -380,13 +380,8 @@ bot.on('message', async msg => {
     }
     set(state, chatId, 'url', message);
 
-    if ((await isSubscribed(chatId)) && (await ownsDomainName(chatId))) {
-      const domains = await getPurchasedDomains(chatId);
-      goto['choose-domain-with-shorten']([...domains, ...adminDomains]);
-      return;
-    }
-
-    goto['choose-domain-with-shorten'](adminDomains);
+    const domains = await getPurchasedDomains(chatId);
+    goto['choose-domain-with-shorten']([...domains, ...adminDomains]);
     return;
   }
   if (action === 'choose-domain-with-shorten') {
@@ -405,11 +400,8 @@ bot.on('message', async msg => {
     return;
   }
   if (action === 'choose-link-type') {
-    if (message === 'Back') {
-      const domains = await getPurchasedDomains(chatId);
-      goto['choose-domain-with-shorten'](domains);
-      return;
-    }
+    if (message === 'Back') return goto['choose-domain-with-shorten'](await getPurchasedDomains(chatId));
+
     if (!linkOptions.includes(message)) {
       bot.sendMessage(chatId, `?`);
       return;
