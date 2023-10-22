@@ -116,6 +116,8 @@ Discover more: t.me/nomadly`,
   dnsRecordSaved: `Record Added`,
   dnsRecordDeleted: `Record Deleted`,
   dnsRecordUpdated: `Record Updated`,
+
+  provideLink: 'Please provide a valid URL. e.g https://google.com',
 };
 
 const tickerOf = {

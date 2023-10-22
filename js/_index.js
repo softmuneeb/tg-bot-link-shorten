@@ -365,51 +365,38 @@ bot.on('message', async msg => {
   //
   //
   if (message === '🔗 URL Shortener') {
-    if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId)))) {
-      bot.sendMessage(chatId, '📋 Subscribe first');
-      return;
-    }
+    if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId))))
+      return bot.sendMessage(chatId, '📋 Subscribe first');
 
-    goto['choose-url-to-shorten']();
-    return;
+    return goto['choose-url-to-shorten']();
   }
   if (action === 'choose-url-to-shorten') {
-    if (!isValidUrl(message)) {
-      bot.sendMessage(chatId, 'Please provide a valid URL. e.g https://google.com', bc);
-      return;
-    }
+    if (!isValidUrl(message)) return bot.sendMessage(chatId, 'Please provide a valid URL. e.g https://google.com', bc);
+
     set(state, chatId, 'url', message);
 
     const domains = await getPurchasedDomains(chatId);
-    goto['choose-domain-with-shorten']([...domains, ...adminDomains]);
-    return;
+    return goto['choose-domain-with-shorten']([...domains, ...adminDomains]);
   }
   if (action === 'choose-domain-with-shorten') {
-    if (message === 'Back') {
-      goto['choose-url-to-shorten']();
-      return;
-    }
+    if (message === 'Back') return goto['choose-url-to-shorten']();
+
     const domain = message.toLowerCase();
     const domains = await getPurchasedDomains(chatId);
     if (!(domains.includes(domain) || adminDomains.includes(domain))) {
-      bot.sendMessage(chatId, 'Please choose a valid domain', bc);
-      return;
+      return bot.sendMessage(chatId, 'Please choose a valid domain', bc);
     }
     set(state, chatId, 'selectedDomain', message);
-    goto['choose-link-type']();
-    return;
+    return goto['choose-link-type']();
   }
   if (action === 'choose-link-type') {
     if (message === 'Back') return goto['choose-domain-with-shorten'](await getPurchasedDomains(chatId));
 
-    if (!linkOptions.includes(message)) {
-      bot.sendMessage(chatId, `?`);
-      return;
-    }
+    if (!linkOptions.includes(message)) return bot.sendMessage(chatId, `?`);
+
     if (message === 'Custom Link') {
       set(state, chatId, 'action', 'shorten-custom');
-      bot.sendMessage(chatId, `Please tell your us preferred short link extension: e.g payer`, bc);
-      return;
+      return bot.sendMessage(chatId, `Please tell your us preferred short link extension: e.g payer`, bc);
     }
 
     // Random Link
@@ -441,14 +428,9 @@ bot.on('message', async msg => {
     const url = info?.url;
     const domain = info?.selectedDomain;
     const shortUrl = domain + '/' + message;
-    if (!isValidUrl('https://' + shortUrl)) {
-      bot.sendMessage(chatId, 'Please provide a valid URL. e.g https://google.com');
-      return;
-    }
-    if (await get(fullUrlOf, shortUrl)) {
-      bot.sendMessage(chatId, `Link already exists. Please try another.`);
-      return;
-    }
+
+    if (!isValidUrl('https://' + shortUrl)) return bot.sendMessage(chatId, t.provideLink);
+    if (await get(fullUrlOf, shortUrl)) return bot.sendMessage(chatId, `Link already exists. Please try another.`);
 
     const shortUrlSanitized = shortUrl.replace('.', '@');
     increment(totalShortLinks);
