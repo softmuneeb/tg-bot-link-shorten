@@ -136,7 +136,7 @@ client
     // set(planOf, chatId, plan);
     // set(planEndingTime, chatId, Date.now() + timeOf[plan]);
     // increment(freeShortLinksOf, chatId, 2); // freeShortLinksForNewUser
-    // increment(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
+    // set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
     // bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan)).catch(() => {});
   })
   .catch(err => log('DB Connected', err, err?.message));
@@ -1209,7 +1209,7 @@ app.get('/bank-payment-for-plan', async (req, res) => {
   // Subscribe Plan
   set(planOf, chatId, plan);
   set(planEndingTime, chatId, Date.now() + timeOf[plan]);
-  increment(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
+  set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
   bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan));
 
   // Logs
@@ -1268,7 +1268,7 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
   // Subscribe Plan
   set(planOf, chatId, plan);
   set(planEndingTime, chatId, Date.now() + timeOf[plan]);
-  increment(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
+  set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
   bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan));
 
   // Logs
