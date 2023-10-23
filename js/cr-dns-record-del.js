@@ -1,9 +1,11 @@
+require('dotenv').config();
 const axios = require('axios');
 const { log } = require('console');
-require('dotenv').config();
 const APIKey = process.env.API_KEY_CONNECT_RESELLER;
+const { updateDNSRecordNs } = require('./cr-dns-record-update-ns');
 
-const deleteDNSRecord = async (DNSZoneID, DNSZoneRecordID) => {
+const deleteDNSRecord = async (DNSZoneID, DNSZoneRecordID, domain, domainNameId, nsId, dnsRecords) => {
+  if (nsId) return updateDNSRecordNs(domainNameId, domain, undefined, nsId, dnsRecords);
   try {
     const apiUrl = 'https://api.connectreseller.com/ConnectReseller/ESHOP/DeleteDNSRecord';
     const requestData = {

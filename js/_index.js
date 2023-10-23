@@ -820,8 +820,9 @@ Nomadly Bot`;
     }
     id--; // User See id as 1,2,3 and we see as 0,1,2
 
-    const { dnszoneID, dnszoneRecordID } = dnsRecords[id];
-    const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID);
+    const nsRecords = dnsRecords.filter(r => r.recordType === 'NS');
+    const { dnszoneID, dnszoneRecordID, nsId, domainNameId } = dnsRecords[id];
+    const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID, domain, domainNameId, nsId, nsRecords);
     if (error) {
       const m = `Error deleting dns record, ${error}, Provide value again`;
       bot.sendMessage(chatId, m, o);
