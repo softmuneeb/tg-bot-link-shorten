@@ -10,33 +10,43 @@ async function getDNSRecords(websiteId) {
   try {
     const params = {
       APIKey: API_KEY,
-      WebsiteId: websiteId, // Assuming websiteId is provided as an argument to the function
+      WebsiteId: websiteId,
     };
     const response = await axios.get(URL, { params });
 
-    // Check the response status code
     if (response.status === 200) {
       return response?.data?.responseData;
     } else {
-      throw new Error(`Error fetching DNS records. Status Code: ${response.status}`);
+      log(`Error fetching DNS records. Status Code: ${response.status}`);
     }
   } catch (error) {
-    throw new Error(`Error: ${error.message}`);
+    log(`Error: ${error.message}`);
   }
 }
 
 const viewDNSRecords = async domain => {
   const details = await getDomainDetails(domain);
 
-  const websiteId = details?.responseData?.websiteId;
+  const { websiteId, domainNameId, nameserver1, nameserver2, nameserver3, nameserver4 } = details?.responseData;
   if (!websiteId) {
     log('No websiteId,', details?.responseMsg?.message);
     return;
   }
 
-  const records = await getDNSRecords(websiteId);
+  const res = await getDNSRecords(websiteId);
+  let records = [];
 
-  return records.filter(r => r.recordType !== 'SOA');
+  records = [...records, ...res.filter(r => r.recordType === 'A')];
+  records = [
+    ...records,
+    { domainNameId, recordContent: nameserver1, recordType: 'NS', nsId: 1 },
+    { domainNameId, recordContent: nameserver2, recordType: 'NS', nsId: 2 },
+    { domainNameId, recordContent: nameserver3, recordType: 'NS', nsId: 3 },
+    { domainNameId, recordContent: nameserver4, recordType: 'NS', nsId: 4 },
+  ];
+  records = [...records, ...res.filter(r => r.recordType === 'CNAME')];
+
+  return records;
 };
 
 // viewDNSRecords('glasso.sbs').then(log);

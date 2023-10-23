@@ -28,6 +28,6 @@ const getDomainDetails = async websiteName => {
   }
 };
 
-// const websiteName = 'ibrism.sbs';
+// const websiteName = 'glasso.sbs';
 // getDomainDetails(websiteName).then(log);
 module.exports = getDomainDetails;

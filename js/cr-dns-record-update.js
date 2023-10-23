@@ -1,9 +1,21 @@
+require('dotenv').config();
 const axios = require('axios');
 const { log } = require('console');
-require('dotenv').config();
 const APIKey = process.env.API_KEY_CONNECT_RESELLER;
+const { updateDNSRecordNs } = require('./cr-dns-record-update-ns');
 
-const updateDNSRecord = async (DNSZoneID, DNSZoneRecordID, RecordName, RecordType, RecordValue) => {
+const updateDNSRecord = async (
+  DNSZoneID,
+  DNSZoneRecordID,
+  RecordName,
+  RecordType,
+  RecordValue,
+  domainNameId,
+  nsId,
+  dnsRecords,
+) => {
+  if (RecordType === 'NS') return await updateDNSRecordNs(domainNameId, RecordName, RecordValue, nsId, dnsRecords);
+
   try {
     const apiUrl = 'https://api.connectreseller.com/ConnectReseller/ESHOP/ModifyDNSRecord';
     const requestData = {
@@ -17,7 +29,7 @@ const updateDNSRecord = async (DNSZoneID, DNSZoneRecordID, RecordName, RecordTyp
 
     const response = await axios.get(apiUrl, { params: requestData });
     log(
-      'updateDNSRecord ',
+      'update DNS Record ',
       { DNSZoneID, DNSZoneRecordID, RecordName, RecordType, RecordValue },
       JSON.stringify(response.data, null, 2),
     );
@@ -25,12 +37,12 @@ const updateDNSRecord = async (DNSZoneID, DNSZoneRecordID, RecordName, RecordTyp
     if (response?.data?.responseMsg?.statusCode === 200) {
       return { success: true };
     } else {
-      let errorMessage = `Issue in updateDNSRecord ${response?.data?.responseMsg?.message}`;
+      let errorMessage = `Issue in update DNS Record ${response?.data?.responseMsg?.message}`;
       log(errorMessage);
       return { error: errorMessage };
     }
   } catch (error) {
-    const errorMessage = `Error updateDNSRecord ${error.message} ${JSON.stringify(error?.response?.data, null, 2)}`;
+    const errorMessage = `Error update DNS Record ${error.message} ${JSON.stringify(error?.response?.data, null, 2)}`;
     log(error, errorMessage);
     return { error: errorMessage };
   }

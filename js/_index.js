@@ -259,13 +259,19 @@ bot.on('message', async msg => {
     'choose-dns-action': async domain => {
       const detail = await viewDNSRecords(domain);
 
-      const toSave = detail.map(({ dnszoneID, dnszoneRecordID, recordType }) => ({
+      const toSave = detail.map(({ dnszoneID, dnszoneRecordID, recordType, domainNameId, nsId, recordContent }) => ({
         dnszoneID,
         dnszoneRecordID,
         recordType,
+        domainNameId,
+        nsId,
+        recordContent,
       }));
       const viewDnsRecords = detail
-        .map(({ recordType, recordContent }, i) => `${i + 1}\t${recordType}\t${recordContent}`)
+        .map(
+          ({ recordType, recordContent, nsId }, i) =>
+            `${i + 1}. \t${recordType === 'NS' ? recordType + nsId : recordType}\t${recordContent}`,
+        )
         .join('\n');
 
       bot.sendMessage(chatId, `${t.viewDnsRecords.replace('{{domain}}', domain)}\n${viewDnsRecords}`, dns);
@@ -789,31 +795,15 @@ Nomadly Bot`;
     return;
   }
   if (action === 'choose-dns-action') {
-    if (message === 'Back') {
-      goto['choose-domain-to-manage']();
-      return;
-    }
+    if (message === 'Back') return goto['choose-domain-to-manage']();
 
-    if (![t.addDns, t.updateDns, t.deleteDns].includes(message)) {
-      bot.sendMessage(chatId, `select valid option`);
-      return;
-    }
+    if (![t.addDns, t.updateDns, t.deleteDns].includes(message)) return bot.sendMessage(chatId, `select valid option`);
 
-    if (message === t.deleteDns) {
-      goto['select-dns-record-id-to-delete']();
-      return;
-    }
+    if (message === t.deleteDns) return goto['select-dns-record-id-to-delete']();
 
-    if (message === t.updateDns) {
-      goto['select-dns-record-id-to-update']();
-      return;
-    }
+    if (message === t.updateDns) return goto['select-dns-record-id-to-update']();
 
-    if (message === t.addDns) {
-      set(state, chatId, 'action', 'select-dns-record-type-to-add');
-      bot.sendMessage(chatId, t.addDnsTxt, dnsRecordType);
-      return;
-    }
+    if (message === t.addDns) return goto['select-dns-record-type-to-add']();
   }
   //
   if (action === 'select-dns-record-id-to-delete') {
@@ -863,7 +853,7 @@ Nomadly Bot`;
     const domain = info?.domainToManage;
     const recordType = info?.recordType;
     if (message === 'Back') {
-      goto['select-dns-record-type-to-add'](recordType);
+      goto['select-dns-record-type-to-add']();
       return;
     }
     const recordContent = message;
@@ -909,15 +899,24 @@ Nomadly Bot`;
     const domain = info?.domainToManage;
     const id = info?.dnsRecordIdToUpdate;
 
-    const { dnszoneID, dnszoneRecordID, recordType } = dnsRecords[id];
-    const { error } = await updateDNSRecord(dnszoneID, dnszoneRecordID, domain, recordType, recordContent);
+    const { dnszoneID, dnszoneRecordID, recordType, domainNameId, nsId } = dnsRecords[id];
+    const { error } = await updateDNSRecord(
+      dnszoneID,
+      dnszoneRecordID,
+      domain,
+      recordType,
+      recordContent,
+      domainNameId,
+      nsId,
+      dnsRecords.filter(r => r.recordType === 'NS'),
+    );
     if (error) {
       const m = `Error update dns record, ${error}, Provide value again`;
-      bot.sendMessage(chatId, m, o);
+      bot.sendMessage(chatId, m);
       return m;
     }
 
-    bot.sendMessage(chatId, t.dnsRecordUpdated, o);
+    bot.sendMessage(chatId, t.dnsRecordUpdated);
     goto['choose-dns-action'](domain);
     return;
   }
@@ -1234,8 +1233,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
   // Buy Domain
   const error = await buyDomainFullProcess(chatId, domain);
   if (error) {
-    res.send(html(error));
-    return;
+    return res.send(html(error));
   }
 
   // Logs
