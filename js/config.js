@@ -103,8 +103,8 @@ Discover more: t.me/nomadly`,
   'CNAME Record': 'CNAME',
   'NS Record': 'NS',
   askDnsContent: {
-    A: `Please provide A record. i.e, 108.0.56.988`,
-    'A Record': `Please provide A record. i.e, 108.0.56.988`,
+    A: `Please provide A record. i.e, 108.0.56.98`,
+    'A Record': `Please provide A record. i.e, 108.0.56.98`,
 
     CNAME: `Please provide CNAME record. i.e, abc.hello.org`,
     'CNAME Record': `Please provide CNAME record. i.e, abc.hello.org`,

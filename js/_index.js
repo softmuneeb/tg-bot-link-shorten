@@ -392,7 +392,7 @@ bot.on('message', async msg => {
     const domain = message.toLowerCase();
     const domains = await getPurchasedDomains(chatId);
     if (!(domains.includes(domain) || adminDomains.includes(domain))) {
-      return bot.sendMessage(chatId, 'Please choose a valid domain', bc);
+      return bot.sendMessage(chatId, 'Please choose a valid domain');
     }
     set(state, chatId, 'selectedDomain', message);
     return goto['choose-link-type']();
@@ -789,7 +789,7 @@ Nomadly Bot`;
     // if he not owns that domain then return
     const domains = await getPurchasedDomains(chatId);
     if (!domains.includes(domain)) {
-      bot.sendMessage(chatId, 'Please choose a valid domain', bc);
+      bot.sendMessage(chatId, 'Please choose a valid domain');
       return;
     }
 
