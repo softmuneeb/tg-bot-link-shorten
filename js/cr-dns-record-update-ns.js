@@ -13,14 +13,12 @@ const updateDNSRecordNs = async (domainNameId, websiteName, RecordValue, nsId, d
       websiteName,
     };
 
-    log(requestData);
     for (let i = 0; i < dnsRecords.length; i++) {
       const r = dnsRecords[i];
       requestData['nameServer' + r.nsId] = r.recordContent;
     }
     // nsId = 1,2,3 or 4
     requestData['nameServer' + nsId] = RecordValue;
-    log(requestData);
 
     const response = await axios.get(apiUrl, { params: requestData });
     log(
