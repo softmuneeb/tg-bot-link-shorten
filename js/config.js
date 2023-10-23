@@ -184,7 +184,7 @@ const dns = {
 const dnsRecordType = {
   parse_mode: 'HTML',
   reply_markup: {
-    keyboard: [[t.cname], [t.a], ['Back', 'Cancel']],
+    keyboard: [[t.cname], [t.ns], [t.a], ['Back', 'Cancel']],
   },
   disable_web_page_preview: true,
 };

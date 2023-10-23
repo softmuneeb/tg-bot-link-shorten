@@ -1,10 +1,13 @@
 require('dotenv').config();
 const axios = require('axios');
 const { log } = require('console');
+const { updateDNSRecordNs } = require('./cr-dns-record-update-ns');
 
 const API_KEY = process.env.API_KEY_CONNECT_RESELLER;
 
-const saveServerInDomain = async (domainName, server, RecordType = 'CNAME') => {
+const saveServerInDomain = async (domainName, server, RecordType = 'CNAME', domainNameId, nsId, dnsRecords) => {
+  if (RecordType === 'NS') return await updateDNSRecordNs(domainNameId, domainName, server, nsId, dnsRecords);
+
   log(`saveServerInDomain ${domainName} ${server} ${RecordType}`);
   let dnsZoneId;
   let websiteId;

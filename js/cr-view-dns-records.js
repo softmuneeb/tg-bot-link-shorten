@@ -38,13 +38,12 @@ const viewDNSRecords = async domain => {
 
   const a_records = res.filter(r => r.recordType === 'A');
   records = a_records.length === 0 ? [{ recordContent: null, recordType: 'A' }] : a_records;
-  records = [
-    ...records,
-    { domainNameId, recordContent: nameserver1, recordType: 'NS', nsId: 1 },
-    { domainNameId, recordContent: nameserver2, recordType: 'NS', nsId: 2 },
-    { domainNameId, recordContent: nameserver3, recordType: 'NS', nsId: 3 },
-    { domainNameId, recordContent: nameserver4, recordType: 'NS', nsId: 4 },
-  ];
+
+  nameserver1 && records.push({ domainNameId, recordContent: nameserver1, recordType: 'NS', nsId: 1 });
+  nameserver2 && records.push({ domainNameId, recordContent: nameserver2, recordType: 'NS', nsId: 2 });
+  nameserver3 && records.push({ domainNameId, recordContent: nameserver3, recordType: 'NS', nsId: 3 });
+  nameserver4 && records.push({ domainNameId, recordContent: nameserver4, recordType: 'NS', nsId: 4 });
+
   records = [...records, ...res.filter(r => r.recordType === 'CNAME')];
 
   return records;

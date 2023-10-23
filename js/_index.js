@@ -852,7 +852,17 @@ Nomadly Bot`;
       return goto['select-dns-record-type-to-add']();
     }
     const recordContent = message;
-    const { error } = await saveServerInDomain(domain, recordContent, t[recordType]);
+    const dnsRecords = info?.dnsRecords;
+    const nsRecords = dnsRecords.filter(r => r.recordType === 'NS');
+    const id = nsRecords.length - 1;
+    const { domainNameId } = dnsRecords[id];
+
+    if (id + 2 > 4 && t[recordType] === 'NS') {
+      bot.sendMessage(chatId, 'Maximum 4 NS records can be added, you can update or delete previous NS records');
+      return goto['select-dns-record-type-to-add']();
+    }
+
+    const { error } = await saveServerInDomain(domain, recordContent, t[recordType], domainNameId, id + 2, nsRecords);
     if (error) {
       const m = `Error saving dns record, ${error}, Provide value again`;
       return bot.sendMessage(chatId, m);
