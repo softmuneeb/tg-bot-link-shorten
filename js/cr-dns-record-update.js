@@ -3,6 +3,7 @@ const axios = require('axios');
 const { log } = require('console');
 const APIKey = process.env.API_KEY_CONNECT_RESELLER;
 const { updateDNSRecordNs } = require('./cr-dns-record-update-ns');
+const { saveServerInDomain } = require('./cr-dns-record-add');
 
 const updateDNSRecord = async (
   DNSZoneID,
@@ -15,6 +16,9 @@ const updateDNSRecord = async (
   dnsRecords,
 ) => {
   if (RecordType === 'NS') return await updateDNSRecordNs(domainNameId, RecordName, RecordValue, nsId, dnsRecords);
+
+  // Custom Requirement fulfilled, if no A record present then show A Record: None, so we are updating it by creating it
+  if (RecordType === 'A' && !DNSZoneID) return await saveServerInDomain(RecordName, RecordValue, 'A');
 
   try {
     const apiUrl = 'https://api.connectreseller.com/ConnectReseller/ESHOP/ModifyDNSRecord';
