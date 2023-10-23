@@ -84,8 +84,18 @@ const regularCheckDns = (bot, chatId, domain) => {
   const intervalDnsPropagation = setInterval(checkDnsPropagation, UPDATE_DNS_INTERVAL * 1000);
 };
 
+const nextNumber = arr => {
+  let n = 1;
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] === n) n++;
+    else return n;
+  }
+  return n;
+};
+
 // convertUSDToNaira(1)
 module.exports = {
+  nextNumber,
   regularCheckDns,
   isValidEmail,
   today,

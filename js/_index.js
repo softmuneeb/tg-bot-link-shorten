@@ -44,6 +44,7 @@ const {
   year,
   isValidEmail,
   regularCheckDns,
+  nextNumber,
 } = require('./utils.js');
 const { getCryptoDepositAddress, convertUSDToCrypto } = require('./pay-blockbee.js');
 const { saveDomainInServer } = require('./rl-save-domain-in-server.js');
@@ -857,12 +858,13 @@ Nomadly Bot`;
     const id = nsRecords.length - 1;
     const { domainNameId } = dnsRecords[id];
 
-    if (id + 2 > 4 && t[recordType] === 'NS') {
+    if (nsRecords.length >= 4 && t[recordType] === 'NS') {
       bot.sendMessage(chatId, 'Maximum 4 NS records can be added, you can update or delete previous NS records');
-      return goto['select-dns-record-type-to-add']();
+      return goto['choose-dns-action'](domain);
     }
 
-    const { error } = await saveServerInDomain(domain, recordContent, t[recordType], domainNameId, id + 2, nsRecords);
+    const nextId = nextNumber(nsRecords.map(r => r.nsId));
+    const { error } = await saveServerInDomain(domain, recordContent, t[recordType], domainNameId, nextId, nsRecords);
     if (error) {
       const m = `Error saving dns record, ${error}, Provide value again`;
       return bot.sendMessage(chatId, m);
