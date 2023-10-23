@@ -780,8 +780,8 @@ Nomadly Bot`;
       bot.sendMessage(chatId, 'No domain names found');
       return;
     }
-    goto['choose-domain-to-manage']();
-    return;
+
+    return goto['choose-domain-to-manage']();
   }
   if (action === 'choose-domain-to-manage') {
     const domain = message.toLowerCase();
@@ -789,8 +789,7 @@ Nomadly Bot`;
     // if he not owns that domain then return
     const domains = await getPurchasedDomains(chatId);
     if (!domains.includes(domain)) {
-      bot.sendMessage(chatId, 'Please choose a valid domain');
-      return;
+      return bot.sendMessage(chatId, 'Please choose a valid domain');
     }
 
     goto['choose-dns-action'](domain);
@@ -817,8 +816,7 @@ Nomadly Bot`;
     const dnsRecords = info?.dnsRecords;
     let id = Number(message);
     if (isNaN(id) || !(id > 0 && id <= dnsRecords.length)) {
-      bot.sendMessage(chatId, `select valid option`);
-      return;
+      return bot.sendMessage(chatId, `select valid option`);
     }
     id--; // User See id as 1,2,3 and we see as 0,1,2
 
@@ -827,64 +825,53 @@ Nomadly Bot`;
     const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID, domain, domainNameId, nsId, nsRecords);
     if (error) {
       const m = `Error deleting dns record, ${error}, Provide value again`;
-      bot.sendMessage(chatId, m, o);
-      return m;
+      return bot.sendMessage(chatId, m);
     }
 
-    bot.sendMessage(chatId, t.dnsRecordDeleted, o);
-    goto['choose-dns-action'](domain);
-    return;
+    bot.sendMessage(chatId, t.dnsRecordDeleted);
+    return goto['choose-dns-action'](domain);
   }
   //
   if (action === 'select-dns-record-type-to-add') {
     const domain = info?.domainToManage;
     if (message === 'Back') {
-      goto['choose-dns-action'](domain);
-      return;
+      return goto['choose-dns-action'](domain);
     }
     const recordType = message;
 
     if (![t.cname, t.ns, t.a].includes(recordType)) {
-      bot.sendMessage(chatId, `select valid option`);
-      return;
+      return bot.sendMessage(chatId, `select valid option`);
     }
 
-    goto['type-dns-record-data-to-add'](recordType);
-    return;
+    return goto['type-dns-record-data-to-add'](recordType);
   }
   if (action === 'type-dns-record-data-to-add') {
     const domain = info?.domainToManage;
     const recordType = info?.recordType;
     if (message === 'Back') {
-      goto['select-dns-record-type-to-add']();
-      return;
+      return goto['select-dns-record-type-to-add']();
     }
     const recordContent = message;
-
     const { error } = await saveServerInDomain(domain, recordContent, t[recordType]);
     if (error) {
       const m = `Error saving dns record, ${error}, Provide value again`;
-      bot.sendMessage(chatId, m, o);
-      return m;
+      return bot.sendMessage(chatId, m);
     }
 
-    bot.sendMessage(chatId, t.dnsRecordSaved, o);
-    goto['choose-dns-action'](domain);
-    return;
+    bot.sendMessage(chatId, t.dnsRecordSaved);
+    return goto['choose-dns-action'](domain);
   }
   //
   if (action === 'select-dns-record-id-to-update') {
     const domain = info?.domainToManage;
     if (message === 'Back') {
-      goto['choose-dns-action'](domain);
-      return;
+      return goto['choose-dns-action'](domain);
     }
 
     const dnsRecords = info?.dnsRecords;
     let id = Number(message);
     if (isNaN(id) || !(id > 0 && id <= dnsRecords.length)) {
-      bot.sendMessage(chatId, `select valid option`);
-      return;
+      return bot.sendMessage(chatId, `select valid option`);
     }
     id--; // User See id as 1,2,3 and we see as 0,1,2
 
