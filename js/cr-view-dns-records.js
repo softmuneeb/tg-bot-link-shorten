@@ -36,7 +36,8 @@ const viewDNSRecords = async domain => {
   const res = await getDNSRecords(websiteId);
   let records = [];
 
-  records = [...records, ...res.filter(r => r.recordType === 'A')];
+  const a_records = res.filter(r => r.recordType === 'A');
+  records = a_records.length === 0 ? [{ recordContent: null, recordType: 'A' }] : a_records;
   records = [
     ...records,
     { domainNameId, recordContent: nameserver1, recordType: 'NS', nsId: 1 },

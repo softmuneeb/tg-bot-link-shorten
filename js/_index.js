@@ -270,7 +270,9 @@ bot.on('message', async msg => {
       const viewDnsRecords = detail
         .map(
           ({ recordType, recordContent, nsId }, i) =>
-            `${i + 1}. \t${recordType === 'NS' ? recordType + nsId : recordType}\t${recordContent}`,
+            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
+              recordContent || 'None'
+            }`,
         )
         .join('\n');
 
