@@ -1,7 +1,7 @@
 const axios = require('axios');
-const { convertUSDToCrypto } = require('./pay-blockbee');
-const { isRailwayAPIWorking } = require('./cr-rl-connect-domain-to-server');
 const { getBusinessId } = require('./pay-fincra');
+const { convertUSDToCrypto } = require('./pay-blockbee');
+const { isRailwayAPIWorking } = require('./rl-save-domain-in-server');
 // const { getRegisteredDomainNames } = require('./get-purchased-domains.test');
 
 const runBot = async () => {
