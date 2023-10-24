@@ -185,7 +185,7 @@ bot.on('message', async msg => {
     set(freeShortLinksOf, chatId, FREE_LINKS);
   }
 
-  const info = await get(state, chatId);
+  let info = await get(state, chatId);
   const action = info?.action;
 
   const firstSteps = [
@@ -257,7 +257,8 @@ bot.on('message', async msg => {
       bot.sendMessage(chatId, t.deleteDnsTxt, bc);
     },
 
-    'choose-dns-action': async domain => {
+    'choose-dns-action': async () => {
+      const domain = info?.domainToManage;
       const detail = await viewDNSRecords(domain);
 
       const toSave = detail.map(({ dnszoneID, dnszoneRecordID, recordType, domainNameId, nsId, recordContent }) => ({
@@ -277,10 +278,9 @@ bot.on('message', async msg => {
         )
         .join('\n');
 
-      bot.sendMessage(chatId, `${t.viewDnsRecords.replace('{{domain}}', domain)}\n${viewDnsRecords}`, dns);
-      set(state, chatId, 'action', 'choose-dns-action');
-      set(state, chatId, 'domainToManage', domain);
       set(state, chatId, 'dnsRecords', toSave);
+      set(state, chatId, 'action', 'choose-dns-action');
+      bot.sendMessage(chatId, `${t.viewDnsRecords.replace('{{domain}}', domain)}\n${viewDnsRecords}`, dns);
     },
 
     'type-dns-record-data-to-add': recordType => {
@@ -430,9 +430,7 @@ bot.on('message', async msg => {
     return;
   }
   if (action === 'shorten-custom') {
-    if (message === 'Back') {
-      goto['choose-link-type']();
-    }
+    if (message === 'Back') return goto['choose-link-type']();
 
     const url = info?.url;
     const domain = info?.selectedDomain;
@@ -490,10 +488,7 @@ bot.on('message', async msg => {
     return;
   }
   if (action === 'domain-name-payment') {
-    if (message === 'Back') {
-      goto['choose-domain-to-buy']();
-      return;
-    }
+    if (message === 'Back') return goto['choose-domain-to-buy']();
 
     const paymentOption = message;
 
@@ -519,10 +514,8 @@ bot.on('message', async msg => {
   if (action === 'bank-transfer-payment-domain') {
     const price = info?.chosenDomainPrice;
     const domain = info?.chosenDomainForPayment;
-    if (message === 'Back') {
-      goto['domain-name-payment'](domain, price);
-      return;
-    }
+    if (message === 'Back') return goto['domain-name-payment'](domain, price);
+
     const email = message;
 
     if (!isValidEmail(email)) {
@@ -557,10 +550,7 @@ Nomadly Bot`,
     const priceUSD = info?.chosenDomainPrice;
     const domain = info?.chosenDomainForPayment;
 
-    if (message === 'Back') {
-      goto['domain-name-payment'](domain, priceUSD);
-      return;
-    }
+    if (message === 'Back') return goto['domain-name-payment'](domain, priceUSD);
 
     const tickerView = message;
     const ticker = tickerOf[tickerView];
@@ -613,14 +603,9 @@ Nomadly Bot`;
     return;
   }
   if (action === 'get-free-domain') {
-    if (message === 'Back' || message === 'No') {
-      goto['choose-domain-to-buy']();
-      return;
-    }
-    if (message !== 'Yes') {
-      bot.sendMessage(chatId, `?`);
-      return;
-    }
+    if (message === 'Back' || message === 'No') return goto['choose-domain-to-buy']();
+
+    if (message !== 'Yes') return bot.sendMessage(chatId, `?`);
 
     set(state, chatId, 'action', 'none');
 
@@ -655,10 +640,8 @@ Nomadly Bot`;
     return;
   }
   if (action === 'subscription-payment') {
-    if (message === 'Back') {
-      goto['choose-subscription']();
-      return;
-    }
+    if (message === 'Back') return goto['choose-subscription']();
+
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
@@ -682,10 +665,8 @@ Nomadly Bot`;
   }
   if (action === 'bank-transfer-payment-subscription') {
     const plan = info?.chosenPlanForPayment;
-    if (message === 'Back') {
-      goto['subscription-payment'](plan);
-      return;
-    }
+    if (message === 'Back') return goto['subscription-payment'](plan);
+
     const email = message;
 
     if (!isValidEmail(email)) {
@@ -793,8 +774,10 @@ Nomadly Bot`;
       return bot.sendMessage(chatId, 'Please choose a valid domain');
     }
 
-    goto['choose-dns-action'](domain);
-    return;
+    await set(state, chatId, 'domainToManage', domain);
+    info = await get(state, chatId);
+
+    return goto['choose-dns-action']();
   }
   if (action === 'choose-dns-action') {
     if (message === 'Back') return goto['choose-domain-to-manage']();
@@ -810,10 +793,8 @@ Nomadly Bot`;
   //
   if (action === 'select-dns-record-id-to-delete') {
     const domain = info?.domainToManage;
-    if (message === 'Back') {
-      goto['choose-dns-action'](domain);
-      return;
-    }
+    if (message === 'Back') return goto['choose-dns-action']();
+
     const dnsRecords = info?.dnsRecords;
     let id = Number(message);
     if (isNaN(id) || !(id > 0 && id <= dnsRecords.length)) {
@@ -830,14 +811,11 @@ Nomadly Bot`;
     }
 
     bot.sendMessage(chatId, t.dnsRecordDeleted);
-    return goto['choose-dns-action'](domain);
+    return goto['choose-dns-action']();
   }
-  //
   if (action === 'select-dns-record-type-to-add') {
-    const domain = info?.domainToManage;
-    if (message === 'Back') {
-      return goto['choose-dns-action'](domain);
-    }
+    if (message === 'Back') return goto['choose-dns-action']();
+
     const recordType = message;
 
     if (![t.cname, t.ns, t.a].includes(recordType)) {
@@ -847,11 +825,10 @@ Nomadly Bot`;
     return goto['type-dns-record-data-to-add'](recordType);
   }
   if (action === 'type-dns-record-data-to-add') {
+    if (message === 'Back') return goto['select-dns-record-type-to-add']();
+
     const domain = info?.domainToManage;
     const recordType = info?.recordType;
-    if (message === 'Back') {
-      return goto['select-dns-record-type-to-add']();
-    }
     const recordContent = message;
     const dnsRecords = info?.dnsRecords;
     const nsRecords = dnsRecords.filter(r => r.recordType === 'NS');
@@ -860,7 +837,7 @@ Nomadly Bot`;
 
     if (nsRecords.length >= 4 && t[recordType] === 'NS') {
       bot.sendMessage(chatId, 'Maximum 4 NS records can be added, you can update or delete previous NS records');
-      return goto['choose-dns-action'](domain);
+      return goto['choose-dns-action']();
     }
 
     const nextId = nextNumber(nsRecords.map(r => r.nsId));
@@ -871,14 +848,11 @@ Nomadly Bot`;
     }
 
     bot.sendMessage(chatId, t.dnsRecordSaved);
-    return goto['choose-dns-action'](domain);
+    return goto['choose-dns-action']();
   }
   //
   if (action === 'select-dns-record-id-to-update') {
-    const domain = info?.domainToManage;
-    if (message === 'Back') {
-      return goto['choose-dns-action'](domain);
-    }
+    if (message === 'Back') return goto['choose-dns-action']();
 
     const dnsRecords = info?.dnsRecords;
     let id = Number(message);
@@ -891,10 +865,7 @@ Nomadly Bot`;
     return;
   }
   if (action === 'type-dns-record-data-to-update') {
-    if (message === 'Back') {
-      goto['select-dns-record-id-to-update']();
-      return;
-    }
+    if (message === 'Back') return goto['select-dns-record-id-to-update']();
 
     const recordContent = message;
     const dnsRecords = info?.dnsRecords;
@@ -919,8 +890,7 @@ Nomadly Bot`;
     }
 
     bot.sendMessage(chatId, t.dnsRecordUpdated);
-    goto['choose-dns-action'](domain);
-    return;
+    return goto['choose-dns-action']();
   }
 
   //
