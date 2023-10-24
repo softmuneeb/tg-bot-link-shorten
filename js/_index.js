@@ -1172,8 +1172,10 @@ app.get('/health', (req, res) => {
   res.send(html('ok'));
 });
 app.get('/bank-payment-for-plan', async (req, res) => {
+  log(req.originalUrl);
+
   // Validations
-  const { ref } = req?.query;
+  const ref = req?.query?.ref;
   const chatId = await get(chatIdOfPayment, ref);
   const plan = (await get(state, chatId))?.chosenPlanForPayment;
   log(`bank-payment-for-plan ref: ${ref} chatId: ${chatId} plan: ${plan}`);
@@ -1196,8 +1198,10 @@ app.get('/bank-payment-for-plan', async (req, res) => {
   set(payments, ref, `Bank, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${name}, ${new Date()}`);
 });
 app.get('/bank-payment-for-domain', async (req, res) => {
+  log(req.originalUrl);
+
   // Validations
-  const { ref } = req?.query;
+  const ref = req?.query?.ref;
   const chatId = await get(chatIdOfPayment, ref);
   const info = await get(state, chatId);
   const domain = info?.chosenDomainForPayment;
@@ -1222,8 +1226,13 @@ app.get('/bank-payment-for-domain', async (req, res) => {
   set(payments, ref, `Bank, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${name}, ${new Date()}`);
 });
 app.get('/crypto-payment-for-subscription', async (req, res) => {
+  log(req.originalUrl);
+
   // Validations
-  const { ref, coin, value_coin } = req?.query;
+  const ref = req?.query?.ref;
+  const coin = req?.query?.coin;
+  const value_coin = req?.query?.value_coin;
+
   const chatId = await get(chatIdOfPayment, ref);
   const info = await get(state, chatId);
   const session = info?.cryptoPaymentSession;
@@ -1256,8 +1265,12 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
 });
 
 app.get('/crypto-payment-for-domain', async (req, res) => {
+  log(req.originalUrl);
+
   // Validations
-  const { ref, coin, value_coin } = req?.query;
+  const ref = req?.query?.ref;
+  const coin = req?.query?.coin;
+  const value_coin = req?.query?.value_coin;
   const chatId = await get(chatIdOfPayment, ref);
   const info = await get(state, chatId);
   const session = info?.cryptoPaymentSession;
@@ -1314,7 +1327,9 @@ app.get('/uptime', (req, res) => {
 });
 
 app.get('/:id', async (req, res) => {
-  const { id } = req?.params;
+  log(req.originalUrl);
+
+  const id = req?.params?.id;
   if (id === '') {
     res.json({ message: 'Salam', from: req.hostname });
     return;
