@@ -248,13 +248,18 @@ bot.on('message', async msg => {
 
     'choose-domain-to-manage': async () => {
       const domains = await getPurchasedDomains(chatId);
-      bot.sendMessage(chatId, t.chooseDomainToManage, show(domains));
       set(state, chatId, 'action', 'choose-domain-to-manage');
+      bot.sendMessage(chatId, t.chooseDomainToManage, show(domains));
     },
 
     'select-dns-record-id-to-delete': () => {
-      set(state, chatId, 'action', 'select-dns-record-id-to-delete');
       bot.sendMessage(chatId, t.deleteDnsTxt, bc);
+      set(state, chatId, 'action', 'select-dns-record-id-to-delete');
+    },
+
+    'confirm-dns-record-id-to-delete': () => {
+      bot.sendMessage(chatId, t.confirmDeleteDnsTxt, yes_no);
+      set(state, chatId, 'action', 'confirm-dns-record-id-to-delete');
     },
 
     'choose-dns-action': async () => {
@@ -792,23 +797,23 @@ Nomadly Bot`;
   }
   //
   if (action === 'select-dns-record-id-to-delete') {
-    const domain = info?.domainToManage;
     if (message === 'Back') return goto['choose-dns-action']();
 
-    const dnsRecords = info?.dnsRecords;
     let id = Number(message);
-    if (isNaN(id) || !(id > 0 && id <= dnsRecords.length)) {
-      return bot.sendMessage(chatId, `select valid option`);
-    }
-    id--; // User See id as 1,2,3 and we see as 0,1,2
+    if (isNaN(id) || !(id > 0 && id <= info?.dnsRecords.length)) return bot.sendMessage(chatId, `select valid option`);
 
+    set(state, chatId, 'delId', --id); // User See id as 1,2,3 and we see as 0,1,2
+    return goto['confirm-dns-record-id-to-delete']();
+  }
+  if (action === 'confirm-dns-record-id-to-delete') {
+    if (message === 'Back' || message === 'No') return goto['select-dns-record-id-to-delete']();
+    if (message !== 'Yes') return bot.sendMessage(chatId, `?`);
+
+    const { dnsRecords, domainToManage, delId } = info;
     const nsRecords = dnsRecords.filter(r => r.recordType === 'NS');
-    const { dnszoneID, dnszoneRecordID, nsId, domainNameId } = dnsRecords[id];
-    const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID, domain, domainNameId, nsId, nsRecords);
-    if (error) {
-      const m = `Error deleting dns record, ${error}, Provide value again`;
-      return bot.sendMessage(chatId, m);
-    }
+    const { dnszoneID, dnszoneRecordID, nsId, domainNameId } = dnsRecords[delId];
+    const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID, domainToManage, domainNameId, nsId, nsRecords);
+    if (error) return bot.sendMessage(chatId, `Error deleting dns record, ${error}, Provide value again`);
 
     bot.sendMessage(chatId, t.dnsRecordDeleted);
     return goto['choose-dns-action']();

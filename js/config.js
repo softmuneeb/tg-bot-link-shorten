@@ -84,7 +84,7 @@ Discover more: t.me/nomadly`,
 
   domainBought: `Your domain {{domain}} is now linked to your account while DNS propagates. You will be updated automatically about the status momentarily.🚀`,
 
-  chooseDomainToManage: `Please select the domain you want to manage DNS`,
+  chooseDomainToManage: `Please select a domain if you wish to manage its DNS settings.`,
 
   chooseDomainWithShortener: `Please select the domain you would like to connect with your shortened link.`,
 
@@ -96,6 +96,7 @@ Discover more: t.me/nomadly`,
   addDnsTxt: 'Please select record type you want to add:',
   updateDnsTxt: 'Please type the record id you wish to update. i.e 3',
   deleteDnsTxt: 'Please type the record id you wish to delete. i.e 3',
+  confirmDeleteDnsTxt: 'Are you sure? Yes or No',
   a: 'A Record',
   cname: 'CNAME Record',
   ns: 'NS Record',
