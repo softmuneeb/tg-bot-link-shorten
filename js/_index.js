@@ -301,7 +301,7 @@ bot.on('message', async msg => {
     'type-dns-record-data-to-update': (id, recordType) => {
       set(state, chatId, 'dnsRecordIdToUpdate', id);
       set(state, chatId, 'action', 'type-dns-record-data-to-update');
-      bot.sendMessage(chatId, t.askDnsContent[recordType]);
+      bot.sendMessage(chatId, t.askUpdateDnsContent[recordType]);
     },
 
     'select-dns-record-type-to-add': () => {
