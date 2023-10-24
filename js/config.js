@@ -133,13 +133,14 @@ Discover more: t.me/nomadly`,
 
 const tickerOf = {
   BTC: 'btc',
-  ETH: 'eth',
-  BCH: 'bch',
   LTC: 'ltc',
+  ETH: 'eth',
+  'USDT (TRon)': 'trc20_usdt',
+  'USDT (ERC20)': 'erc20_usdt',
   DOGE: 'doge',
-  'USDT Tron': 'trc20_usdt',
-  BUSD: 'bep20_busd',
-  POLYGON: 'polygon_matic',
+  // BCH: 'bch',
+  // BUSD: 'bep20_busd',
+  // POLYGON: 'polygon_matic',
 };
 const tickerViews = Object.keys(tickerOf);
 
