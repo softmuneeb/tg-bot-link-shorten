@@ -1172,7 +1172,7 @@ app.get('/health', (req, res) => {
   res.send(html('ok'));
 });
 app.get('/bank-payment-for-plan', async (req, res) => {
-  log(req.originalUrl);
+  log(req?.hostname, req?.originalUrl);
 
   // Validations
   const ref = req?.query?.ref;
@@ -1198,7 +1198,7 @@ app.get('/bank-payment-for-plan', async (req, res) => {
   set(payments, ref, `Bank, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${name}, ${new Date()}`);
 });
 app.get('/bank-payment-for-domain', async (req, res) => {
-  log(req.originalUrl);
+  log(req?.hostname, req?.originalUrl);
 
   // Validations
   const ref = req?.query?.ref;
@@ -1226,7 +1226,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
   set(payments, ref, `Bank, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${name}, ${new Date()}`);
 });
 app.get('/crypto-payment-for-subscription', async (req, res) => {
-  log(req.originalUrl);
+  log(req?.hostname, req?.originalUrl);
 
   // Validations
   const ref = req?.query?.ref;
@@ -1265,7 +1265,7 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
 });
 
 app.get('/crypto-payment-for-domain', async (req, res) => {
-  log(req.originalUrl);
+  log(req?.hostname, req?.originalUrl);
 
   // Validations
   const ref = req?.query?.ref;
@@ -1327,7 +1327,7 @@ app.get('/uptime', (req, res) => {
 });
 
 app.get('/:id', async (req, res) => {
-  log(req.originalUrl);
+  log(req?.hostname, req?.originalUrl);
 
   const id = req?.params?.id;
   if (id === '') {
