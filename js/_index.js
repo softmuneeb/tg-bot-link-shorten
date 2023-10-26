@@ -965,19 +965,13 @@ Nomadly Bot`;
     return;
   }
   if (message === admin.viewUsers) {
-    if (!isAdmin(chatId)) {
-      bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
-      return;
-    }
+    if (!isAdmin(chatId)) return bot.sendMessage(chatId, 'not authorized');
 
-    bot.sendMessage(chatId, `Users:\n${(await getUsers()).join('\n')}`);
-    return;
+    const users = await getUsers();
+    return bot.sendMessage(chatId, `Users: ${users.length}\n${users.join('\n')}`);
   }
   if (message === admin.viewAnalytics) {
-    if (!isAdmin(chatId)) {
-      bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
-      return;
-    }
+    if (!isAdmin(chatId)) return bot.sendMessage(chatId, 'not authorized');
 
     const analyticsData = await getAnalytics();
     bot.sendMessage(chatId, `Analytics Data:\n${analyticsData.join('\n')}`);
