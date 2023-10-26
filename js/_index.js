@@ -32,6 +32,8 @@ const {
   show,
   dns,
   dnsRecordType,
+  admin,
+  user,
 } = require('./config.js');
 const {
   isValidUrl,
@@ -333,7 +335,7 @@ bot.on('message', async msg => {
     return;
   }
   //
-  if (message === 'Block User') {
+  if (message === admin.blockUser) {
     if (!isAdmin(chatId)) {
       bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
       return;
@@ -355,7 +357,7 @@ bot.on('message', async msg => {
     return;
   }
   //
-  if (message === 'Unblock User') {
+  if (message === admin.unblockUser) {
     if (!isAdmin(chatId)) {
       bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
       return;
@@ -377,8 +379,11 @@ bot.on('message', async msg => {
     return;
   }
   //
+  if (message === admin.messageUsers) {
+  }
   //
-  if (message === '🔗 URL Shortener') {
+  //
+  if (message === user.urlShortener) {
     if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId))))
       return bot.sendMessage(chatId, '📋 Subscribe first');
 
@@ -458,7 +463,7 @@ bot.on('message', async msg => {
   }
   //
   //
-  if (message === '🌐 Buy Domain Names') {
+  if (message === user.buyDomainName) {
     goto['choose-domain-to-buy']();
     return;
   }
@@ -622,7 +627,7 @@ Nomadly Bot`;
   }
   //
   //
-  if (message === '📋 Subscribe Here') {
+  if (message === user.buyPlan) {
     if (await isSubscribed(chatId)) {
       bot.sendMessage(chatId, 'You are currently enrolled in a subscription plan.');
       return;
@@ -762,7 +767,7 @@ Nomadly Bot`;
   }
   //
   //
-  if (message === '😎 DNS Management') {
+  if (message === user.dnsManagement) {
     if (!(await ownsDomainName(chatId))) {
       bot.sendMessage(chatId, 'No domain names found');
       return;
@@ -900,7 +905,7 @@ Nomadly Bot`;
 
   //
   //
-  if (message === '🔍 My Plan') {
+  if (message === user.viewPlan) {
     const subscribedPlan = await get(planOf, chatId);
 
     if (subscribedPlan) {
@@ -924,7 +929,7 @@ Nomadly Bot`;
     bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
     return;
   }
-  if (message === '🔍 View Analytics') {
+  if (message === user.viewShortLinks) {
     const links = await getShortLinks(chatId);
     if (links.length === 0) {
       bot.sendMessage(chatId, 'You have no shortened links yet.');
@@ -935,7 +940,7 @@ Nomadly Bot`;
     bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
     return;
   }
-  if (message === '👀 My Domain Names') {
+  if (message === user.viewDomainNames) {
     const purchasedDomains = await getPurchasedDomains(chatId);
     if (purchasedDomains.length === 0) {
       bot.sendMessage(chatId, 'You have no purchased domains yet.');
@@ -964,7 +969,7 @@ Nomadly Bot`;
     bot.sendMessage(chatId, 'Data restored successfully.');
     return;
   }
-  if (message === 'View Users') {
+  if (message === admin.viewUsers) {
     if (!isAdmin(chatId)) {
       bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
       return;
@@ -973,7 +978,7 @@ Nomadly Bot`;
     bot.sendMessage(chatId, `Users:\n${(await getUsers()).join('\n')}`);
     return;
   }
-  if (message === 'View Analytics') {
+  if (message === admin.viewAnalytics) {
     if (!isAdmin(chatId)) {
       bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
       return;
@@ -983,7 +988,7 @@ Nomadly Bot`;
     bot.sendMessage(chatId, `Analytics Data:\n${analyticsData.join('\n')}`);
     return;
   }
-  if (message === '🛠️ Get Support') {
+  if (message === user.getSupport) {
     bot.sendMessage(chatId, t.support);
     return;
   }

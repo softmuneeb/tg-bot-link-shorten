@@ -1,44 +1,31 @@
 require('dotenv').config();
-
 const FREE_LINKS = Number(process.env.FREE_LINKS);
-const FREE_LINKS_HOURS = Number(process.env.FREE_LINKS_TIME_SECONDS) / 60 / 60;
+const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME;
 const PRICE_DAILY = Number(process.env.PRICE_DAILY_SUBSCRIPTION);
 const PRICE_WEEKLY = Number(process.env.PRICE_WEEKLY_SUBSCRIPTION);
 const PRICE_MONTHLY = Number(process.env.PRICE_MONTHLY_SUBSCRIPTION);
-
 const DAILY_PLAN_FREE_DOMAINS = Number(process.env.DAILY_PLAN_FREE_DOMAINS);
 const WEEKLY_PLAN_FREE_DOMAINS = Number(process.env.WEEKLY_PLAN_FREE_DOMAINS);
+const FREE_LINKS_HOURS = Number(process.env.FREE_LINKS_TIME_SECONDS) / 60 / 60;
 const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS);
 
-const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME;
-
-const priceOf = {
-  Daily: PRICE_DAILY,
-  Weekly: PRICE_WEEKLY,
-  Monthly: PRICE_MONTHLY,
+// Note: these button labels must not mix with each other, other wise it may mess up bot
+const admin = {
+  viewAnalytics: '📈 View Analytics',
+  viewUsers: '👀 View Users',
+  blockUser: '✋ Block User',
+  unblockUser: '👌 Unblock User',
+  messageUsers: '👋 Message all users',
 };
-
-const freeDomainsOf = {
-  Daily: DAILY_PLAN_FREE_DOMAINS,
-  Weekly: WEEKLY_PLAN_FREE_DOMAINS,
-  Monthly: MONTHLY_PLAN_FREE_DOMAINS,
-};
-
-const timeOf = {
-  Daily: 86400 * 1000,
-  Weekly: 7 * 86400 * 1000,
-  Monthly: 30 * 86400 * 1000,
-};
-
-const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
-const paymentOptions = ['Crypto', 'Bank ₦aira + Card🌐︎'];
-const linkOptions = ['Random Link', 'Custom Link'];
-
-const chooseSubscription = {
-  parse_mode: 'HTML',
-  reply_markup: {
-    keyboard: [...subscriptionOptions.map(a => [a]), ['Back', 'Cancel']],
-  },
+const user = {
+  urlShortener: '🔗 URL Shortener',
+  viewShortLinks: '🔍 View Analytics',
+  buyDomainName: '🌐 Buy Domain Names',
+  viewDomainNames: '👀 My Domain Names',
+  dnsManagement: '😎 DNS Management',
+  buyPlan: '📋 Subscribe Here',
+  viewPlan: '🔍 My Plan',
+  getSupport: '🛠️ Get Support',
 };
 
 const t = {
@@ -123,7 +110,7 @@ Discover more: t.me/nomadly`,
     NS: `A new NS record will be updated for the selected id. To Add a new record, please choose “Add DNS Record”`,
     'NS Record': `A new NS record will be updated for the selected id. To Add a new record, please choose “Add DNS Record”`,
   },
-  // dnsRecordSaved: `Added Record. Want to Add More Records?`,
+
   dnsRecordSaved: `Record Added`,
   dnsRecordDeleted: `Record Deleted`,
   dnsRecordUpdated: `Record Updated`,
@@ -138,15 +125,51 @@ const tickerOf = {
   'USDT (TRon)': 'trc20_usdt',
   'USDT (ERC20)': 'erc20_usdt',
   DOGE: 'doge',
-  // BCH: 'bch',
-  // BUSD: 'bep20_busd',
-  // POLYGON: 'polygon_matic',
 };
+
+/////////////////////////////////////////////////////////////////////////////////////
+
 const tickerViews = Object.keys(tickerOf);
 
-const aO = {
+const adminKeyboard = {
   reply_markup: {
-    keyboard: [['View Analytics'], ['View Users'], ['Block User'], ['Unblock User']],
+    keyboard: Object.values(admin).map(b => [b]),
+  },
+};
+
+const userKeyboard = {
+  reply_markup: {
+    keyboard: Object.values(user).map(b => [b]),
+  },
+  disable_web_page_preview: true,
+};
+
+const priceOf = {
+  Daily: PRICE_DAILY,
+  Weekly: PRICE_WEEKLY,
+  Monthly: PRICE_MONTHLY,
+};
+
+const freeDomainsOf = {
+  Daily: DAILY_PLAN_FREE_DOMAINS,
+  Weekly: WEEKLY_PLAN_FREE_DOMAINS,
+  Monthly: MONTHLY_PLAN_FREE_DOMAINS,
+};
+
+const timeOf = {
+  Daily: 86400 * 1000,
+  Weekly: 7 * 86400 * 1000,
+  Monthly: 30 * 86400 * 1000,
+};
+
+const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
+const paymentOptions = ['Crypto', 'Bank ₦aira + Card🌐︎'];
+const linkOptions = ['Random Link', 'Custom Link'];
+
+const chooseSubscription = {
+  parse_mode: 'HTML',
+  reply_markup: {
+    keyboard: [...subscriptionOptions.map(a => [a]), ['Back', 'Cancel']],
   },
 };
 
@@ -154,22 +177,6 @@ const dO = {
   reply_markup: {
     keyboard: [['Back', 'Cancel'], ['Backup Data'], ['Restore Data']],
   },
-};
-
-const o = {
-  reply_markup: {
-    keyboard: [
-      ['🔗 URL Shortener'],
-      ['🔍 View Analytics'],
-      ['🌐 Buy Domain Names'],
-      ['👀 My Domain Names'],
-      ['😎 DNS Management'],
-      ['📋 Subscribe Here'],
-      ['🔍 My Plan'],
-      ['🛠️ Get Support'],
-    ],
-  },
-  disable_web_page_preview: true,
 };
 
 const rem = {
@@ -254,6 +261,8 @@ const html = (text = t.successPayment) => {
 };
 
 module.exports = {
+  admin,
+  user,
   dnsRecordType,
   dns,
   show,
@@ -273,8 +282,8 @@ module.exports = {
   subscriptionOptions,
   priceOf,
   paymentOptions,
-  aO,
+  aO: adminKeyboard,
   dO,
-  o,
+  o: userKeyboard,
   timeOf,
 };
