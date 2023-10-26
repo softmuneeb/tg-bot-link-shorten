@@ -36,6 +36,7 @@ const {
   isValidEmail,
   regularCheckDns,
   convertUSDToNaira,
+  sendMessageToAllUsers,
 } = require('./utils.js');
 const fs = require('fs');
 require('dotenv').config();
@@ -76,6 +77,7 @@ log('Bot ran!');
 // variables to implement core functionality
 let state = {},
   linksOf = {},
+  expiryOf = {},
   fullUrlOf = {},
   domainsOf = {},
   chatIdBlocked = {},
@@ -184,10 +186,11 @@ bot.on('message', async msg => {
   const firstSteps = [
     'block-user',
     'unblock-user',
-    'choose-url-to-shorten',
-    'choose-domain-to-buy',
     'choose-subscription',
+    'choose-domain-to-buy',
+    'choose-url-to-shorten',
     'choose-domain-to-manage',
+    admin.messageUsers,
   ];
   const goto = {
     'domain-name-payment': (domain, price) => {
@@ -301,6 +304,15 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', 'select-dns-record-type-to-add');
       bot.sendMessage(chatId, t.addDnsTxt, dnsRecordType);
     },
+
+    [admin.messageUsers]: () => {
+      bot.sendMessage(chatId, 'Enter message', bc);
+      set(state, chatId, 'action', admin.messageUsers);
+    },
+    adminConfirmMessage: () => {
+      bot.sendMessage(chatId, 'Confirm?', yes_no);
+      set(state, chatId, 'action', 'adminConfirmMessage');
+    },
   };
 
   if (message === '/start') {
@@ -350,6 +362,19 @@ bot.on('message', async msg => {
   }
   //
   if (message === admin.messageUsers) {
+    if (!isAdmin(chatId)) return bot.sendMessage(chatId, 'not authorized');
+    return goto[admin.messageUsers]();
+  }
+  if (action === admin.messageUsers) {
+    await set(state, chatId, 'messageContent', message);
+    info = await get(state, chatId);
+    return goto.adminConfirmMessage();
+  }
+  if (action === 'adminConfirmMessage') {
+    if (message === 'No' || message === 'Back') goto[admin.messageUsers]();
+    set(state, chatId, 'action', 'none');
+    sendMessageToAllUsers(bot, info?.messageContent, nameOf, chatId);
+    return bot.sendMessage(chatId, 'Sent all all users', aO);
   }
   //
   //

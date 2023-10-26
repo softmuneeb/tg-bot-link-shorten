@@ -2,6 +2,8 @@ require('dotenv').config();
 const axios = require('axios');
 const { t } = require('./config');
 const resolveDns = require('./resolve-cname.js');
+const { getAll } = require('./db');
+const { log } = require('console');
 
 const UPDATE_DNS_INTERVAL = Number(process.env.UPDATE_DNS_INTERVAL || 60);
 const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE;
@@ -93,18 +95,31 @@ const nextNumber = arr => {
   return n;
 };
 
-// convertUSDToNaira(1)
+const sendMessageToAllUsers = async (bot, message, nameOf, myChatId) => {
+  const chatIds = await getChatIds(nameOf);
+  const total = chatIds.length;
+  bot.sendMessage(myChatId, `Total users: ${total}`);
+  for (let i = 0; i < total; i++) bot.sendMessage(chatIds[i], message).catch(err => log(err.message, chatIds[i]));
+};
+
+const getChatIds = async nameOf => {
+  let ans = await getAll(nameOf);
+  if (!ans) return [];
+  return ans.map(a => a._id);
+};
+
 module.exports = {
-  nextNumber,
-  regularCheckDns,
-  isValidEmail,
-  today,
-  week,
-  month,
   year,
-  convertUSDToNaira,
-  isValidUrl,
-  isNormalUser,
-  isDeveloper,
+  week,
+  today,
+  month,
   isAdmin,
+  isValidUrl,
+  nextNumber,
+  isDeveloper,
+  isValidEmail,
+  isNormalUser,
+  regularCheckDns,
+  convertUSDToNaira,
+  sendMessageToAllUsers,
 };

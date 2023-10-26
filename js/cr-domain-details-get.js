@@ -1,6 +1,5 @@
 require('dotenv').config();
 const axios = require('axios');
-const { log } = require('console');
 
 const getDomainDetails = async websiteName => {
   try {
