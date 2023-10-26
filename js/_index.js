@@ -1,62 +1,62 @@
-const { getRegisteredDomainNames } = require('./cr-domain-purchased-get.js');
-const { MongoClient } = require('mongodb');
-const TelegramBot = require('node-telegram-bot-api');
-const { createCheckout } = require('./pay-fincra.js');
-const { customAlphabet } = require('nanoid');
-const { log } = require('console');
-const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
-require('dotenv').config();
-const fs = require('fs');
 const {
-  priceOf,
-  aO,
   o,
-  paymentOptions,
-  subscriptionOptions,
-  tickerViews,
-  tickerOf,
-  timeOf,
-  chooseSubscription,
+  t,
+  bc,
+  aO,
   rem,
   pay,
-  bc,
-  linkType,
-  payBank,
-  linkOptions,
-  html,
-  t,
-  freeDomainsOf,
-  yes_no,
-  show,
   dns,
-  dnsRecordType,
-  admin,
+  html,
   user,
+  show,
+  admin,
+  timeOf,
+  yes_no,
+  priceOf,
+  payBank,
+  linkType,
+  tickerOf,
+  linkOptions,
+  tickerViews,
+  freeDomainsOf,
+  dnsRecordType,
+  paymentOptions,
+  chooseSubscription,
+  subscriptionOptions,
 } = require('./config.js');
 const {
-  isValidUrl,
-  isDeveloper,
-  isAdmin,
-  convertUSDToNaira,
-  today,
   week,
-  month,
   year,
+  month,
+  today,
+  isAdmin,
+  isValidUrl,
+  nextNumber,
+  isDeveloper,
   isValidEmail,
   regularCheckDns,
-  nextNumber,
+  convertUSDToNaira,
 } = require('./utils.js');
-const { getCryptoDepositAddress, convertUSDToCrypto } = require('./pay-blockbee.js');
-const { saveDomainInServer } = require('./rl-save-domain-in-server.js');
-const { saveServerInDomain } = require('./cr-dns-record-add.js');
-const { buyDomainOnline } = require('./cr-domain-register.js');
-const { get, set, del, increment, getAll, decrement } = require('./db.js');
-const { checkDomainPriceOnline } = require('./cr-domain-price-get.js');
+const fs = require('fs');
+require('dotenv').config();
+const cors = require('cors');
+const axios = require('axios');
+const express = require('express');
+const { log } = require('console');
+const { MongoClient } = require('mongodb');
+const { customAlphabet } = require('nanoid');
+const TelegramBot = require('node-telegram-bot-api');
+const { createCheckout } = require('./pay-fincra.js');
 const viewDNSRecords = require('./cr-view-dns-records.js');
 const { deleteDNSRecord } = require('./cr-dns-record-del.js');
+const { buyDomainOnline } = require('./cr-domain-register.js');
+const { saveServerInDomain } = require('./cr-dns-record-add.js');
 const { updateDNSRecord } = require('./cr-dns-record-update.js');
+const { checkDomainPriceOnline } = require('./cr-domain-price-get.js');
+const { saveDomainInServer } = require('./rl-save-domain-in-server.js');
+const { get, set, del, increment, getAll, decrement } = require('./db.js');
+const { getRegisteredDomainNames } = require('./cr-domain-purchased-get.js');
+const { getCryptoDepositAddress, convertUSDToCrypto } = require('./pay-blockbee.js');
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5);
 process.env['NTBA_FIX_350'] = 1;
@@ -71,78 +71,69 @@ const FREE_LINKS = Number(process.env.FREE_LINKS);
 const FREE_LINKS_TIME_SECONDS = Number(process.env.FREE_LINKS_TIME_SECONDS) * 1000; // to milliseconds
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
-log('Bot is running...');
+log('Bot ran!');
 
 // variables to implement core functionality
-let state = {};
-let linksOf = {};
-let fullUrlOf = {};
-let domainsOf = {};
-let chatIdBlocked = {};
-let planEndingTime = {};
-let chatIdOfPayment = {};
-let totalShortLinks = {};
-let freeShortLinksOf = {};
-let freeDomainNamesAvailableFor = {};
+let state = {},
+  linksOf = {},
+  fullUrlOf = {},
+  domainsOf = {},
+  chatIdBlocked = {},
+  planEndingTime = {},
+  chatIdOfPayment = {},
+  totalShortLinks = {},
+  freeShortLinksOf = {},
+  freeDomainNamesAvailableFor = {};
 
 // variables to view system information
-let payments = {};
-let clicksOf = {};
-let clicksOn = {};
-let chatIdOf = {};
-let nameOf = {};
-let planOf = {};
+let nameOf = {},
+  planOf = {},
+  payments = {},
+  clicksOf = {},
+  clicksOn = {},
+  chatIdOf = {};
 
-let adminDomains = [];
-let connect_reseller_working = false;
-// restoreData();
-// manually data add here or call methods
+// some info to use with bot
+let adminDomains = [],
+  connect_reseller_working = false;
+
+// restoreData(); // can be use when there is no db
 
 let db;
+const loadData = async () => {
+  db = client.db(DB_NAME);
 
+  // variables to implement core functionality
+  state = db.collection('state');
+  linksOf = db.collection('linksOf');
+  expiryOf = db.collection('expiryOf');
+  fullUrlOf = db.collection('fullUrlOf');
+  domainsOf = db.collection('domainsOf');
+  chatIdBlocked = db.collection('chatIdBlocked');
+  planEndingTime = db.collection('planEndingTime');
+  chatIdOfPayment = db.collection('chatIdOfPayment');
+  totalShortLinks = db.collection('totalShortLinks');
+  freeShortLinksOf = db.collection('freeShortLinksOf');
+  freeDomainNamesAvailableFor = db.collection('freeDomainNamesAvailableFor');
+
+  // variables to view system information
+  nameOf = db.collection('nameOf');
+  planOf = db.collection('planOf');
+  payments = db.collection('payments');
+  clicksOf = db.collection('clicksOf');
+  clicksOn = db.collection('clicksOn');
+  chatIdOf = db.collection('chatIdOf');
+
+  log(`DB Connected. May peace be with you and Lord's mercy and blessings.`);
+  set(freeShortLinksOf, 6687923716, FREE_LINKS);
+  set(freeShortLinksOf, 1531772316, FREE_LINKS);
+  adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
+};
 const client = new MongoClient(process.env.MONGO_URL);
-
 client
   .connect()
-  .then(async () => {
-    db = client.db(DB_NAME);
-
-    // variables to implement core functionality
-    state = db.collection('state');
-    linksOf = db.collection('linksOf');
-    expiryOf = db.collection('expiryOf');
-    fullUrlOf = db.collection('fullUrlOf');
-    domainsOf = db.collection('domainsOf');
-    chatIdBlocked = db.collection('chatIdBlocked');
-    planEndingTime = db.collection('planEndingTime');
-    chatIdOfPayment = db.collection('chatIdOfPayment');
-    totalShortLinks = db.collection('totalShortLinks');
-    freeShortLinksOf = db.collection('freeShortLinksOf');
-    freeDomainNamesAvailableFor = db.collection('freeDomainNamesAvailableFor');
-
-    // variables to view system information
-    payments = db.collection('payments');
-    clicksOf = db.collection('clicksOf');
-    clicksOn = db.collection('clicksOn');
-    chatIdOf = db.collection('chatIdOf');
-    nameOf = db.collection('nameOf');
-    planOf = db.collection('planOf');
-    log('DB Connected lala');
-
-    set(freeShortLinksOf, 6687923716, FREE_LINKS);
-    set(freeShortLinksOf, 1531772316, FREE_LINKS);
-    adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
-
-    // Seed Code // Code to allocate subscriptions, domains and resources to admins, developers, testers
-    // const chatId = 5168006768;
-    // const plan = 'Daily';
-    // set(planOf, chatId, plan);
-    // set(planEndingTime, chatId, Date.now() + timeOf[plan]);
-    // increment(freeShortLinksOf, chatId, 2); // freeShortLinksForNewUser
-    // set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
-    // bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan)).catch(() => {});
-  })
-  .catch(err => log('DB Connected', err, err?.message));
+  .then(loadData)
+  .catch(err => log('DB Error lala', err, err?.message));
 
 bot.on('message', async msg => {
   const chatId = msg?.chat?.id;
@@ -315,68 +306,47 @@ bot.on('message', async msg => {
   if (message === '/start') {
     set(state, chatId, 'action', 'none');
 
-    if (isAdmin(chatId)) {
-      bot.sendMessage(chatId, 'Hello, Admin! Please select an option:', aO);
-      return;
-    }
+    if (isAdmin(chatId)) return bot.sendMessage(chatId, 'Hello, Admin! Please select an option:', aO);
 
     const freeLinks = await get(freeShortLinksOf, chatId);
-    if (freeLinks === undefined || freeLinks > 0) {
-      bot.sendMessage(chatId, t.welcomeFreeTrial, o);
-      return;
-    }
-    bot.sendMessage(chatId, t.welcome, o);
-    return;
+    if (freeLinks === undefined || freeLinks > 0) return bot.sendMessage(chatId, t.welcomeFreeTrial, o);
+
+    return bot.sendMessage(chatId, t.welcome, o);
   }
   //
   if (message.toLowerCase() === 'cancel' || (firstSteps.includes(action) && message === 'Back')) {
     set(state, chatId, 'action', 'none');
-    bot.sendMessage(chatId, `User has Pressed ${message} Button.`, isAdmin(chatId) ? aO : o);
-    return;
+    return bot.sendMessage(chatId, `User has Pressed ${message} Button.`, isAdmin(chatId) ? aO : o);
   }
   //
   if (message === admin.blockUser) {
-    if (!isAdmin(chatId)) {
-      bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
-      return;
-    }
-    bot.sendMessage(chatId, 'Please share the username of the user that needs to be blocked.', bc);
+    if (!isAdmin(chatId)) return bot.sendMessage(chatId, 'not authorized');
     set(state, chatId, 'action', 'block-user');
-    return;
+    return bot.sendMessage(chatId, 'Please share the username of the user that needs to be blocked.', bc);
   }
   if (action === 'block-user') {
     const userToBlock = message;
     const chatIdToBlock = await get(chatIdOf, userToBlock);
-    if (!chatIdToBlock) {
-      bot.sendMessage(chatId, `User ${userToBlock} not found`, bc);
-      return;
-    }
-    set(chatIdBlocked, chatIdToBlock, true);
-    bot.sendMessage(chatId, `User ${userToBlock} has been blocked.`, aO);
+    if (!chatIdToBlock) return bot.sendMessage(chatId, `User ${userToBlock} not found`);
+
     set(state, chatId, 'action', 'none');
-    return;
+    set(chatIdBlocked, chatIdToBlock, true);
+    return bot.sendMessage(chatId, `User ${userToBlock} has been blocked.`, aO);
   }
   //
   if (message === admin.unblockUser) {
-    if (!isAdmin(chatId)) {
-      bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
-      return;
-    }
-    bot.sendMessage(chatId, 'Please share the username of the user that needs to be unblocked.', bc);
+    if (!isAdmin(chatId)) return bot.sendMessage(chatId, 'not authorized');
     set(state, chatId, 'action', 'unblock-user');
-    return;
+    return bot.sendMessage(chatId, 'Please share the username of the user that needs to be unblocked.', bc);
   }
   if (action === 'unblock-user') {
     const userToUnblock = message;
     const chatIdToUnblock = await get(chatIdOf, userToUnblock);
-    if (!chatIdToUnblock) {
-      bot.sendMessage(chatId, `User ${userToUnblock} not found`, bc);
-      return;
-    }
-    set(chatIdBlocked, chatIdToUnblock, false);
-    bot.sendMessage(chatId, `User ${userToUnblock} has been unblocked.`, aO);
+    if (!chatIdToUnblock) return bot.sendMessage(chatId, `User ${userToUnblock} not found`, bc);
+
     set(state, chatId, 'action', 'none');
-    return;
+    set(chatIdBlocked, chatIdToUnblock, false);
+    return bot.sendMessage(chatId, `User ${userToUnblock} has been unblocked.`, aO);
   }
   //
   if (message === admin.messageUsers) {
@@ -1366,7 +1336,7 @@ app.get('/:id', async (req, res) => {
 const startServer = () => {
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
-    log(`Server is running on port http://localhost:${port}`);
+    log(`Server ran away!\nhttp://localhost:${port}`);
   });
 };
 startServer();
