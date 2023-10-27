@@ -1,12 +1,14 @@
+/*global Buffer process */
+const fs = require('fs');
 require('dotenv').config();
 const axios = require('axios');
 const { t } = require('./config');
-const resolveDns = require('./resolve-cname.js');
 const { getAll } = require('./db');
 const { log } = require('console');
+const resolveDns = require('./resolve-cname.js');
 
-const UPDATE_DNS_INTERVAL = Number(process.env.UPDATE_DNS_INTERVAL || 60);
 const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE;
+const UPDATE_DNS_INTERVAL = Number(process.env.UPDATE_DNS_INTERVAL || 60);
 const PERCENT_INCREASE_USD_TO_NAIRA = Number(process.env.PERCENT_INCREASE_USD_TO_NAIRA);
 
 function isValidUrl(url) {
@@ -108,6 +110,17 @@ const getChatIds = async nameOf => {
   return ans.map(a => a._id);
 };
 
+const sendQrCode = async (bot, chatId, bb) => {
+  const qrCode = await bb.getQrcode();
+  const buffer = Buffer.from(qrCode?.qr_code, 'base64');
+  fs.writeFileSync('image.png', buffer);
+  bot
+    .sendPhoto(chatId, 'image.png', {
+      caption: 'Here is your QR code!',
+    })
+    .then(() => fs.unlinkSync('image.png'))
+    .catch(log);
+};
 module.exports = {
   year,
   week,
@@ -115,6 +128,7 @@ module.exports = {
   month,
   isAdmin,
   isValidUrl,
+  sendQrCode,
   nextNumber,
   isDeveloper,
   isValidEmail,

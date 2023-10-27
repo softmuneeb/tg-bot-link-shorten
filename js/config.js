@@ -1,3 +1,4 @@
+/*global process */
 require('dotenv').config();
 const FREE_LINKS = Number(process.env.FREE_LINKS);
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME;
@@ -18,17 +19,30 @@ const admin = {
   messageUsers: '👋 Message all users',
 };
 const user = {
+  // main keyboard
   urlShortener: '🔗 URL Shortener',
   viewShortLinks: '🔍 View Analytics',
   buyDomainName: '🌐 Buy Domain Names',
   viewDomainNames: '👀 My Domain Names',
   dnsManagement: '😎 DNS Management',
   buyPlan: '📋 Subscribe Here',
+  wallet: '💰 Wallet',
   viewPlan: '🔍 My Plan',
   getSupport: '🛠️ Get Support',
 };
+const u = {
+  // other key boards
+  deposit: '💵 Deposit',
+  withdraw: '💸 Withdraw',
+
+  // wallet
+  usd: 'USD',
+  ngn: 'NGN',
+};
 
 const t = {
+  askValidEmail: 'Please provide a valid email',
+  askValidCrypto: 'Please choose a valid crypto currency',
   chooseSubscription: `<b>Elevate Your Brand with Our Subscription Plans!</b>
 
 - <b>Daily:</b> $${PRICE_DAILY} with ${DAILY_PLAN_FREE_DOMAINS} free ".sbs" domains.
@@ -116,6 +130,38 @@ Discover more: t.me/nomadly`,
   dnsRecordUpdated: `Record Updated`,
 
   provideLink: 'Please provide a valid URL. e.g https://google.com',
+
+  comingSoonWithdraw: `Withdraw coming soon. Contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+
+  selectCurrencyToDeposit: `Please select currency to deposit USD / NGN`,
+
+  depositNGN: `Please enter NGN Amount:`,
+  askEmailForNGN: `Please provide an email for payment confirmation`,
+
+  depositUSD: `Please enter USD Amount, note that minium value is $6:`,
+  selectCryptoToDeposit: `Please choose a crypto currency:`,
+  showDepositCryptoInfo: (priceCrypto, tickerView, address) =>
+    `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
+
+Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your wallet will be updated.
+
+Best regards,
+Nomadly Bot`,
+  confirmationDepositCrypto: (
+    amount,
+    usd,
+  ) => `Your payment of ${amount} ($${usd}) is processed. Thank you for choosing us.
+Best,
+Nomadly Bot`,
+  showWallet: (usd, ngn) => `Wallet Balance:
+$${usd}
+${ngn} NGN`,
+
+  wallet: (usd, ngn) => `Wallet Balance:
+$${usd}
+${ngn} NGN
+
+Select wallet option:`,
 };
 
 const tickerOf = {
@@ -128,8 +174,23 @@ const tickerOf = {
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
+const _bc = ['Back', 'Cancel'];
 
 const tickerViews = Object.keys(tickerOf);
+
+const k = {
+  of: list => ({
+    reply_markup: {
+      keyboard: [...list.map(a => [a]), _bc],
+    },
+  }),
+
+  wallet: {
+    reply_markup: {
+      keyboard: [[u.deposit], [u.withdraw], _bc],
+    },
+  },
+};
 
 const adminKeyboard = {
   reply_markup: {
@@ -141,6 +202,7 @@ const userKeyboard = {
   reply_markup: {
     keyboard: Object.values(user).map(b => [b]),
   },
+  parse_mode: 'HTML',
   disable_web_page_preview: true,
 };
 
@@ -169,13 +231,13 @@ const linkOptions = ['Random Link', 'Custom Link'];
 const chooseSubscription = {
   parse_mode: 'HTML',
   reply_markup: {
-    keyboard: [...subscriptionOptions.map(a => [a]), ['Back', 'Cancel']],
+    keyboard: [...subscriptionOptions.map(a => [a]), _bc],
   },
 };
 
 const dO = {
   reply_markup: {
-    keyboard: [['Back', 'Cancel'], ['Backup Data'], ['Restore Data']],
+    keyboard: [_bc, ['Backup Data'], ['Restore Data']],
   },
 };
 
@@ -188,7 +250,7 @@ const rem = {
 const bc = {
   parse_mode: 'HTML',
   reply_markup: {
-    keyboard: [['Back', 'Cancel']],
+    keyboard: [_bc],
   },
   disable_web_page_preview: true,
 };
@@ -196,42 +258,39 @@ const bc = {
 const dns = {
   parse_mode: 'HTML',
   reply_markup: {
-    keyboard: [[t.addDns], [t.updateDns], [t.deleteDns], ['Back', 'Cancel']],
+    keyboard: [[t.addDns], [t.updateDns], [t.deleteDns], _bc],
   },
   disable_web_page_preview: true,
 };
 const dnsRecordType = {
   parse_mode: 'HTML',
   reply_markup: {
-    keyboard: [[t.cname], [t.ns], [t.a], ['Back', 'Cancel']],
+    keyboard: [[t.cname], [t.ns], [t.a], _bc],
   },
   disable_web_page_preview: true,
 };
 const yes_no = {
   parse_mode: 'HTML',
   reply_markup: {
-    keyboard: [
-      ['Yes', 'No'],
-      ['Back', 'Cancel'],
-    ],
+    keyboard: [['Yes', 'No'], _bc],
   },
   disable_web_page_preview: true,
 };
 
 const pay = {
   reply_markup: {
-    keyboard: [paymentOptions, ['Back', 'Cancel']],
+    keyboard: [paymentOptions, _bc],
   },
 };
 const linkType = {
   reply_markup: {
-    keyboard: [linkOptions, ['Back', 'Cancel']],
+    keyboard: [linkOptions, _bc],
   },
 };
 
 const show = domains => ({
   reply_markup: {
-    keyboard: [...domains.map(d => [d]), ['Back', 'Cancel']],
+    keyboard: [...domains.map(d => [d]), _bc],
   },
 });
 
@@ -261,29 +320,31 @@ const html = (text = t.successPayment) => {
 };
 
 module.exports = {
-  admin,
-  user,
-  dnsRecordType,
-  dns,
-  show,
-  yes_no,
-  freeDomainsOf,
+  k,
   t,
-  tickerOf,
-  tickerViews,
-  html,
-  linkOptions,
-  payBank,
-  linkType,
-  pay,
+  u,
+  dO,
   bc,
+  dns,
+  pay,
   rem,
+  user,
+  show,
+  html,
+  admin,
+  yes_no,
+  timeOf,
+  payBank,
+  priceOf,
+  tickerOf,
+  linkType,
+  tickerViews,
+  linkOptions,
+  dnsRecordType,
+  freeDomainsOf,
+  paymentOptions,
+  o: userKeyboard,
+  aO: adminKeyboard,
   chooseSubscription,
   subscriptionOptions,
-  priceOf,
-  paymentOptions,
-  aO: adminKeyboard,
-  dO,
-  o: userKeyboard,
-  timeOf,
 };

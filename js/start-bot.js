@@ -1,6 +1,6 @@
 const axios = require('axios');
 const { getBusinessId } = require('./pay-fincra');
-const { convertUSDToCrypto } = require('./pay-blockbee');
+const { usdToCrypto } = require('./pay-blockbee');
 const { isRailwayAPIWorking } = require('./rl-save-domain-in-server');
 // const { getRegisteredDomainNames } = require('./get-purchased-domains.test');
 
@@ -15,7 +15,7 @@ const runBot = async () => {
     console.log('working, fincra api');
     // await getRegisteredDomainNames();
     // console.log('working, connect reseller api');
-    await convertUSDToCrypto('1', 'polygon_matic');
+    await usdToCrypto('1', 'polygon_matic');
     console.log('working, blockbee api');
     await isRailwayAPIWorking();
     console.log('working, railway api, now starting the bot');
