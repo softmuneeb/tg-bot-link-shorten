@@ -1571,7 +1571,7 @@ const tryConnectReseller = async () => {
     axios.get('https://api.ipify.org/').then(ip => {
       const message = `Please add <code>${ip.data}</code> to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
       log(message);
-      send(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' }).catch(() => {});
+      send(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' })
       send(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' });
     });
     //
