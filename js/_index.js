@@ -7,11 +7,11 @@ const {
   bc,
   aO,
   rem,
-  pay,
   dns,
   html,
   user,
   show,
+  payIn,
   admin,
   timeOf,
   yes_no,
@@ -24,7 +24,6 @@ const {
   tickerViewOf,
   freeDomainsOf,
   dnsRecordType,
-  paymentOptions,
   chooseSubscription,
   subscriptionOptions,
 } = require('./config.js');
@@ -225,7 +224,7 @@ bot.on('message', async msg => {
   };
   const goto = {
     'domain-name-payment': (domain, price) => {
-      send(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, pay);
+      send(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, k.pay);
       set(state, chatId, 'action', 'domain-name-payment');
     },
     'choose-domain-to-buy': async () => {
@@ -247,7 +246,7 @@ bot.on('message', async msg => {
       );
     },
     'subscription-payment': plan => {
-      send(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
+      send(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, k.pay);
       set(state, chatId, 'action', 'subscription-payment');
     },
     'choose-subscription': () => {
@@ -408,15 +407,7 @@ bot.on('message', async msg => {
       send(chatId, t.showDepositCryptoInfo(usdIn, tickerView, address), o);
     },
 
-    confirmationDepositCrypto: amountWithTicker => {
-      // check how much amount received and add to wallet
-      // del(state, chatId, 'ref', null);
-      send(chatId, t.confirmationDepositCrypto(amountWithTicker));
-    },
     //
-    showWallet: (usd, ngn) => {
-      send(chatId, t.showWallet(usd, ngn));
-    },
     selectCurrencyToWithdraw: () => {
       send(chatId, t.comingSoonWithdraw);
     },
@@ -601,23 +592,19 @@ bot.on('message', async msg => {
   }
   if (action === 'domain-name-payment') {
     if (message === 'Back') return goto['choose-domain-to-buy']();
+    const payOption = message;
 
-    const paymentOption = message;
-
-    if (!paymentOptions.includes(paymentOption)) {
-      send(chatId, 'Please choose a valid payment option');
-      return;
-    }
-
-    if (paymentOption === 'Crypto') {
-      send(chatId, `Please choose a crypto currency`, k.of(tickerViews));
+    if (payOption === payIn.crypto) {
       set(state, chatId, 'action', 'crypto-transfer-payment-domain');
-      return;
+      return send(chatId, `Please choose a crypto currency`, k.of(tickerViews));
     }
 
-    send(chatId, `Please provide an email for payment confirmation.`, bc);
-    set(state, chatId, 'action', 'bank-transfer-payment-domain');
-    return;
+    if (payOption === payIn.bank) {
+      set(state, chatId, 'action', 'bank-transfer-payment-domain');
+      return send(chatId, t.askEmail, bc);
+    }
+
+    return send(chatId, t.askValidPayOption);
   }
   if (action === 'bank-transfer-payment-domain') {
     const price = info?.chosenDomainPrice;
@@ -730,23 +717,19 @@ Nomadly Bot`;
   }
   if (action === 'subscription-payment') {
     if (message === 'Back') return goto['choose-subscription']();
+    const payOption = message;
 
-    const paymentOption = message;
-
-    if (!paymentOptions.includes(paymentOption)) {
-      send(chatId, 'Please choose a valid payment option');
-      return;
+    if (payOption === payIn.crypto) {
+      set(state, chatId, 'action', 'crypto-transfer-payment');
+      return send(chatId, `Please choose a crypto currency`, k.of(tickerViews));
     }
 
-    if (paymentOption === 'Bank ₦aira + Card🌐︎') {
-      send(chatId, `Please provide an email for payment confirmation.`, bc);
+    if (payOption === payIn.bank) {
       set(state, chatId, 'action', 'bank-transfer-payment-subscription');
-      return;
+      return send(chatId, t.askEmail, bc);
     }
 
-    send(chatId, `Please choose a crypto currency`, k.of(tickerViews));
-    set(state, chatId, 'action', 'crypto-transfer-payment');
-    return;
+    return send(chatId, t.askValidPayOption);
   }
   if (action === 'bank-transfer-payment-subscription') {
     const plan = info?.chosenPlanForPayment;

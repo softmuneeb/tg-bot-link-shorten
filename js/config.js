@@ -41,8 +41,10 @@ const u = {
 };
 
 const t = {
+  askEmail: `Please provide an email for payment confirmation.`,
   askValidEmail: 'Please provide a valid email',
   askValidCrypto: 'Please choose a valid crypto currency',
+  askValidPayOption: 'Please choose a valid payment option',
   chooseSubscription: `<b>Elevate Your Brand with Our Subscription Plans!</b>
 
 - <b>Daily:</b> $${PRICE_DAILY} with ${DAILY_PLAN_FREE_DOMAINS} free ".sbs" domains.
@@ -176,6 +178,12 @@ const tickerOf = {
 /////////////////////////////////////////////////////////////////////////////////////
 const _bc = ['Back', 'Cancel'];
 
+const payIn = {
+  crypto: 'Crypto',
+  bank: 'Bank ₦aira + Card🌐︎',
+  wallet: '💰 Wallet',
+};
+
 const tickerViews = Object.keys(tickerOf);
 const reverseObject = o => Object.fromEntries(Object.entries(o).map(([key, val]) => [val, key]));
 const tickerViewOf = reverseObject(tickerOf);
@@ -189,6 +197,12 @@ const k = {
   wallet: {
     reply_markup: {
       keyboard: [[u.deposit], [u.withdraw], _bc],
+    },
+  },
+
+  pay: {
+    reply_markup: {
+      keyboard: [Object.values(payIn), _bc],
     },
   },
 };
@@ -226,7 +240,7 @@ const timeOf = {
 };
 
 const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
-const paymentOptions = ['Crypto', 'Bank ₦aira + Card🌐︎'];
+
 const linkOptions = ['Random Link', 'Custom Link'];
 
 const chooseSubscription = {
@@ -278,11 +292,6 @@ const yes_no = {
   disable_web_page_preview: true,
 };
 
-const pay = {
-  reply_markup: {
-    keyboard: [paymentOptions, _bc],
-  },
-};
 const linkType = {
   reply_markup: {
     keyboard: [linkOptions, _bc],
@@ -327,11 +336,11 @@ module.exports = {
   dO,
   bc,
   dns,
-  pay,
   rem,
   user,
   show,
   html,
+  payIn,
   admin,
   yes_no,
   timeOf,
@@ -339,12 +348,12 @@ module.exports = {
   priceOf,
   tickerOf,
   linkType,
+  payOptions,
   tickerViews,
   linkOptions,
   tickerViewOf,
   dnsRecordType,
   freeDomainsOf,
-  paymentOptions,
   o: userKeyboard,
   aO: adminKeyboard,
   chooseSubscription,
