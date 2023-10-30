@@ -177,7 +177,8 @@ const tickerOf = {
 const _bc = ['Back', 'Cancel'];
 
 const tickerViews = Object.keys(tickerOf);
-
+const reverseObject = o => Object.fromEntries(Object.entries(o).map(([key, val]) => [val, key]));
+const tickerViewOf = reverseObject(tickerOf);
 const k = {
   of: list => ({
     reply_markup: {
@@ -340,6 +341,7 @@ module.exports = {
   linkType,
   tickerViews,
   linkOptions,
+  tickerViewOf,
   dnsRecordType,
   freeDomainsOf,
   paymentOptions,

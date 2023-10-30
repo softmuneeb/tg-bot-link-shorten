@@ -21,6 +21,7 @@ const {
   tickerOf,
   linkOptions,
   tickerViews,
+  tickerViewOf,
   freeDomainsOf,
   dnsRecordType,
   paymentOptions,
@@ -388,14 +389,14 @@ bot.on('message', async msg => {
     },
     [a.showDepositCryptoInfo]: async () => {
       const ref = nanoid();
-      set(state, chatId, 'ref', ref);
-      set(chatIdOfPayment, ref, chatId);
       const { amount, tickerView } = info;
       const ticker = tickerOf[tickerView];
       const { address, bb } = await getCryptoDepositAddress(ticker, chatId, SELF_URL, `/crypto-wallet?a=b&ref=${ref}&`);
 
       log({ ref });
       sendQrCode(bot, chatId, bb);
+      set(state, chatId, 'ref', ref);
+      set(chatIdOfPayment, ref, chatId);
       set(state, chatId, 'action', 'none');
       const usdIn = await usdToCrypto(amount, ticker);
       set(state, chatId, 'usdIn', usdIn);
@@ -404,7 +405,7 @@ bot.on('message', async msg => {
 
     confirmationDepositCrypto: amountWithTicker => {
       // check how much amount received and add to wallet
-      del(state, chatId, 'ref');
+      // del(state, chatId, 'ref', null);
       bot.sendMessage(chatId, t.confirmationDepositCrypto(amountWithTicker));
     },
     //
@@ -1431,7 +1432,7 @@ app.get('/crypto-wallet', async (req, res) => {
 
   // check how much amount received and add to wallet
   // del(state, chatId, 'ref'); // does not have 3rd arg as input
-  bot.sendMessage(chatId, t.confirmationDepositCrypto(usdIn));
+  bot.sendMessage(chatId, t.confirmationDepositCrypto(value_coin + ' ' + tickerViewOf[coin], usdIn));
   bot.sendMessage(chatId, t.showWallet(usdBalance, 0));
 
   // Logs
@@ -1440,6 +1441,7 @@ app.get('/crypto-wallet', async (req, res) => {
   del(chatIdOfPayment, ref);
   const name = await get(nameOf, chatId);
   // del(state, chatId); // do some thing better than delete to be a high quality app
+  set(state, chatId, 'ref', null); // do some thing better than delete to be a high quality app
   set(payments, ref, `Crypto,Wallet,wallet,$${usdIn},${chatId},${name},${date},${value_coin} ${coin}`);
 });
 
