@@ -1333,7 +1333,7 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
   // Validations
   const ref = req?.query?.ref;
   const coin = req?.query?.coin;
-  const value_coin = req?.query?.value_coin;
+  const value_coin = req?.query?.value_forwarded_coin;
 
   const chatId = await get(chatIdOfPayment, ref);
   const info = await get(state, chatId);
@@ -1371,7 +1371,7 @@ app.get('/crypto-payment-for-domain', async (req, res) => {
   // Validations
   const ref = req?.query?.ref;
   const coin = req?.query?.coin;
-  const value_coin = req?.query?.value_coin;
+  const value_coin = req?.query?.value_forwarded_coin;
   const chatId = await get(chatIdOfPayment, ref);
   const info = await get(state, chatId);
   const session = info?.cryptoPaymentSession;
@@ -1411,7 +1411,7 @@ app.get('/crypto-wallet', async (req, res) => {
   // Validations
   const refReceived = req?.query?.ref;
   const coin = req?.query?.coin;
-  const value_coin = req?.query?.value_coin; // ? value_coin or coin with
+  const value_coin = req?.query?.value_forwarded_coin; // ? value_coin or coin with
   const chatId = await get(chatIdOfPayment, refReceived);
   const info = await get(state, chatId);
   const ref = info?.ref;
