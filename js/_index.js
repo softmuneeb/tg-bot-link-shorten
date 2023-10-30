@@ -86,7 +86,7 @@ const send = (chatId, message, options) => {
 
 // variables to implement core functionality
 let state = {},
-  wallet = {},
+  walletOf = {},
   linksOf = {},
   expiryOf = {},
   fullUrlOf = {},
@@ -118,8 +118,8 @@ const loadData = async () => {
 
   // variables to implement core functionality
   state = db.collection('state');
-  wallet = db.collection('wallet');
   linksOf = db.collection('linksOf');
+  walletOf = db.collection('walletOf');
   expiryOf = db.collection('expiryOf');
   fullUrlOf = db.collection('fullUrlOf');
   domainsOf = db.collection('domainsOf');
@@ -352,7 +352,7 @@ bot.on('message', async msg => {
 
     [user.wallet]: async () => {
       set(state, chatId, 'action', user.wallet);
-      const w = await get(wallet, chatId);
+      const w = await get(walletOf, chatId);
       const usdBalance = isNaN(w?.usdIn) ? 0 : w?.usdIn;
       send(chatId, t.wallet(usdBalance, 0), k.wallet);
     },
@@ -1157,8 +1157,8 @@ function restoreData() {
     const backupJSON = fs.readFileSync('backup.json', 'utf-8');
     const restoredData = JSON.parse(backupJSON);
     Object.assign(state, restoredData.state);
-    Object.assign(wallet, restoredData.wallet);
     Object.assign(linksOf, restoredData.linksOf);
+    Object.assign(walletOf, restoredData.walletOf);
     Object.assign(expiryOf, restoredData.expiryOf);
     Object.assign(clicksOf, restoredData.clicksOf);
     Object.assign(clicksOn, restoredData.clicksOn);
@@ -1181,8 +1181,8 @@ function restoreData() {
 async function backupTheData() {
   const backupData = {
     state: await getAll(state),
-    wallet: await getAll(wallet),
     linksOf: await getAll(linksOf),
+    walletOf: await getAll(walletOf),
     expiryOf: await getAll(expiryOf),
     fullUrlOf: await getAll(fullUrlOf),
     domainsOf: await getAll(domainsOf),
@@ -1420,33 +1420,26 @@ app.get('/crypto-wallet', async (req, res) => {
   const chatId = await get(chatIdOfPayment, refReceived);
   const info = await get(state, chatId);
   const ref = info?.ref;
-  const usdIn = info?.usdIn;
+  const usdIn = Number(await convert(value_coin, coin, 'usd'));
   log(`crypto-wallet ref: ${ref} chatId: ${chatId}`);
   if (!(ref && ref === refReceived)) {
     log(t.payError);
     return res.send(html(t.payError));
   }
-  // const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
-  // if (!(Number(value_coin) >= price && coin === ticker))
-  //   return res.send(html('Payment invalid, either less value sent or coin sent is not correct'));
-  // TODO: tx fee check, static crypto address check I think impossible due to same address can not track diff payments
-  // Add Money to Wallet
-  const w = await get(wallet, chatId);
-  const usdBalance = isNaN(w?.usdIn) ? Number(usdIn) : Number(usdIn) + Number(w?.usdIn);
-  set(wallet, chatId, 'usdIn', usdBalance);
 
-  // check how much amount received and add to wallet
-  // del(state, chatId, 'ref'); // does not have 3rd arg as input
-  send(chatId, t.confirmationDepositCrypto(value_coin + ' ' + tickerViewOf[coin], usdIn));
+  const wallet = await get(walletOf, chatId);
+  const usdBalance = (wallet?.usdIn || 0) + usdIn;
+
   send(chatId, t.showWallet(usdBalance, 0));
+  set(walletOf, chatId, 'usdIn', usdBalance);
+  send(chatId, t.confirmationDepositCrypto(value_coin + ' ' + tickerViewOf[coin], usdIn));
 
   // Logs
   res.send(html());
   const date = new Date();
   del(chatIdOfPayment, ref);
+  set(state, chatId, 'ref', null);
   const name = await get(nameOf, chatId);
-  // del(state, chatId); // do some thing better than delete to be a high quality app
-  set(state, chatId, 'ref', null); // do some thing better than delete to be a high quality app
   set(payments, ref, `Crypto,Wallet,wallet,$${usdIn},${chatId},${name},${date},${value_coin} ${coin}`);
 });
 
