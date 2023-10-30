@@ -223,9 +223,9 @@ bot.on('message', async msg => {
     showDepositCryptoInfo: 'showDepositCryptoInfo',
   };
   const goto = {
-    'domain-name-payment': (domain, price) => {
+    'domain-pay': (domain, price) => {
       send(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, k.pay);
-      set(state, chatId, 'action', 'domain-name-payment');
+      set(state, chatId, 'action', 'domain-pay');
     },
     'choose-domain-to-buy': async () => {
       let text = ``;
@@ -245,9 +245,9 @@ bot.on('message', async msg => {
         bc,
       );
     },
-    'subscription-payment': plan => {
+    'plan-pay': plan => {
       send(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, k.pay);
-      set(state, chatId, 'action', 'subscription-payment');
+      set(state, chatId, 'action', 'plan-pay');
     },
     'choose-subscription': () => {
       set(state, chatId, 'action', 'choose-subscription');
@@ -587,29 +587,29 @@ bot.on('message', async msg => {
     }
 
     set(state, chatId, 'chosenDomainPrice', price);
-    goto['domain-name-payment'](domain, price);
+    goto['domain-pay'](domain, price);
     return;
   }
-  if (action === 'domain-name-payment') {
+  if (action === 'domain-pay') {
     if (message === 'Back') return goto['choose-domain-to-buy']();
     const payOption = message;
 
     if (payOption === payIn.crypto) {
-      set(state, chatId, 'action', 'crypto-transfer-payment-domain');
+      set(state, chatId, 'action', 'crypto-pay-domain');
       return send(chatId, `Please choose a crypto currency`, k.of(tickerViews));
     }
 
     if (payOption === payIn.bank) {
-      set(state, chatId, 'action', 'bank-transfer-payment-domain');
+      set(state, chatId, 'action', 'bank-pay-domain');
       return send(chatId, t.askEmail, bc);
     }
 
     return send(chatId, t.askValidPayOption);
   }
-  if (action === 'bank-transfer-payment-domain') {
+  if (action === 'bank-pay-domain') {
     const price = info?.chosenDomainPrice;
     const domain = info?.chosenDomainForPayment;
-    if (message === 'Back') return goto['domain-name-payment'](domain, price);
+    if (message === 'Back') return goto['domain-pay'](domain, price);
 
     const email = message;
 
@@ -638,11 +638,11 @@ Nomadly Bot`,
     set(state, chatId, 'action', 'none');
     return;
   }
-  if (action === 'crypto-transfer-payment-domain') {
+  if (action === 'crypto-pay-domain') {
     const priceUSD = info?.chosenDomainPrice;
     const domain = info?.chosenDomainForPayment;
 
-    if (message === 'Back') return goto['domain-name-payment'](domain, priceUSD);
+    if (message === 'Back') return goto['domain-pay'](domain, priceUSD);
 
     const tickerView = message;
     const ticker = tickerOf[tickerView];
@@ -711,29 +711,34 @@ Nomadly Bot`;
 
     set(state, chatId, 'chosenPlanForPayment', plan);
 
-    goto['subscription-payment'](plan);
+    goto['plan-pay'](plan);
 
     return;
   }
-  if (action === 'subscription-payment') {
+  if (action === 'plan-pay') {
     if (message === 'Back') return goto['choose-subscription']();
     const payOption = message;
 
     if (payOption === payIn.crypto) {
-      set(state, chatId, 'action', 'crypto-transfer-payment');
+      set(state, chatId, 'action', 'crypto-pay-plan');
       return send(chatId, `Please choose a crypto currency`, k.of(tickerViews));
     }
 
     if (payOption === payIn.bank) {
-      set(state, chatId, 'action', 'bank-transfer-payment-subscription');
+      set(state, chatId, 'action', 'bank-pay-plan');
+      return send(chatId, t.askEmail, bc);
+    }
+
+    if (payOption === payIn.wallet) {
+      set(state, chatId, 'action', 'bank-tran sfer-payment-subscription');
       return send(chatId, t.askEmail, bc);
     }
 
     return send(chatId, t.askValidPayOption);
   }
-  if (action === 'bank-transfer-payment-subscription') {
+  if (action === 'bank-pay-plan') {
     const plan = info?.chosenPlanForPayment;
-    if (message === 'Back') return goto['subscription-payment'](plan);
+    if (message === 'Back') return goto['plan-pay'](plan);
 
     const email = message;
 
@@ -743,7 +748,7 @@ Nomadly Bot`;
     const ref = nanoid();
     log({ ref });
     set(chatIdOfPayment, ref, chatId);
-    const { url, error } = await createCheckout(priceNGN, `/bank-payment-for-plan?a=b&ref=${ref}&`, email, username);
+    const { url, error } = await createCheckout(priceNGN, `/bank-pay-plan?a=b&ref=${ref}&`, email, username);
     if (error) {
       send(chatId, error, o);
       set(state, chatId, 'action', 'none');
@@ -762,12 +767,12 @@ Nomadly Bot`,
     set(state, chatId, 'action', 'none');
     return;
   }
-  if (action === 'crypto-transfer-payment') {
+  if (action === 'crypto-pay-plan') {
     const plan = info?.chosenPlanForPayment;
     const priceUSD = priceOf[plan];
 
     if (message === 'Back') {
-      goto['subscription-payment'](plan);
+      goto['plan-pay'](plan);
       return;
     }
 
@@ -1259,14 +1264,14 @@ app.get('/health', (req, res) => {
   tryConnectReseller();
   res.send(html('ok'));
 });
-app.get('/bank-payment-for-plan', async (req, res) => {
+app.get('/bank-pay-plan', async (req, res) => {
   log(req?.hostname + req?.originalUrl);
 
   // Validations
   const ref = req?.query?.ref;
   const chatId = await get(chatIdOfPayment, ref);
   const plan = (await get(state, chatId))?.chosenPlanForPayment;
-  log(`bank-payment-for-plan ref: ${ref} chatId: ${chatId} plan: ${plan}`);
+  log(`bank-pay-plan ref: ${ref} chatId: ${chatId} plan: ${plan}`);
   if (!plan) {
     res.send(html('Payment already processed or not found'));
     return;
