@@ -33,13 +33,13 @@ const {
   month,
   today,
   isAdmin,
+  usdToNgn,
   isValidUrl,
   nextNumber,
   sendQrCode,
   isDeveloper,
   isValidEmail,
   regularCheckDns,
-  convertUSDToNaira,
   sendMessageToAllUsers,
 } = require('./utils.js');
 const fs = require('fs');
@@ -615,7 +615,7 @@ bot.on('message', async msg => {
 
     if (!isValidEmail(email)) return send(chatId, t.askValidEmail);
 
-    const priceNGN = Number(await convertUSDToNaira(price));
+    const priceNGN = Number(await usdToNgn(price));
     const ref = nanoid();
     log({ ref });
     set(chatIdOfPayment, ref, chatId);
@@ -744,7 +744,7 @@ Nomadly Bot`;
 
     if (!isValidEmail(email)) return send(chatId, t.askValidEmail);
 
-    const priceNGN = Number(await convertUSDToNaira(priceOf[plan]));
+    const priceNGN = Number(await usdToNgn(priceOf[plan]));
     const ref = nanoid();
     log({ ref });
     set(chatIdOfPayment, ref, chatId);

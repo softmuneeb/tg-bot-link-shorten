@@ -28,21 +28,21 @@ function isAdmin(chatId) {
   return chatId === Number(process.env.TELEGRAM_ADMIN_CHAT_ID); // Replace with the actual admin's chat ID
 }
 
-async function convertUSDToNaira(amountInUSD) {
+async function usdToNgn(amountInUSD) {
   try {
     const apiUrl = `https://openexchangerates.org/api/latest.json?app_id=${API_KEY_CURRENCY_EXCHANGE}`;
 
     const response = await axios.get(apiUrl);
-    const usdToNairaRate = response.data.rates['NGN']; // Get the exchange rate for USD to Naira
+    const usdToNgnRate = response.data.rates['NGN']; // Get the exchange rate for USD to Naira
 
-    const nairaAmount = Number(amountInUSD) * usdToNairaRate * (1 + PERCENT_INCREASE_USD_TO_NAIRA);
+    const nairaAmount = Number(amountInUSD) * usdToNgnRate * (1 + PERCENT_INCREASE_USD_TO_NAIRA);
     return nairaAmount.toFixed();
   } catch (error) {
     console.error(`Error converting currency: ${error.message}`);
     return error.message;
   }
 }
-// convertUSDToNaira(1).then(console.log);
+// usdToNgn(1).then(console.log);
 
 function today() {
   const currentDate = new Date();
@@ -127,6 +127,7 @@ module.exports = {
   today,
   month,
   isAdmin,
+  usdToNgn,
   isValidUrl,
   sendQrCode,
   nextNumber,
@@ -134,6 +135,5 @@ module.exports = {
   isValidEmail,
   isNormalUser,
   regularCheckDns,
-  convertUSDToNaira,
   sendMessageToAllUsers,
 };
