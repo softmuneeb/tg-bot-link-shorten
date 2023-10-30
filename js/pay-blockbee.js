@@ -1,10 +1,11 @@
+/*global process */
 require('dotenv').config();
 const BlockBee = require('@blockbee/api');
 const API_KEY_BLOCKBEE = process.env.API_KEY_BLOCKBEE;
 
-const usdToCrypto = async (value, coin) => {
+const convert = async (value, to, coin) => {
   try {
-    const conversion = await BlockBee.getConvert(coin, value, 'usd', API_KEY_BLOCKBEE);
+    const conversion = await BlockBee.getConvert(coin, value, to, API_KEY_BLOCKBEE);
     return conversion?.value_coin;
   } catch (error) {
     console.log(error);
@@ -17,7 +18,9 @@ const usdToCrypto = async (value, coin) => {
     );
   }
 };
-// usdToCrypto('10', 'btc').then(console.log);
+
+// convert('10', 'usd', 'btc').then(console.log);
+// convert('1', 'btc', 'usd').then(console.log);
 
 const getCryptoDepositAddress = async (ticker, webhookParams, backendServer, redirectPath) => {
   const myAddress = ''; // auto gen by BB
@@ -33,4 +36,4 @@ const getCryptoDepositAddress = async (ticker, webhookParams, backendServer, red
 
 // getCryptoDepositAddress('polygon_matic',  '6687923716', 'https://softgreen.com', "/crypto" ).then(a=> console.log(JSON.stringify(a)))
 
-module.exports = { getCryptoDepositAddress, usdToCrypto };
+module.exports = { getCryptoDepositAddress, convert };

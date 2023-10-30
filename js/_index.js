@@ -62,7 +62,7 @@ const { checkDomainPriceOnline } = require('./cr-domain-price-get.js');
 const { saveDomainInServer } = require('./rl-save-domain-in-server.js');
 const { get, set, del, increment, getAll, decrement } = require('./db.js');
 const { getRegisteredDomainNames } = require('./cr-domain-purchased-get.js');
-const { getCryptoDepositAddress, usdToCrypto } = require('./pay-blockbee.js');
+const { getCryptoDepositAddress, convert } = require('./pay-blockbee.js');
 
 process.env['NTBA_FIX_350'] = 1;
 const DB_NAME = process.env.DB_NAME;
@@ -78,6 +78,11 @@ const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 log('Bot ran!');
+
+const send = (chatId, message, options) => {
+  log('reply:\t' + message + ' ' + options?.reply_markup?.keyboard?.map(i => i) || '' + '\tto: ' + chatId);
+  bot.sendMessage(chatId, message, options);
+};
 
 // variables to implement core functionality
 let state = {},
@@ -147,19 +152,19 @@ client
 bot.on('message', async msg => {
   const chatId = msg?.chat?.id;
   const message = msg?.text;
-  log('command\t' + message + '\t' + chatId + '\t' + msg?.from?.username);
+  log('message: \t' + message + '\tfrom: ' + chatId + '\t' + msg?.from?.username);
 
   tryConnectReseller(); // our ip may change on railway hosting so make sure its correct
 
   if (!db) {
-    bot.sendMessage(chatId, 'Bot starting, please wait');
+    send(chatId, 'Bot starting, please wait');
     return;
   }
 
   if (!connect_reseller_working) {
     await tryConnectReseller();
     if (!connect_reseller_working) {
-      bot.sendMessage(chatId, 'Bot starting, please wait');
+      send(chatId, 'Bot starting, please wait');
       return;
     }
   }
@@ -169,7 +174,7 @@ bot.on('message', async msg => {
 
   const blocked = await get(chatIdBlocked, chatId);
   if (blocked) {
-    bot.sendMessage(
+    send(
       chatId,
       `You are currently blocked from using the bot. Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
       rem,
@@ -220,7 +225,7 @@ bot.on('message', async msg => {
   };
   const goto = {
     'domain-name-payment': (domain, price) => {
-      bot.sendMessage(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, pay);
+      send(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, pay);
       set(state, chatId, 'action', 'domain-name-payment');
     },
     'choose-domain-to-buy': async () => {
@@ -235,52 +240,52 @@ bot.on('message', async msg => {
             : ` Remember, your ${plan} plan includes ${available} free ".sbs" domain${s}. Let's get your domain today!`;
       }
       set(state, chatId, 'action', 'choose-domain-to-buy');
-      bot.sendMessage(
+      send(
         chatId,
         `<b>Claim Your Corner of the Web!</b>  Please share the domain name you wish to purchase, like "abcpay.com".${text}`,
         bc,
       );
     },
     'subscription-payment': plan => {
-      bot.sendMessage(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
+      send(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, pay);
       set(state, chatId, 'action', 'subscription-payment');
     },
     'choose-subscription': () => {
       set(state, chatId, 'action', 'choose-subscription');
-      bot.sendMessage(chatId, t.chooseSubscription, chooseSubscription);
+      send(chatId, t.chooseSubscription, chooseSubscription);
     },
     'choose-url-to-shorten': async () => {
       set(state, chatId, 'action', 'choose-url-to-shorten');
       const m = 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com';
-      bot.sendMessage(chatId, m, bc);
+      send(chatId, m, bc);
       adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
     },
     'choose-domain-with-shorten': domains => {
-      bot.sendMessage(chatId, t.chooseDomainWithShortener, show(domains));
+      send(chatId, t.chooseDomainWithShortener, show(domains));
       set(state, chatId, 'action', 'choose-domain-with-shorten');
     },
     'choose-link-type': () => {
-      bot.sendMessage(chatId, `Choose link type:`, linkType);
+      send(chatId, `Choose link type:`, linkType);
       set(state, chatId, 'action', 'choose-link-type');
     },
     'get-free-domain': () => {
-      bot.sendMessage(chatId, t.chooseFreeDomainText, yes_no);
+      send(chatId, t.chooseFreeDomainText, yes_no);
       set(state, chatId, 'action', 'get-free-domain');
     },
 
     'choose-domain-to-manage': async () => {
       const domains = await getPurchasedDomains(chatId);
       set(state, chatId, 'action', 'choose-domain-to-manage');
-      bot.sendMessage(chatId, t.chooseDomainToManage, show(domains));
+      send(chatId, t.chooseDomainToManage, show(domains));
     },
 
     'select-dns-record-id-to-delete': () => {
-      bot.sendMessage(chatId, t.deleteDnsTxt, bc);
+      send(chatId, t.deleteDnsTxt, bc);
       set(state, chatId, 'action', 'select-dns-record-id-to-delete');
     },
 
     'confirm-dns-record-id-to-delete': () => {
-      bot.sendMessage(chatId, t.confirmDeleteDnsTxt, yes_no);
+      send(chatId, t.confirmDeleteDnsTxt, yes_no);
       set(state, chatId, 'action', 'confirm-dns-record-id-to-delete');
     },
 
@@ -307,38 +312,38 @@ bot.on('message', async msg => {
 
       set(state, chatId, 'dnsRecords', toSave);
       set(state, chatId, 'action', 'choose-dns-action');
-      bot.sendMessage(chatId, `${t.viewDnsRecords.replace('{{domain}}', domain)}\n${viewDnsRecords}`, dns);
+      send(chatId, `${t.viewDnsRecords.replace('{{domain}}', domain)}\n${viewDnsRecords}`, dns);
     },
 
     'type-dns-record-data-to-add': recordType => {
-      bot.sendMessage(chatId, t.askDnsContent[recordType], bc);
+      send(chatId, t.askDnsContent[recordType], bc);
       set(state, chatId, 'recordType', recordType);
       set(state, chatId, 'action', 'type-dns-record-data-to-add');
     },
 
     'select-dns-record-id-to-update': () => {
-      bot.sendMessage(chatId, t.updateDnsTxt, bc);
+      send(chatId, t.updateDnsTxt, bc);
       set(state, chatId, 'action', 'select-dns-record-id-to-update');
     },
     'type-dns-record-data-to-update': (id, recordType) => {
       set(state, chatId, 'dnsRecordIdToUpdate', id);
       set(state, chatId, 'action', 'type-dns-record-data-to-update');
-      bot.sendMessage(chatId, t.askUpdateDnsContent[recordType]);
+      send(chatId, t.askUpdateDnsContent[recordType]);
     },
 
     'select-dns-record-type-to-add': () => {
       set(state, chatId, 'action', 'select-dns-record-type-to-add');
-      bot.sendMessage(chatId, t.addDnsTxt, dnsRecordType);
+      send(chatId, t.addDnsTxt, dnsRecordType);
     },
 
     //
     //
     [admin.messageUsers]: () => {
-      bot.sendMessage(chatId, 'Enter message', bc);
+      send(chatId, 'Enter message', bc);
       set(state, chatId, 'action', admin.messageUsers);
     },
     adminConfirmMessage: () => {
-      bot.sendMessage(chatId, 'Confirm?', yes_no);
+      send(chatId, 'Confirm?', yes_no);
       set(state, chatId, 'action', 'adminConfirmMessage');
     },
     //
@@ -349,20 +354,20 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', user.wallet);
       const w = await get(wallet, chatId);
       const usdBalance = isNaN(w?.usdIn) ? 0 : w?.usdIn;
-      bot.sendMessage(chatId, t.wallet(usdBalance, 0), k.wallet);
+      send(chatId, t.wallet(usdBalance, 0), k.wallet);
     },
     //
     [a.selectCurrencyToDeposit]: () => {
       set(state, chatId, 'action', a.selectCurrencyToDeposit);
-      bot.sendMessage(chatId, t.selectCurrencyToDeposit, k.of([u.usd, u.ngn]));
+      send(chatId, t.selectCurrencyToDeposit, k.of([u.usd, u.ngn]));
     },
     //
     [a.depositNGN]: () => {
-      bot.sendMessage(chatId, t.depositNGN, bc);
+      send(chatId, t.depositNGN, bc);
       set(state, chatId, 'action', a.depositNGN);
     },
     [a.askEmailForNGN]: () => {
-      bot.sendMessage(chatId, t.askEmailForNGN, bc);
+      send(chatId, t.askEmailForNGN, bc);
       set(state, chatId, 'action', a.askEmailForNGN);
     },
     [a.showDepositNgnInfo]: () => {
@@ -371,21 +376,21 @@ bot.on('message', async msg => {
       log({ ref });
       set(state, chatId, 'ref', ref, email);
       set(state, chatId, 'action', 'none');
-      bot.sendMessage(chatId, t.showDepositNgnInfo(priceNGN, tickerView, address), o);
+      send(chatId, t.showDepositNgnInfo(priceNGN, tickerView, address), o);
     },
     confirmationDepositNgn: amountWithTicker => {
       // check how much amount received and add to wallet
       del(state, chatId, 'ref');
-      bot.sendMessage(chatId, t.confirmationDepositNgn(amountWithTicker));
+      send(chatId, t.confirmationDepositNgn(amountWithTicker));
     },
     //
     [a.depositUSD]: () => {
-      bot.sendMessage(chatId, t.depositUSD, bc);
+      send(chatId, t.depositUSD, bc);
       set(state, chatId, 'action', a.depositUSD);
     },
     [a.selectCryptoToDeposit]: () => {
       set(state, chatId, 'action', a.selectCryptoToDeposit);
-      bot.sendMessage(chatId, t.selectCryptoToDeposit, k.of(tickerViews));
+      send(chatId, t.selectCryptoToDeposit, k.of(tickerViews));
     },
     [a.showDepositCryptoInfo]: async () => {
       const ref = nanoid();
@@ -398,73 +403,73 @@ bot.on('message', async msg => {
       set(state, chatId, 'ref', ref);
       set(chatIdOfPayment, ref, chatId);
       set(state, chatId, 'action', 'none');
-      const usdIn = await usdToCrypto(amount, ticker);
+      const usdIn = await convert(amount, 'usd', ticker);
       set(state, chatId, 'usdIn', usdIn);
-      bot.sendMessage(chatId, t.showDepositCryptoInfo(usdIn, tickerView, address), o);
+      send(chatId, t.showDepositCryptoInfo(usdIn, tickerView, address), o);
     },
 
     confirmationDepositCrypto: amountWithTicker => {
       // check how much amount received and add to wallet
       // del(state, chatId, 'ref', null);
-      bot.sendMessage(chatId, t.confirmationDepositCrypto(amountWithTicker));
+      send(chatId, t.confirmationDepositCrypto(amountWithTicker));
     },
     //
     showWallet: (usd, ngn) => {
-      bot.sendMessage(chatId, t.showWallet(usd, ngn));
+      send(chatId, t.showWallet(usd, ngn));
     },
     selectCurrencyToWithdraw: () => {
-      bot.sendMessage(chatId, t.comingSoonWithdraw);
+      send(chatId, t.comingSoonWithdraw);
     },
   };
 
   if (message === '/start') {
     set(state, chatId, 'action', 'none');
 
-    if (isAdmin(chatId)) return bot.sendMessage(chatId, 'Hello, Admin! Please select an option:', aO);
+    if (isAdmin(chatId)) return send(chatId, 'Hello, Admin! Please select an option:', aO);
 
     const freeLinks = await get(freeShortLinksOf, chatId);
-    if (freeLinks === undefined || freeLinks > 0) return bot.sendMessage(chatId, t.welcomeFreeTrial, o);
+    if (freeLinks === undefined || freeLinks > 0) return send(chatId, t.welcomeFreeTrial, o);
 
-    return bot.sendMessage(chatId, t.welcome, o);
+    return send(chatId, t.welcome, o);
   }
   //
   if (message.toLowerCase() === 'cancel' || (firstSteps.includes(action) && message === 'Back')) {
     set(state, chatId, 'action', 'none');
-    return bot.sendMessage(chatId, `User has Pressed ${message} Button.`, isAdmin(chatId) ? aO : o);
+    return send(chatId, `User has Pressed ${message} Button.`, isAdmin(chatId) ? aO : o);
   }
   //
   if (message === admin.blockUser) {
-    if (!isAdmin(chatId)) return bot.sendMessage(chatId, 'not authorized');
+    if (!isAdmin(chatId)) return send(chatId, 'not authorized');
     set(state, chatId, 'action', 'block-user');
-    return bot.sendMessage(chatId, 'Please share the username of the user that needs to be blocked.', bc);
+    return send(chatId, 'Please share the username of the user that needs to be blocked.', bc);
   }
   if (action === 'block-user') {
     const userToBlock = message;
     const chatIdToBlock = await get(chatIdOf, userToBlock);
-    if (!chatIdToBlock) return bot.sendMessage(chatId, `User ${userToBlock} not found`);
+    if (!chatIdToBlock) return send(chatId, `User ${userToBlock} not found`);
 
     set(state, chatId, 'action', 'none');
     set(chatIdBlocked, chatIdToBlock, true);
-    return bot.sendMessage(chatId, `User ${userToBlock} has been blocked.`, aO);
+    return send(chatId, `User ${userToBlock} has been blocked.`, aO);
   }
   //
   if (message === admin.unblockUser) {
-    if (!isAdmin(chatId)) return bot.sendMessage(chatId, 'not authorized');
+    if (!isAdmin(chatId)) return send(chatId, 'not authorized');
     set(state, chatId, 'action', 'unblock-user');
-    return bot.sendMessage(chatId, 'Please share the username of the user that needs to be unblocked.', bc);
+    return send(chatId, 'Please share the username of the user that needs to be unblocked.', bc);
   }
   if (action === 'unblock-user') {
     const userToUnblock = message;
     const chatIdToUnblock = await get(chatIdOf, userToUnblock);
-    if (!chatIdToUnblock) return bot.sendMessage(chatId, `User ${userToUnblock} not found`, bc);
+    if (!chatIdToUnblock) return send(chatId, `User ${userToUnblock} not found`, bc);
 
     set(state, chatId, 'action', 'none');
     set(chatIdBlocked, chatIdToUnblock, false);
-    return bot.sendMessage(chatId, `User ${userToUnblock} has been unblocked.`, aO);
+    return send(chatId, `User ${userToUnblock} has been unblocked.`, aO);
   }
   //
   if (message === admin.messageUsers) {
-    if (!isAdmin(chatId)) return bot.sendMessage(chatId, 'not authorized');
+    if (!isAdmin(chatId)) return send(chatId, 'not authorized');
     return goto[admin.messageUsers]();
   }
   if (action === admin.messageUsers) {
@@ -476,18 +481,18 @@ bot.on('message', async msg => {
     if (message === 'No' || message === 'Back') goto[admin.messageUsers]();
     set(state, chatId, 'action', 'none');
     sendMessageToAllUsers(bot, info?.messageContent, nameOf, chatId);
-    return bot.sendMessage(chatId, 'Sent all all users', aO);
+    return send(chatId, 'Sent all all users', aO);
   }
   //
   //
   if (message === user.urlShortener) {
     if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId))))
-      return bot.sendMessage(chatId, '📋 Subscribe first');
+      return send(chatId, '📋 Subscribe first');
 
     return goto['choose-url-to-shorten']();
   }
   if (action === 'choose-url-to-shorten') {
-    if (!isValidUrl(message)) return bot.sendMessage(chatId, 'Please provide a valid URL. e.g https://google.com', bc);
+    if (!isValidUrl(message)) return send(chatId, 'Please provide a valid URL. e.g https://google.com', bc);
 
     set(state, chatId, 'url', message);
 
@@ -500,7 +505,7 @@ bot.on('message', async msg => {
     const domain = message.toLowerCase();
     const domains = await getPurchasedDomains(chatId);
     if (!(domains.includes(domain) || adminDomains.includes(domain))) {
-      return bot.sendMessage(chatId, 'Please choose a valid domain');
+      return send(chatId, 'Please choose a valid domain');
     }
     set(state, chatId, 'selectedDomain', message);
     return goto['choose-link-type']();
@@ -508,11 +513,11 @@ bot.on('message', async msg => {
   if (action === 'choose-link-type') {
     if (message === 'Back') return goto['choose-domain-with-shorten'](await getPurchasedDomains(chatId));
 
-    if (!linkOptions.includes(message)) return bot.sendMessage(chatId, `?`);
+    if (!linkOptions.includes(message)) return send(chatId, `?`);
 
     if (message === 'Custom Link') {
       set(state, chatId, 'action', 'shorten-custom');
-      return bot.sendMessage(chatId, `Please tell your us preferred short link extension: e.g payer`, bc);
+      return send(chatId, `Please tell your us preferred short link extension: e.g payer`, bc);
     }
 
     // Random Link
@@ -520,7 +525,7 @@ bot.on('message', async msg => {
     const domain = info?.selectedDomain;
     const shortUrl = domain + '/' + nanoid();
     if (await get(fullUrlOf, shortUrl)) {
-      bot.sendMessage(chatId, `Link already exists. Please type 'ok' to try another.`);
+      send(chatId, `Link already exists. Please type 'ok' to try another.`);
       return;
     }
 
@@ -529,7 +534,7 @@ bot.on('message', async msg => {
     set(state, chatId, 'action', 'none');
     set(fullUrlOf, shortUrlSanitized, url);
     set(linksOf, chatId, shortUrlSanitized, url);
-    bot.sendMessage(chatId, `Your shortened URL is: ${shortUrl}`, o);
+    send(chatId, `Your shortened URL is: ${shortUrl}`, o);
     if (adminDomains.includes(domain)) {
       decrement(freeShortLinksOf, chatId);
       set(expiryOf, shortUrlSanitized, Date.now() + FREE_LINKS_TIME_SECONDS);
@@ -543,15 +548,15 @@ bot.on('message', async msg => {
     const domain = info?.selectedDomain;
     const shortUrl = domain + '/' + message;
 
-    if (!isValidUrl('https://' + shortUrl)) return bot.sendMessage(chatId, t.provideLink);
-    if (await get(fullUrlOf, shortUrl)) return bot.sendMessage(chatId, `Link already exists. Please try another.`);
+    if (!isValidUrl('https://' + shortUrl)) return send(chatId, t.provideLink);
+    if (await get(fullUrlOf, shortUrl)) return send(chatId, `Link already exists. Please try another.`);
 
     const shortUrlSanitized = shortUrl.replace('.', '@');
     increment(totalShortLinks);
     set(state, chatId, 'action', 'none');
     set(fullUrlOf, shortUrlSanitized, url);
     set(linksOf, chatId, shortUrlSanitized, url);
-    bot.sendMessage(chatId, `Your shortened URL is: ${shortUrl}`, o);
+    send(chatId, `Your shortened URL is: ${shortUrl}`, o);
     if (adminDomains.includes(domain)) {
       decrement(freeShortLinksOf, chatId);
       set(expiryOf, shortUrlSanitized, Date.now() + FREE_LINKS_TIME_SECONDS);
@@ -569,14 +574,14 @@ bot.on('message', async msg => {
     const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/;
 
     if (!domainRegex.test(domain)) {
-      bot.sendMessage(chatId, 'Domain name is invalid. Please try another domain name.');
+      send(chatId, 'Domain name is invalid. Please try another domain name.');
       return;
     }
 
     const { available, price, originalPrice } = await checkDomainPriceOnline(domain);
 
     if (!available) {
-      bot.sendMessage(chatId, 'Domain is not available. Please try another domain name.', rem);
+      send(chatId, 'Domain is not available. Please try another domain name.', rem);
       return;
     }
 
@@ -600,17 +605,17 @@ bot.on('message', async msg => {
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
-      bot.sendMessage(chatId, 'Please choose a valid payment option');
+      send(chatId, 'Please choose a valid payment option');
       return;
     }
 
     if (paymentOption === 'Crypto') {
-      bot.sendMessage(chatId, `Please choose a crypto currency`, k.of(tickerViews));
+      send(chatId, `Please choose a crypto currency`, k.of(tickerViews));
       set(state, chatId, 'action', 'crypto-transfer-payment-domain');
       return;
     }
 
-    bot.sendMessage(chatId, `Please provide an email for payment confirmation.`, bc);
+    send(chatId, `Please provide an email for payment confirmation.`, bc);
     set(state, chatId, 'action', 'bank-transfer-payment-domain');
     return;
   }
@@ -621,7 +626,7 @@ bot.on('message', async msg => {
 
     const email = message;
 
-    if (!isValidEmail(email)) return bot.sendMessage(chatId, t.askValidEmail);
+    if (!isValidEmail(email)) return send(chatId, t.askValidEmail);
 
     const priceNGN = Number(await convertUSDToNaira(price));
     const ref = nanoid();
@@ -629,12 +634,12 @@ bot.on('message', async msg => {
     set(chatIdOfPayment, ref, chatId);
     const { url, error } = await createCheckout(priceNGN, `/bank-payment-for-domain?a=b&ref=${ref}&`, email, username);
     if (error) {
-      bot.sendMessage(chatId, error, o);
+      send(chatId, error, o);
       set(state, chatId, 'action', 'none');
       return;
     }
 
-    bot.sendMessage(
+    send(
       chatId,
       `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
 
@@ -642,7 +647,7 @@ Best regards,
 Nomadly Bot`,
       payBank(url),
     );
-    bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, o);
+    send(chatId, `Bank ₦aira + Card 🌐︎`, o);
     set(state, chatId, 'action', 'none');
     return;
   }
@@ -654,7 +659,7 @@ Nomadly Bot`,
 
     const tickerView = message;
     const ticker = tickerOf[tickerView];
-    if (!ticker) return bot.sendMessage(chatId, t.askValidCrypto);
+    if (!ticker) return send(chatId, t.askValidCrypto);
 
     const ref = nanoid();
     log({ ref });
@@ -667,7 +672,7 @@ Nomadly Bot`,
 
     set(chatIdOfPayment, ref, chatId);
 
-    const priceCrypto = await usdToCrypto(priceUSD, ticker);
+    const priceCrypto = await convert(priceUSD, 'usd', ticker);
     set(state, chatId, 'cryptoPaymentSession', {
       priceCrypto,
       ticker,
@@ -682,14 +687,14 @@ Best regards,
 Nomadly Bot`;
 
     sendQrCode(bot, chatId, bb);
-    bot.sendMessage(chatId, text, o);
+    send(chatId, text, o);
     set(state, chatId, 'action', 'none');
     return;
   }
   if (action === 'get-free-domain') {
     if (message === 'Back' || message === 'No') return goto['choose-domain-to-buy']();
 
-    if (message !== 'Yes') return bot.sendMessage(chatId, `?`);
+    if (message !== 'Yes') return send(chatId, `?`);
 
     set(state, chatId, 'action', 'none');
 
@@ -703,7 +708,7 @@ Nomadly Bot`;
   //
   if (message === user.buyPlan) {
     if (await isSubscribed(chatId)) {
-      bot.sendMessage(chatId, 'You are currently enrolled in a subscription plan.');
+      send(chatId, 'You are currently enrolled in a subscription plan.');
       return;
     }
     goto['choose-subscription']();
@@ -713,7 +718,7 @@ Nomadly Bot`;
     const plan = message;
 
     if (!subscriptionOptions.includes(plan)) {
-      bot.sendMessage(chatId, 'Please choose a valid plan', chooseSubscription);
+      send(chatId, 'Please choose a valid plan', chooseSubscription);
       return;
     }
 
@@ -729,17 +734,17 @@ Nomadly Bot`;
     const paymentOption = message;
 
     if (!paymentOptions.includes(paymentOption)) {
-      bot.sendMessage(chatId, 'Please choose a valid payment option');
+      send(chatId, 'Please choose a valid payment option');
       return;
     }
 
     if (paymentOption === 'Bank ₦aira + Card🌐︎') {
-      bot.sendMessage(chatId, `Please provide an email for payment confirmation.`, bc);
+      send(chatId, `Please provide an email for payment confirmation.`, bc);
       set(state, chatId, 'action', 'bank-transfer-payment-subscription');
       return;
     }
 
-    bot.sendMessage(chatId, `Please choose a crypto currency`, k.of(tickerViews));
+    send(chatId, `Please choose a crypto currency`, k.of(tickerViews));
     set(state, chatId, 'action', 'crypto-transfer-payment');
     return;
   }
@@ -749,7 +754,7 @@ Nomadly Bot`;
 
     const email = message;
 
-    if (!isValidEmail(email)) return bot.sendMessage(chatId, t.askValidEmail);
+    if (!isValidEmail(email)) return send(chatId, t.askValidEmail);
 
     const priceNGN = Number(await convertUSDToNaira(priceOf[plan]));
     const ref = nanoid();
@@ -757,12 +762,12 @@ Nomadly Bot`;
     set(chatIdOfPayment, ref, chatId);
     const { url, error } = await createCheckout(priceNGN, `/bank-payment-for-plan?a=b&ref=${ref}&`, email, username);
     if (error) {
-      bot.sendMessage(chatId, error, o);
+      send(chatId, error, o);
       set(state, chatId, 'action', 'none');
       return;
     }
 
-    bot.sendMessage(
+    send(
       chatId,
       `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
 
@@ -770,7 +775,7 @@ Best regards,
 Nomadly Bot`,
       payBank(url),
     );
-    bot.sendMessage(chatId, `Bank ₦aira + Card 🌐︎`, o);
+    send(chatId, `Bank ₦aira + Card 🌐︎`, o);
     set(state, chatId, 'action', 'none');
     return;
   }
@@ -785,9 +790,9 @@ Nomadly Bot`,
 
     const tickerView = message;
     const ticker = tickerOf[tickerView];
-    if (!ticker) return bot.sendMessage(chatId, t.askValidCrypto);
+    if (!ticker) return send(chatId, t.askValidCrypto);
 
-    const priceCrypto = await usdToCrypto(priceUSD, ticker);
+    const priceCrypto = await convert(priceUSD, 'usd', ticker);
 
     const ref = nanoid();
     log({ ref });
@@ -812,7 +817,7 @@ Best regards,
 Nomadly Bot`;
 
     sendQrCode(bot, chatId, bb);
-    bot.sendMessage(chatId, text, o);
+    send(chatId, text, o);
     set(state, chatId, 'action', 'none');
     return;
   }
@@ -820,7 +825,7 @@ Nomadly Bot`;
   //
   if (message === user.dnsManagement) {
     if (!(await ownsDomainName(chatId))) {
-      bot.sendMessage(chatId, 'No domain names found');
+      send(chatId, 'No domain names found');
       return;
     }
 
@@ -832,7 +837,7 @@ Nomadly Bot`;
     // if he not owns that domain then return
     const domains = await getPurchasedDomains(chatId);
     if (!domains.includes(domain)) {
-      return bot.sendMessage(chatId, 'Please choose a valid domain');
+      return send(chatId, 'Please choose a valid domain');
     }
 
     await set(state, chatId, 'domainToManage', domain);
@@ -843,7 +848,7 @@ Nomadly Bot`;
   if (action === 'choose-dns-action') {
     if (message === 'Back') return goto['choose-domain-to-manage']();
 
-    if (![t.addDns, t.updateDns, t.deleteDns].includes(message)) return bot.sendMessage(chatId, `select valid option`);
+    if (![t.addDns, t.updateDns, t.deleteDns].includes(message)) return send(chatId, `select valid option`);
 
     if (message === t.deleteDns) return goto['select-dns-record-id-to-delete']();
 
@@ -856,22 +861,22 @@ Nomadly Bot`;
     if (message === 'Back') return goto['choose-dns-action']();
 
     let id = Number(message);
-    if (isNaN(id) || !(id > 0 && id <= info?.dnsRecords.length)) return bot.sendMessage(chatId, `select valid option`);
+    if (isNaN(id) || !(id > 0 && id <= info?.dnsRecords.length)) return send(chatId, `select valid option`);
 
     set(state, chatId, 'delId', --id); // User See id as 1,2,3 and we see as 0,1,2
     return goto['confirm-dns-record-id-to-delete']();
   }
   if (action === 'confirm-dns-record-id-to-delete') {
     if (message === 'Back' || message === 'No') return goto['select-dns-record-id-to-delete']();
-    if (message !== 'Yes') return bot.sendMessage(chatId, `?`);
+    if (message !== 'Yes') return send(chatId, `?`);
 
     const { dnsRecords, domainToManage, delId } = info;
     const nsRecords = dnsRecords.filter(r => r.recordType === 'NS');
     const { dnszoneID, dnszoneRecordID, nsId, domainNameId } = dnsRecords[delId];
     const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID, domainToManage, domainNameId, nsId, nsRecords);
-    if (error) return bot.sendMessage(chatId, `Error deleting dns record, ${error}, Provide value again`);
+    if (error) return send(chatId, `Error deleting dns record, ${error}, Provide value again`);
 
-    bot.sendMessage(chatId, t.dnsRecordDeleted);
+    send(chatId, t.dnsRecordDeleted);
     return goto['choose-dns-action']();
   }
   if (action === 'select-dns-record-type-to-add') {
@@ -880,7 +885,7 @@ Nomadly Bot`;
     const recordType = message;
 
     if (![t.cname, t.ns, t.a].includes(recordType)) {
-      return bot.sendMessage(chatId, `select valid option`);
+      return send(chatId, `select valid option`);
     }
 
     return goto['type-dns-record-data-to-add'](recordType);
@@ -897,7 +902,7 @@ Nomadly Bot`;
     const { domainNameId } = dnsRecords[id];
 
     if (nsRecords.length >= 4 && t[recordType] === 'NS') {
-      bot.sendMessage(chatId, 'Maximum 4 NS records can be added, you can update or delete previous NS records');
+      send(chatId, 'Maximum 4 NS records can be added, you can update or delete previous NS records');
       return goto['choose-dns-action']();
     }
 
@@ -905,10 +910,10 @@ Nomadly Bot`;
     const { error } = await saveServerInDomain(domain, recordContent, t[recordType], domainNameId, nextId, nsRecords);
     if (error) {
       const m = `Error saving dns record, ${error}, Provide value again`;
-      return bot.sendMessage(chatId, m);
+      return send(chatId, m);
     }
 
-    bot.sendMessage(chatId, t.dnsRecordSaved);
+    send(chatId, t.dnsRecordSaved);
     return goto['choose-dns-action']();
   }
   //
@@ -918,7 +923,7 @@ Nomadly Bot`;
     const dnsRecords = info?.dnsRecords;
     let id = Number(message);
     if (isNaN(id) || !(id > 0 && id <= dnsRecords.length)) {
-      return bot.sendMessage(chatId, `select valid option`);
+      return send(chatId, `select valid option`);
     }
     id--; // User See id as 1,2,3 and we see as 0,1,2
 
@@ -946,11 +951,11 @@ Nomadly Bot`;
     );
     if (error) {
       const m = `Error update dns record, ${error}, Provide value again`;
-      bot.sendMessage(chatId, m);
+      send(chatId, m);
       return m;
     }
 
-    bot.sendMessage(chatId, t.dnsRecordUpdated);
+    send(chatId, t.dnsRecordUpdated);
     return goto['choose-dns-action']();
   }
   //
@@ -962,13 +967,13 @@ Nomadly Bot`;
   if (action === user.wallet) {
     if (message === u.deposit) return goto[a.selectCurrencyToDeposit](); // can be combine in one line with object
     if (message === u.withdraw) return goto[a.selectCurrencyToWithdraw]();
-    return bot.sendMessage(chatId, `?`);
+    return send(chatId, `?`);
   }
 
   if (action === a.selectCurrencyToDeposit) {
     if (message === u.usd) return goto[a.depositUSD]();
     if (message === u.ngn) return goto[a.depositNGN]();
-    return bot.sendMessage(chatId, `?`);
+    return send(chatId, `?`);
   }
 
   if (action === a.depositNGN) {
@@ -978,7 +983,7 @@ Nomadly Bot`;
   if (action === a.askEmailForNGN) {
     if (message === 'Back') return goto[a.depositNGN]();
     const email = message;
-    if (!isValidEmail(email)) return bot.sendMessage(chatId, t.askValidEmail);
+    if (!isValidEmail(email)) return send(chatId, t.askValidEmail);
     await saveInfo('email', email);
     return goto[a.showDepositNgnInfo]();
   }
@@ -987,7 +992,7 @@ Nomadly Bot`;
     if (message === 'Back') return goto[user.wallet]();
 
     const amount = message;
-    if (isNaN(amount)) return bot.sendMessage(chatId, `?`);
+    if (isNaN(amount)) return send(chatId, `?`);
     await saveInfo('amount', amount);
 
     return goto[a.selectCryptoToDeposit]();
@@ -997,7 +1002,7 @@ Nomadly Bot`;
 
     const tickerView = message;
     const ticker = tickerOf[tickerView];
-    if (!ticker) return bot.sendMessage(chatId, t.askValidCrypto);
+    if (!ticker) return send(chatId, t.askValidCrypto);
     await saveInfo('tickerView', tickerView);
     return goto[a.showDepositCryptoInfo]();
   }
@@ -1009,14 +1014,14 @@ Nomadly Bot`;
 
     if (subscribedPlan) {
       if (!(await isSubscribed(chatId))) {
-        bot.sendMessage(
+        send(
           chatId,
           `Your ${subscribedPlan} subscription is expired on ${new Date(await get(planEndingTime, chatId))}`,
         );
         return;
       }
 
-      bot.sendMessage(
+      send(
         chatId,
         `You are currently subscribed to the ${subscribedPlan} plan. Your plan is valid till ${new Date(
           await get(planEndingTime, chatId),
@@ -1025,68 +1030,68 @@ Nomadly Bot`;
       return;
     }
 
-    bot.sendMessage(chatId, 'You are not currently subscribed to any plan.');
+    send(chatId, 'You are not currently subscribed to any plan.');
     return;
   }
   if (message === user.viewShortLinks) {
     const links = await getShortLinks(chatId);
     if (links.length === 0) {
-      bot.sendMessage(chatId, 'You have no shortened links yet.');
+      send(chatId, 'You have no shortened links yet.');
       return;
     }
 
     const linksText = formatLinks(links).join('\n\n');
-    bot.sendMessage(chatId, `Here are your shortened links:\n${linksText}`);
+    send(chatId, `Here are your shortened links:\n${linksText}`);
     return;
   }
   if (message === user.viewDomainNames) {
     const purchasedDomains = await getPurchasedDomains(chatId);
     if (purchasedDomains.length === 0) {
-      bot.sendMessage(chatId, 'You have no purchased domains yet.');
+      send(chatId, 'You have no purchased domains yet.');
       return;
     }
 
     const domainsText = purchasedDomains.join('\n');
-    bot.sendMessage(chatId, `Here are your purchased domains:\n${domainsText}`);
+    send(chatId, `Here are your purchased domains:\n${domainsText}`);
     return;
   }
   if (message === 'Backup Data') {
     if (!isDeveloper(chatId)) {
-      bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
+      send(chatId, 'Apologies, but you do not have the authorization to access this content.');
       return;
     }
     backupTheData();
-    bot.sendMessage(chatId, 'Backup created successfully.');
+    send(chatId, 'Backup created successfully.');
     return;
   }
   if (message === 'Restore Data') {
     if (!isDeveloper(chatId)) {
-      bot.sendMessage(chatId, 'Apologies, but you do not have the authorization to access this content.');
+      send(chatId, 'Apologies, but you do not have the authorization to access this content.');
       return;
     }
     restoreData();
-    bot.sendMessage(chatId, 'Data restored successfully.');
+    send(chatId, 'Data restored successfully.');
     return;
   }
   if (message === admin.viewUsers) {
-    if (!isAdmin(chatId)) return bot.sendMessage(chatId, 'not authorized');
+    if (!isAdmin(chatId)) return send(chatId, 'not authorized');
 
     const users = await getUsers();
-    return bot.sendMessage(chatId, `Users: ${users.length}\n${users.join('\n')}`);
+    return send(chatId, `Users: ${users.length}\n${users.join('\n')}`);
   }
   if (message === admin.viewAnalytics) {
-    if (!isAdmin(chatId)) return bot.sendMessage(chatId, 'not authorized');
+    if (!isAdmin(chatId)) return send(chatId, 'not authorized');
 
     const analyticsData = await getAnalytics();
-    bot.sendMessage(chatId, `Analytics Data:\n${analyticsData.join('\n')}`);
+    send(chatId, `Analytics Data:\n${analyticsData.join('\n')}`);
     return;
   }
   if (message === user.getSupport) {
-    bot.sendMessage(chatId, t.support);
+    send(chatId, t.support);
     return;
   }
 
-  bot.sendMessage(chatId, t.unknownCommand);
+  send(chatId, t.unknownCommand);
 });
 
 async function getPurchasedDomains(chatId) {
@@ -1229,11 +1234,11 @@ const buyDomainFullProcess = async (chatId, domain) => {
   if (buyDomainError) {
     const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
     log(m);
-    bot.sendMessage(TELEGRAM_DEV_CHAT_ID, m);
-    bot.sendMessage(chatId, m);
+    send(TELEGRAM_DEV_CHAT_ID, m);
+    send(chatId, m);
     return m;
   }
-  bot.sendMessage(
+  send(
     chatId,
     `Domain ${domain} is now yours. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain} Thank you for choosing us.
 
@@ -1245,18 +1250,18 @@ Nomadly Bot`,
   const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
   if (error) {
     const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`;
-    bot.sendMessage(chatId, m);
+    send(chatId, m);
     return m;
   }
-  bot.sendMessage(chatId, `Linking domain with your account...`); // save railway in domain
+  send(chatId, `Linking domain with your account...`); // save railway in domain
 
   const { error: saveServerInDomainError } = await saveServerInDomain(domain, server);
   if (saveServerInDomainError) {
     const m = `Error saving server in domain ${saveServerInDomainError}`;
-    bot.sendMessage(chatId, m);
+    send(chatId, m);
     return m;
   }
-  bot.sendMessage(chatId, t.domainBought.replace('{{domain}}', domain));
+  send(chatId, t.domainBought.replace('{{domain}}', domain));
   regularCheckDns(bot, chatId, domain);
   return false; // error = false
 };
@@ -1288,7 +1293,7 @@ app.get('/bank-payment-for-plan', async (req, res) => {
   set(planOf, chatId, plan);
   set(planEndingTime, chatId, Date.now() + timeOf[plan]);
   set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
-  bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan));
+  send(chatId, t.planSubscribed.replace('{{plan}}', plan));
 
   // Logs
   res.send(html());
@@ -1355,7 +1360,7 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
   set(planOf, chatId, plan);
   set(planEndingTime, chatId, Date.now() + timeOf[plan]);
   set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
-  bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan));
+  send(chatId, t.planSubscribed.replace('{{plan}}', plan));
 
   // Logs
   res.send(html());
@@ -1432,8 +1437,8 @@ app.get('/crypto-wallet', async (req, res) => {
 
   // check how much amount received and add to wallet
   // del(state, chatId, 'ref'); // does not have 3rd arg as input
-  bot.sendMessage(chatId, t.confirmationDepositCrypto(value_coin + ' ' + tickerViewOf[coin], usdIn));
-  bot.sendMessage(chatId, t.showWallet(usdBalance, 0));
+  send(chatId, t.confirmationDepositCrypto(value_coin + ' ' + tickerViewOf[coin], usdIn));
+  send(chatId, t.showWallet(usdBalance, 0));
 
   // Logs
   res.send(html());
@@ -1518,8 +1523,8 @@ const tryConnectReseller = async () => {
     axios.get('https://api.ipify.org/').then(ip => {
       const message = `Please add <code>${ip.data}</code> to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
       log(message);
-      bot.sendMessage(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' }).catch(() => {});
-      bot.sendMessage(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' });
+      send(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' }).catch(() => {});
+      send(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' });
     });
     //
   }
