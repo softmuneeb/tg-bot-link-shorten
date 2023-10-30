@@ -25,7 +25,7 @@ const {
   freeDomainsOf,
   dnsRecordType,
   chooseSubscription,
-  subscriptionOptions,
+  planOptions,
 } = require('./config.js');
 const {
   week,
@@ -36,11 +36,13 @@ const {
   usdToNgn,
   isValidUrl,
   nextNumber,
+  getBalance,
   sendQrCode,
   isDeveloper,
   isValidEmail,
   regularCheckDns,
   sendMessageToAllUsers,
+  subscribePlan,
 } = require('./utils.js');
 const fs = require('fs');
 require('dotenv').config();
@@ -79,7 +81,7 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 log('Bot ran!');
 
 const send = (chatId, message, options) => {
-  log('reply:\t' + message + ' ' + options?.reply_markup?.keyboard?.map(i => i) || '' + '\tto: ' + chatId);
+  log('reply:\t' + message + ' ' + (options?.reply_markup?.keyboard?.map(i => i) || '') + '\tto: ' + chatId);
   bot.sendMessage(chatId, message, options);
 };
 
@@ -137,16 +139,16 @@ const loadData = async () => {
   clicksOn = db.collection('clicksOn');
   chatIdOf = db.collection('chatIdOf');
 
-  log(`DB Connected. May peace be with you and Lord's mercy and blessings.`);
-  set(freeShortLinksOf, 6687923716, FREE_LINKS);
-  set(freeShortLinksOf, 1531772316, FREE_LINKS);
+  log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`);
+  set(planEndingTime, 6687923716, 0);
+  // set(freeShortLinksOf, 6687923716, FREE_LINKS);
   adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
 };
 const client = new MongoClient(process.env.MONGO_URL);
 client
   .connect()
   .then(loadData)
-  .catch(err => log('DB Error lala', err, err?.message));
+  .catch(err => log('DB Error bro', err, err?.message));
 
 bot.on('message', async msg => {
   const chatId = msg?.chat?.id;
@@ -221,6 +223,13 @@ bot.on('message', async msg => {
     depositUSD: 'depositUSD',
     selectCryptoToDeposit: 'selectCryptoToDeposit',
     showDepositCryptoInfo: 'showDepositCryptoInfo',
+
+    walletSelectCurrency: 'walletSelectCurrency',
+    walletPayUsd: 'walletPayUsd',
+    walletPayUsdConfirm: 'walletPayUsdConfirm',
+
+    walletPayNgn: 'walletPayNgn',
+    walletPayNgnConfirm: 'walletPayNgnConfirm',
   };
   const goto = {
     'domain-pay': (domain, price) => {
@@ -245,7 +254,8 @@ bot.on('message', async msg => {
         bc,
       );
     },
-    'plan-pay': plan => {
+    'plan-pay': () => {
+      const { plan } = info;
       send(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, k.pay);
       set(state, chatId, 'action', 'plan-pay');
     },
@@ -351,9 +361,8 @@ bot.on('message', async msg => {
 
     [user.wallet]: async () => {
       set(state, chatId, 'action', user.wallet);
-      const w = await get(walletOf, chatId);
-      const usdBalance = isNaN(w?.usdIn) ? 0 : w?.usdIn;
-      send(chatId, t.wallet(usdBalance, 0), k.wallet);
+      const { usdBal, ngnBal } = await getBalance(walletOf, chatId);
+      send(chatId, t.wallet(usdBal, ngnBal), k.wallet);
     },
     //
     [a.selectCurrencyToDeposit]: () => {
@@ -411,6 +420,67 @@ bot.on('message', async msg => {
     selectCurrencyToWithdraw: () => {
       send(chatId, t.comingSoonWithdraw);
     },
+    //
+    //
+    walletSelectCurrency: async () => {
+      set(state, chatId, 'action', a.walletSelectCurrency);
+      const { usdBal, ngnBal } = await getBalance(walletOf, chatId);
+      send(chatId, t.walletSelectCurrency(usdBal, ngnBal), k.of([u.usd, u.ngn]));
+    },
+  };
+  const walletOk = {
+    'plan-pay': async coin => {
+      set(state, chatId, 'action', 'none');
+
+      const plan = info?.plan;
+      const wallet = await get(walletOf, chatId);
+      const { usdBal, ngnBal } = await getBalance(walletOf, chatId);
+
+      if (coin === u.usd) {
+        const priceUsd = priceOf[plan];
+        if (usdBal < priceUsd) return send(chatId, t.walletBalanceLow, k.of([u.deposit]));
+
+        const usdOut = (wallet?.usdOut || 0) + priceUsd;
+        await set(walletOf, chatId, 'usdOut', usdOut);
+      } else {
+        const priceNgn = await usdToNgn(priceOf[plan]);
+        if (ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]));
+
+        const ngnOut = (wallet?.ngnOut || 0) + priceNgn;
+        await set(walletOf, chatId, 'ngnOut', ngnOut);
+      }
+
+      const { usdBal: usd, ngnBal: ngn } = await getBalance(walletOf, chatId);
+      send(chatId, t.showWallet(usd, ngn), o);
+      subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot);
+    },
+
+    'domain-pay': async coin => {
+      set(state, chatId, 'action', 'none');
+      const price = info?.chosenDomainPrice;
+      const wallet = await get(walletOf, chatId);
+      const { usdBal, ngnBal } = await getBalance(walletOf, chatId);
+
+      if (coin === u.usd) {
+        const priceUsd = price;
+        if (usdBal < price) return send(chatId, t.walletBalanceLow, k.of([u.deposit]));
+
+        const usdOut = (wallet?.usdOut || 0) + priceUsd;
+        set(walletOf, chatId, 'usdOut', usdOut);
+      } else {
+        const priceNgn = await usdToNgn(price);
+        if (ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]));
+
+        const ngnOut = (wallet?.ngnOut || 0) + priceNgn;
+        set(walletOf, chatId, 'ngnOut', ngnOut);
+      }
+
+      const domain = info?.chosenDomainForPayment;
+      const error = await buyDomainFullProcess(chatId, domain);
+      if (error) send(chatId, error);
+    },
+    'leads-generate-pay': async () => {},
+    'leads-validate-pay': async () => {},
   };
 
   if (message === '/start') {
@@ -580,10 +650,7 @@ bot.on('message', async msg => {
 
     if (originalPrice <= 2 && (await isSubscribed(chatId))) {
       const available = (await get(freeDomainNamesAvailableFor, chatId)) || 0;
-      if (available > 0) {
-        goto['get-free-domain']();
-        return;
-      }
+      if (available > 0) return goto['get-free-domain']();
     }
 
     set(state, chatId, 'chosenDomainPrice', price);
@@ -602,6 +669,11 @@ bot.on('message', async msg => {
     if (payOption === payIn.bank) {
       set(state, chatId, 'action', 'bank-pay-domain');
       return send(chatId, t.askEmail, bc);
+    }
+
+    if (payOption === payIn.wallet) {
+      set(state, chatId, 'lastStep', 'domain-pay');
+      return goto.walletSelectCurrency();
     }
 
     return send(chatId, t.askValidPayOption);
@@ -683,13 +755,12 @@ Nomadly Bot`;
 
     if (message !== 'Yes') return send(chatId, `?`);
 
-    set(state, chatId, 'action', 'none');
-
     const domain = info?.chosenDomainForPayment;
     const error = await buyDomainFullProcess(chatId, domain);
     if (!error) decrement(freeDomainNamesAvailableFor, chatId);
+    else send(chatId, error);
 
-    return;
+    return set(state, chatId, 'action', 'none');
   }
   //
   //
@@ -704,16 +775,10 @@ Nomadly Bot`;
   if (action === 'choose-subscription') {
     const plan = message;
 
-    if (!subscriptionOptions.includes(plan)) {
-      send(chatId, 'Please choose a valid plan', chooseSubscription);
-      return;
-    }
+    if (!planOptions.includes(plan)) return send(chatId, 'Please choose a valid plan', chooseSubscription);
 
-    set(state, chatId, 'chosenPlanForPayment', plan);
-
-    goto['plan-pay'](plan);
-
-    return;
+    await saveInfo('plan', plan);
+    return goto['plan-pay']();
   }
   if (action === 'plan-pay') {
     if (message === 'Back') return goto['choose-subscription']();
@@ -730,15 +795,15 @@ Nomadly Bot`;
     }
 
     if (payOption === payIn.wallet) {
-      set(state, chatId, 'action', 'bank-tran sfer-payment-subscription');
-      return send(chatId, t.askEmail, bc);
-    }
+      set(state, chatId, 'lastStep', 'plan-pay');
 
+      return goto.walletSelectCurrency();
+    }
     return send(chatId, t.askValidPayOption);
   }
   if (action === 'bank-pay-plan') {
-    const plan = info?.chosenPlanForPayment;
-    if (message === 'Back') return goto['plan-pay'](plan);
+    const plan = info?.plan;
+    if (message === 'Back') return goto['plan-pay']();
 
     const email = message;
 
@@ -750,31 +815,19 @@ Nomadly Bot`;
     set(chatIdOfPayment, ref, chatId);
     const { url, error } = await createCheckout(priceNGN, `/bank-pay-plan?a=b&ref=${ref}&`, email, username);
     if (error) {
-      send(chatId, error, o);
       set(state, chatId, 'action', 'none');
-      return;
+      return send(chatId, error, o);
     }
 
-    send(
-      chatId,
-      `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
-
-Best regards,
-Nomadly Bot`,
-      payBank(url),
-    );
-    send(chatId, `Bank ₦aira + Card 🌐︎`, o);
+    send(chatId, t['bank-pay-plan'](priceNGN, plan), payBank(url));
     set(state, chatId, 'action', 'none');
-    return;
+    return send(chatId, `Bank ₦aira + Card 🌐︎`, o);
   }
   if (action === 'crypto-pay-plan') {
-    const plan = info?.chosenPlanForPayment;
+    const plan = info?.plan;
     const priceUSD = priceOf[plan];
 
-    if (message === 'Back') {
-      goto['plan-pay'](plan);
-      return;
-    }
+    if (message === 'Back') return goto['plan-pay']();
 
     const tickerView = message;
     const ticker = tickerOf[tickerView];
@@ -784,12 +837,7 @@ Nomadly Bot`,
 
     const ref = nanoid();
     log({ ref });
-    const { address, bb } = await getCryptoDepositAddress(
-      ticker,
-      chatId,
-      SELF_URL,
-      `/crypto-payment-for-subscription?a=b&ref=${ref}&`,
-    );
+    const { address, bb } = await getCryptoDepositAddress(ticker, chatId, SELF_URL, `/crypto-pay-plan?a=b&ref=${ref}&`);
     set(chatIdOfPayment, ref, chatId);
     set(state, chatId, 'cryptoPaymentSession', {
       priceCrypto,
@@ -958,18 +1006,22 @@ Nomadly Bot`;
     return send(chatId, `?`);
   }
 
+  if (message === u.deposit) return goto[a.selectCurrencyToDeposit]();
+
   if (action === a.selectCurrencyToDeposit) {
+    if (message === 'Back') return goto[user.wallet]();
     if (message === u.usd) return goto[a.depositUSD]();
     if (message === u.ngn) return goto[a.depositNGN]();
     return send(chatId, `?`);
   }
 
   if (action === a.depositNGN) {
-    if (message === 'Back') return goto[user.wallet]();
+    if (message === 'Back') return goto[a.selectCurrencyToDeposit]();
     return goto[a.askEmailForNGN]();
   }
   if (action === a.askEmailForNGN) {
     if (message === 'Back') return goto[a.depositNGN]();
+
     const email = message;
     if (!isValidEmail(email)) return send(chatId, t.askValidEmail);
     await saveInfo('email', email);
@@ -977,7 +1029,7 @@ Nomadly Bot`;
   }
 
   if (action === a.depositUSD) {
-    if (message === 'Back') return goto[user.wallet]();
+    if (message === 'Back') return goto[a.selectCurrencyToDeposit]();
 
     const amount = message;
     if (isNaN(amount)) return send(chatId, `?`);
@@ -993,6 +1045,26 @@ Nomadly Bot`;
     if (!ticker) return send(chatId, t.askValidCrypto);
     await saveInfo('tickerView', tickerView);
     return goto[a.showDepositCryptoInfo]();
+  }
+  //
+  //
+  if (action === a.walletSelectCurrency) {
+    if (message === 'Back') return goto[info?.lastStep]();
+
+    const coin = message;
+    if (![u.usd, u.ngn].includes(coin)) return send(chatId, `?`);
+
+    return walletOk[info?.lastStep](coin);
+  }
+  if (action === a.walletPayUsd) {
+    if (message === 'Back') return goto.walletSelectCurrency();
+
+    return walletOk[info?.lastStep](u.usd);
+  }
+  if (action === a.walletPayNgn) {
+    if (message === 'Back') return goto.walletSelectCurrency();
+
+    return walletOk[info?.lastStep](u.ngn);
   }
 
   //
@@ -1218,14 +1290,14 @@ const formatLinks = links => {
 };
 
 const buyDomainFullProcess = async (chatId, domain) => {
-  const { error: buyDomainError } = await buyDomain(chatId, domain);
-  if (buyDomainError) {
-    const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
-    log(m);
-    send(TELEGRAM_DEV_CHAT_ID, m);
-    send(chatId, m);
-    return m;
-  }
+  // const { error: buyDomainError } = await buyDomain(chatId, domain);
+  // if (buyDomainError) {
+  //   const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
+  //   log(m);
+  //   send(TELEGRAM_DEV_CHAT_ID, m);
+  //   send(chatId, m);
+  //   return m;
+  // }
   send(
     chatId,
     `Domain ${domain} is now yours. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain} Thank you for choosing us.
@@ -1235,20 +1307,20 @@ Nomadly Bot`,
     o,
   );
 
-  const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
-  if (error) {
-    const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`;
-    send(chatId, m);
-    return m;
-  }
+  // const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
+  // if (error) {
+  //   const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`;
+  //   send(chatId, m);
+  //   return m;
+  // }
   send(chatId, `Linking domain with your account...`); // save railway in domain
 
-  const { error: saveServerInDomainError } = await saveServerInDomain(domain, server);
-  if (saveServerInDomainError) {
-    const m = `Error saving server in domain ${saveServerInDomainError}`;
-    send(chatId, m);
-    return m;
-  }
+  // const { error: saveServerInDomainError } = await saveServerInDomain(domain, server);
+  // if (saveServerInDomainError) {
+  //   const m = `Error saving server in domain ${saveServerInDomainError}`;
+  //   send(chatId, m);
+  //   return m;
+  // }
   send(chatId, t.domainBought.replace('{{domain}}', domain));
   regularCheckDns(bot, chatId, domain);
   return false; // error = false
@@ -1270,7 +1342,7 @@ app.get('/bank-pay-plan', async (req, res) => {
   // Validations
   const ref = req?.query?.ref;
   const chatId = await get(chatIdOfPayment, ref);
-  const plan = (await get(state, chatId))?.chosenPlanForPayment;
+  const plan = (await get(state, chatId))?.plan;
   log(`bank-pay-plan ref: ${ref} chatId: ${chatId} plan: ${plan}`);
   if (!plan) {
     res.send(html('Payment already processed or not found'));
@@ -1278,10 +1350,7 @@ app.get('/bank-pay-plan', async (req, res) => {
   }
 
   // Subscribe Plan
-  set(planOf, chatId, plan);
-  set(planEndingTime, chatId, Date.now() + timeOf[plan]);
-  set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
-  send(chatId, t.planSubscribed.replace('{{plan}}', plan));
+  subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot);
 
   // Logs
   res.send(html());
@@ -1320,7 +1389,7 @@ app.get('/bank-payment-for-domain', async (req, res) => {
 });
 
 //
-app.get('/crypto-payment-for-subscription', async (req, res) => {
+app.get('/crypto-pay-plan', async (req, res) => {
   log(req?.hostname + req?.originalUrl);
 
   // Validations
@@ -1331,8 +1400,8 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
   const chatId = await get(chatIdOfPayment, ref);
   const info = await get(state, chatId);
   const session = info?.cryptoPaymentSession;
-  const plan = info?.chosenPlanForPayment;
-  log(`crypto-payment-for-subscription ref: ${ref} chatId: ${chatId} plan: ${plan}`);
+  const plan = info?.plan;
+  log(`crypto-pay-plan ref: ${ref} chatId: ${chatId} plan: ${plan}`);
   if (!plan) {
     res.send(html(t.payError));
     return;
@@ -1345,10 +1414,7 @@ app.get('/crypto-payment-for-subscription', async (req, res) => {
   }
 
   // Subscribe Plan
-  set(planOf, chatId, plan);
-  set(planEndingTime, chatId, Date.now() + timeOf[plan]);
-  set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
-  send(chatId, t.planSubscribed.replace('{{plan}}', plan));
+  subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot);
 
   // Logs
   res.send(html());
@@ -1416,10 +1482,11 @@ app.get('/crypto-wallet', async (req, res) => {
   }
 
   const wallet = await get(walletOf, chatId);
-  const usdBalance = (wallet?.usdIn || 0) + usdIn;
+  const usdInTotal = (wallet?.usdIn || 0) + usdIn;
+  await set(walletOf, chatId, 'usdIn', usdInTotal);
+  const { usdBal, ngnBal } = await getBalance(walletOf, chatId);
 
-  send(chatId, t.showWallet(usdBalance, 0));
-  set(walletOf, chatId, 'usdIn', usdBalance);
+  send(chatId, t.showWallet(usdBal, ngnBal));
   send(chatId, t.confirmationDepositCrypto(value_coin + ' ' + tickerViewOf[coin], usdIn));
 
   // Logs

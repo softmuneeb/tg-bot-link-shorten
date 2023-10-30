@@ -142,6 +142,15 @@ Discover more: t.me/nomadly`,
 
   depositUSD: `Please enter USD Amount, note that minium value is $6:`,
   selectCryptoToDeposit: `Please choose a crypto currency:`,
+
+  'bank-pay-plan': (
+    priceNGN,
+    plan,
+  ) => `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+
+Best regards,
+Nomadly Bot`,
+
   showDepositCryptoInfo: (priceCrypto, tickerView, address) =>
     `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
 
@@ -164,6 +173,14 @@ $${usd}
 ${ngn} NGN
 
 Select wallet option:`,
+  walletSelectCurrency: (usd, ngn) => `Please select currency to pay from your Wallet Balance:
+${usd} USD
+${ngn} NGN`,
+
+  walletBalanceLow: `Please top up wallet to continue`,
+
+  walletPay:(thing, usd)=> ``,
+  walletPayPlanNgn:()=> ``,
 };
 
 const tickerOf = {
@@ -239,14 +256,14 @@ const timeOf = {
   Monthly: 30 * 86400 * 1000,
 };
 
-const subscriptionOptions = ['Daily', 'Weekly', 'Monthly'];
+const planOptions = ['Daily', 'Weekly', 'Monthly'];
 
 const linkOptions = ['Random Link', 'Custom Link'];
 
 const chooseSubscription = {
   parse_mode: 'HTML',
   reply_markup: {
-    keyboard: [...subscriptionOptions.map(a => [a]), _bc],
+    keyboard: [...planOptions.map(a => [a]), _bc],
   },
 };
 
@@ -348,7 +365,6 @@ module.exports = {
   priceOf,
   tickerOf,
   linkType,
-  payOptions,
   tickerViews,
   linkOptions,
   tickerViewOf,
@@ -357,5 +373,5 @@ module.exports = {
   o: userKeyboard,
   aO: adminKeyboard,
   chooseSubscription,
-  subscriptionOptions,
+  planOptions,
 };

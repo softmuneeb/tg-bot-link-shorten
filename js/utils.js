@@ -2,8 +2,8 @@
 const fs = require('fs');
 require('dotenv').config();
 const axios = require('axios');
-const { t } = require('./config');
-const { getAll } = require('./db');
+const { t, timeOf, freeDomainsOf } = require('./config');
+const { getAll, get, set } = require('./db');
 const { log } = require('console');
 const resolveDns = require('./resolve-cname.js');
 
@@ -121,6 +121,23 @@ const sendQrCode = async (bot, chatId, bb) => {
     .then(() => fs.unlinkSync('image.png'))
     .catch(log);
 };
+
+const getBalance = async (walletOf, chatId) => {
+  const wallet = await get(walletOf, chatId);
+  const usdBal = (wallet?.usdIn || 0) - (wallet?.usdOut || 0);
+  const ngnBal = (isNaN(wallet?.ngnIn) || 0) - (isNaN(wallet?.ngnOut) || 0);
+
+  return { usdBal, ngnBal };
+};
+
+const subscribePlan = async (planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot, keyboard) => {
+  set(planOf, chatId, plan);
+  set(planEndingTime, chatId, Date.now() + timeOf[plan]);
+  set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan]);
+  bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan), keyboard);
+  log('reply:\t' + t.planSubscribed.replace('{{plan}}', plan) + '\tto: ' + chatId);
+};
+
 module.exports = {
   year,
   week,
@@ -130,10 +147,12 @@ module.exports = {
   usdToNgn,
   isValidUrl,
   sendQrCode,
+  getBalance,
   nextNumber,
   isDeveloper,
   isValidEmail,
   isNormalUser,
+  subscribePlan,
   regularCheckDns,
   sendMessageToAllUsers,
 };
