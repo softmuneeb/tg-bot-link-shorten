@@ -1,3 +1,4 @@
+/*global process */
 require('dotenv').config();
 const axios = require('axios');
 const { log } = require('console');
@@ -78,5 +79,5 @@ async function isRailwayAPIWorking() {
 }
 
 // isRailwayAPIWorking();
-// saveDomainInServer('softmuneeba.com').then(log);
+// saveDomainInServer('blockbee.com').then(log);
 module.exports = { saveDomainInServer, isRailwayAPIWorking };
