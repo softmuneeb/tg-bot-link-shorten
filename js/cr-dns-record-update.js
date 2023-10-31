@@ -1,9 +1,10 @@
-require('dotenv').config();
-const axios = require('axios');
-const { log } = require('console');
-const APIKey = process.env.API_KEY_CONNECT_RESELLER;
-const { updateDNSRecordNs } = require('./cr-dns-record-update-ns');
-const { saveServerInDomain } = require('./cr-dns-record-add');
+/* global process */
+require('dotenv').config()
+const axios = require('axios')
+const { log } = require('console')
+const APIKey = process.env.API_KEY_CONNECT_RESELLER
+const { updateDNSRecordNs } = require('./cr-dns-record-update-ns')
+const { saveServerInDomain } = require('./cr-dns-record-add')
 
 const updateDNSRecord = async (
   DNSZoneID,
@@ -15,13 +16,13 @@ const updateDNSRecord = async (
   nsId,
   dnsRecords,
 ) => {
-  if (RecordType === 'NS') return await updateDNSRecordNs(domainNameId, RecordName, RecordValue, nsId, dnsRecords);
+  if (RecordType === 'NS') return await updateDNSRecordNs(domainNameId, RecordName, RecordValue, nsId, dnsRecords)
 
   // Custom Requirement fulfilled, if no A record present then show A Record: None, so we are updating it by creating it
-  if (RecordType === 'A' && !DNSZoneID) return await saveServerInDomain(RecordName, RecordValue, 'A');
+  if (RecordType === 'A' && !DNSZoneID) return await saveServerInDomain(RecordName, RecordValue, 'A')
 
   try {
-    const apiUrl = 'https://api.connectreseller.com/ConnectReseller/ESHOP/ModifyDNSRecord';
+    const apiUrl = 'https://api.connectreseller.com/ConnectReseller/ESHOP/ModifyDNSRecord'
     const requestData = {
       APIKey,
       DNSZoneID,
@@ -29,30 +30,30 @@ const updateDNSRecord = async (
       RecordType,
       RecordValue,
       DNSZoneRecordID,
-    };
+    }
 
-    const response = await axios.get(apiUrl, { params: requestData });
+    const response = await axios.get(apiUrl, { params: requestData })
     log(
       'update DNS Record ',
       { DNSZoneID, DNSZoneRecordID, RecordName, RecordType, RecordValue },
       JSON.stringify(response.data, null, 2),
-    );
+    )
 
     if (response?.data?.responseMsg?.statusCode === 200) {
-      return { success: true };
+      return { success: true }
     } else {
-      let errorMessage = `Issue in update DNS Record ${response?.data?.responseMsg?.message}`;
-      log(errorMessage);
-      return { error: errorMessage };
+      let errorMessage = `Issue in update DNS Record ${response?.data?.responseMsg?.message}`
+      log(errorMessage)
+      return { error: errorMessage }
     }
   } catch (error) {
-    const errorMessage = `Error update DNS Record ${error.message} ${JSON.stringify(error?.response?.data, null, 2)}`;
-    log(error, errorMessage);
-    return { error: errorMessage };
+    const errorMessage = `Error update DNS Record ${error.message} ${JSON.stringify(error?.response?.data, null, 2)}`
+    log(error, errorMessage)
+    return { error: errorMessage }
   }
-};
+}
 // const dnszoneID = 153141;
 // const dnszoneRecordID = 1112779751;
 // updateDNSRecord(dnszoneID, dnszoneRecordID, 'glasso.sbs', 'CNAME', 'abc.def').then(log);
 
-module.exports = { updateDNSRecord };
+module.exports = { updateDNSRecord }

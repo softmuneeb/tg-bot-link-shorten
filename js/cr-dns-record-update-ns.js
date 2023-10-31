@@ -1,49 +1,50 @@
-require('dotenv').config();
-const axios = require('axios');
-const { log } = require('console');
-const APIKey = process.env.API_KEY_CONNECT_RESELLER;
+/* global process */
+require('dotenv').config()
+const axios = require('axios')
+const { log } = require('console')
+const APIKey = process.env.API_KEY_CONNECT_RESELLER
 
 const updateDNSRecordNs = async (domainNameId, websiteName, RecordValue, nsId, dnsRecords) => {
   try {
-    const apiUrl = 'https://api.connectreseller.com/ConnectReseller/ESHOP/UpdateNameServer';
+    const apiUrl = 'https://api.connectreseller.com/ConnectReseller/ESHOP/UpdateNameServer'
 
     const requestData = {
       APIKey,
       domainNameId,
       websiteName,
-    };
+    }
 
     for (let i = 0; i < dnsRecords.length; i++) {
-      const r = dnsRecords[i];
-      requestData['nameServer' + r.nsId] = r.recordContent;
+      const r = dnsRecords[i]
+      requestData['nameServer' + r.nsId] = r.recordContent
     }
     // nsId = 1,2,3 or 4
-    requestData['nameServer' + nsId] = RecordValue;
+    requestData['nameServer' + nsId] = RecordValue
 
-    const response = await axios.get(apiUrl, { params: requestData });
+    const response = await axios.get(apiUrl, { params: requestData })
     log(
       'update DNS Record Ns ',
       { domainNameId, websiteName, RecordValue, nsId },
       JSON.stringify(response.data, null, 2),
-    );
+    )
 
     if (response?.data?.responseMsg?.statusCode === 200) {
-      return { success: true };
+      return { success: true }
     } else if (response?.data?.responseMsg?.statusCode === 400) {
-      let error = `${response?.data?.responseMsg?.message}`;
-      log(error);
-      return { error };
+      let error = `${response?.data?.responseMsg?.message}`
+      log(error)
+      return { error }
     } else {
-      let error = `Issue in update DNS Record Ns ${response?.data?.responseMsg?.message}`;
-      log(error);
-      return { error };
+      let error = `Issue in update DNS Record Ns ${response?.data?.responseMsg?.message}`
+      log(error)
+      return { error }
     }
   } catch (error) {
-    const m = `Error update DNS Record Ns ${error.message}`;
-    log(JSON.stringify(error?.response?.data, null, 2), m);
-    return { error: m };
+    const m = `Error update DNS Record Ns ${error.message}`
+    log(JSON.stringify(error?.response?.data, null, 2), m)
+    return { error: m }
   }
-};
+}
 
 // const domainNameId = 1991939,
 //   websiteName = 'glasso.sbs',
@@ -56,4 +57,4 @@ const updateDNSRecordNs = async (domainNameId, websiteName, RecordValue, nsId, d
 //   { nsId: 4, recordContent: null },
 // ]).then(log);
 
-module.exports = { updateDNSRecordNs };
+module.exports = { updateDNSRecordNs }

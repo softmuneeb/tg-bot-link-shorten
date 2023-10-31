@@ -1,11 +1,11 @@
 /*global process */
-require('dotenv').config();
-const axios = require('axios');
-const { log } = require('console');
-const API_TOKEN = process.env.API_KEY_RAILWAY;
-const ENVIRONMENT_ID = process.env.RAILWAY_ENVIRONMENT_ID;
-const SERVICE_ID = process.env.RAILWAY_SERVICE_ID;
-const GRAPHQL_ENDPOINT = 'https://backboard.railway.app/graphql/v2';
+require('dotenv').config()
+const axios = require('axios')
+const { log } = require('console')
+const API_TOKEN = process.env.API_KEY_RAILWAY
+const ENVIRONMENT_ID = process.env.RAILWAY_ENVIRONMENT_ID
+const SERVICE_ID = process.env.RAILWAY_SERVICE_ID
+const GRAPHQL_ENDPOINT = 'https://backboard.railway.app/graphql/v2'
 async function saveDomainInServer(domain) {
   const GRAPHQL_QUERY = `
   mutation customDomainCreate {
@@ -19,7 +19,7 @@ async function saveDomainInServer(domain) {
             }
           }
       }
-  }`;
+  }`
   const response = await axios.post(
     GRAPHQL_ENDPOINT,
     { query: GRAPHQL_QUERY },
@@ -29,18 +29,18 @@ async function saveDomainInServer(domain) {
         'Content-Type': 'application/json',
       },
     },
-  );
-  const error = response?.data?.errors?.[0]?.message;
+  )
+  const error = response?.data?.errors?.[0]?.message
 
   if (error) {
-    log('Error saveDomainInServer', error);
-    log('domain', domain, 'GraphQL Response:', JSON.stringify(response.data, null, 2));
-    return { error };
+    log('Error saveDomainInServer', error)
+    log('domain', domain, 'GraphQL Response:', JSON.stringify(response.data, null, 2))
+    return { error }
   }
 
-  const server = response?.data?.data?.customDomainCreate?.status?.dnsRecords[0]?.requiredValue;
+  const server = response?.data?.data?.customDomainCreate?.status?.dnsRecords[0]?.requiredValue
 
-  return { server };
+  return { server }
 }
 async function isRailwayAPIWorking() {
   const GRAPHQL_QUERY = `
@@ -55,7 +55,7 @@ async function isRailwayAPIWorking() {
       }
     }
   }
-}`;
+}`
   const response = await axios.post(
     GRAPHQL_ENDPOINT,
     { query: GRAPHQL_QUERY },
@@ -65,19 +65,19 @@ async function isRailwayAPIWorking() {
         'Content-Type': 'application/json',
       },
     },
-  );
-  const error = response?.data?.errors?.[0]?.message;
+  )
+  const error = response?.data?.errors?.[0]?.message
 
-  log('isRailwayAPIWorking');
+  log('isRailwayAPIWorking')
 
   if (error) {
-    log('Error query me', error);
-    return { error };
+    log('Error query me', error)
+    return { error }
   }
 
-  return response.data;
+  return response.data
 }
 
 // isRailwayAPIWorking();
 // saveDomainInServer('blockbee.com').then(log);
-module.exports = { saveDomainInServer, isRailwayAPIWorking };
+module.exports = { saveDomainInServer, isRailwayAPIWorking }

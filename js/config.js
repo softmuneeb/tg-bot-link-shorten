@@ -1,14 +1,14 @@
-/*global process */
-require('dotenv').config();
-const FREE_LINKS = Number(process.env.FREE_LINKS);
-const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME;
-const PRICE_DAILY = Number(process.env.PRICE_DAILY_SUBSCRIPTION);
-const PRICE_WEEKLY = Number(process.env.PRICE_WEEKLY_SUBSCRIPTION);
-const PRICE_MONTHLY = Number(process.env.PRICE_MONTHLY_SUBSCRIPTION);
-const DAILY_PLAN_FREE_DOMAINS = Number(process.env.DAILY_PLAN_FREE_DOMAINS);
-const WEEKLY_PLAN_FREE_DOMAINS = Number(process.env.WEEKLY_PLAN_FREE_DOMAINS);
-const FREE_LINKS_HOURS = Number(process.env.FREE_LINKS_TIME_SECONDS) / 60 / 60;
-const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS);
+/* global process */
+require('dotenv').config()
+const FREE_LINKS = Number(process.env.FREE_LINKS)
+const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
+const PRICE_DAILY = Number(process.env.PRICE_DAILY_SUBSCRIPTION)
+const PRICE_WEEKLY = Number(process.env.PRICE_WEEKLY_SUBSCRIPTION)
+const PRICE_MONTHLY = Number(process.env.PRICE_MONTHLY_SUBSCRIPTION)
+const DAILY_PLAN_FREE_DOMAINS = Number(process.env.DAILY_PLAN_FREE_DOMAINS)
+const WEEKLY_PLAN_FREE_DOMAINS = Number(process.env.WEEKLY_PLAN_FREE_DOMAINS)
+const FREE_LINKS_HOURS = Number(process.env.FREE_LINKS_TIME_SECONDS) / 60 / 60
+const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS)
 
 // Note: these button labels must not mix with each other, other wise it may mess up bot
 const admin = {
@@ -17,7 +17,7 @@ const admin = {
   blockUser: '✋ Block User',
   unblockUser: '👌 Unblock User',
   messageUsers: '👋 Message all users',
-};
+}
 const user = {
   // main keyboard
   urlShortener: '🔗 URL Shortener',
@@ -29,7 +29,7 @@ const user = {
   wallet: '💰 Wallet',
   viewPlan: '🔍 My Plan',
   getSupport: '🛠️ Get Support',
-};
+}
 const u = {
   // other key boards
   deposit: '💵 Deposit',
@@ -38,7 +38,7 @@ const u = {
   // wallet
   usd: 'USD',
   ngn: 'NGN',
-};
+}
 
 const t = {
   showDepositNgnInfo:
@@ -218,7 +218,7 @@ ${usd} USD
 ${ngn} NGN`,
 
   walletBalanceLow: `Please top up wallet to continue`,
-};
+}
 
 const tickerOf = {
   BTC: 'btc',
@@ -227,20 +227,20 @@ const tickerOf = {
   'USDT (TRon)': 'trc20_usdt',
   'USDT (ERC20)': 'erc20_usdt',
   DOGE: 'doge',
-};
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
-const _bc = ['Back', 'Cancel'];
+const _bc = ['Back', 'Cancel']
 
 const payIn = {
   crypto: 'Crypto',
   bank: 'Bank ₦aira + Card🌐︎',
   wallet: '💰 Wallet',
-};
+}
 
-const tickerViews = Object.keys(tickerOf);
-const reverseObject = o => Object.fromEntries(Object.entries(o).map(([key, val]) => [val, key]));
-const tickerViewOf = reverseObject(tickerOf);
+const tickerViews = Object.keys(tickerOf)
+const reverseObject = o => Object.fromEntries(Object.entries(o).map(([key, val]) => [val, key]))
+const tickerViewOf = reverseObject(tickerOf)
 const k = {
   of: list => ({
     reply_markup: {
@@ -259,13 +259,13 @@ const k = {
       keyboard: [Object.values(payIn), _bc],
     },
   },
-};
+}
 
 const adminKeyboard = {
   reply_markup: {
     keyboard: Object.values(admin).map(b => [b]),
   },
-};
+}
 
 const userKeyboard = {
   reply_markup: {
@@ -273,48 +273,48 @@ const userKeyboard = {
   },
   parse_mode: 'HTML',
   disable_web_page_preview: true,
-};
+}
 
 const priceOf = {
   Daily: PRICE_DAILY,
   Weekly: PRICE_WEEKLY,
   Monthly: PRICE_MONTHLY,
-};
+}
 
 const freeDomainsOf = {
   Daily: DAILY_PLAN_FREE_DOMAINS,
   Weekly: WEEKLY_PLAN_FREE_DOMAINS,
   Monthly: MONTHLY_PLAN_FREE_DOMAINS,
-};
+}
 
 const timeOf = {
   Daily: 86400 * 1000,
   Weekly: 7 * 86400 * 1000,
   Monthly: 30 * 86400 * 1000,
-};
+}
 
-const planOptions = ['Daily', 'Weekly', 'Monthly'];
+const planOptions = ['Daily', 'Weekly', 'Monthly']
 
-const linkOptions = ['Random Link', 'Custom Link'];
+const linkOptions = ['Random Link', 'Custom Link']
 
 const chooseSubscription = {
   parse_mode: 'HTML',
   reply_markup: {
     keyboard: [...planOptions.map(a => [a]), _bc],
   },
-};
+}
 
 const dO = {
   reply_markup: {
     keyboard: [_bc, ['Backup Data'], ['Restore Data']],
   },
-};
+}
 
 const rem = {
   reply_markup: {
     remove_keyboard: true,
   },
-};
+}
 
 const bc = {
   parse_mode: 'HTML',
@@ -322,7 +322,7 @@ const bc = {
     keyboard: [_bc],
   },
   disable_web_page_preview: true,
-};
+}
 
 const dns = {
   parse_mode: 'HTML',
@@ -330,33 +330,33 @@ const dns = {
     keyboard: [[t.addDns], [t.updateDns], [t.deleteDns], _bc],
   },
   disable_web_page_preview: true,
-};
+}
 const dnsRecordType = {
   parse_mode: 'HTML',
   reply_markup: {
     keyboard: [[t.cname], [t.ns], [t.a], _bc],
   },
   disable_web_page_preview: true,
-};
+}
 const yes_no = {
   parse_mode: 'HTML',
   reply_markup: {
     keyboard: [['Yes', 'No'], _bc],
   },
   disable_web_page_preview: true,
-};
+}
 
 const linkType = {
   reply_markup: {
     keyboard: [linkOptions, _bc],
   },
-};
+}
 
 const show = domains => ({
   reply_markup: {
     keyboard: [...domains.map(d => [d]), _bc],
   },
-});
+})
 
 const payBank = url => ({
   reply_markup: {
@@ -371,7 +371,7 @@ const payBank = url => ({
       ],
     ],
   },
-});
+})
 
 const html = (text = t.successPayment) => {
   return `
@@ -380,8 +380,8 @@ const html = (text = t.successPayment) => {
                 <p style="font-family: 'system-ui';" >${text}</p>
             </body>
         </html>
-    `;
-};
+    `
+}
 
 module.exports = {
   k,
@@ -411,4 +411,4 @@ module.exports = {
   aO: adminKeyboard,
   chooseSubscription,
   planOptions,
-};
+}
