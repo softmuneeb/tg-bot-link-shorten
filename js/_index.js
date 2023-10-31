@@ -157,31 +157,17 @@ bot.on('message', async msg => {
 
   tryConnectReseller(); // our ip may change on railway hosting so make sure its correct
 
-  if (!db) {
-    send(chatId, 'Bot starting, please wait');
-    return;
-  }
-
+  if (!db) return send(chatId, 'Bot starting, please wait');
   if (!connect_reseller_working) {
     await tryConnectReseller();
-    if (!connect_reseller_working) {
-      send(chatId, 'Bot starting, please wait');
-      return;
-    }
+    if (!connect_reseller_working) return send(chatId, 'Bot starting, please wait');
   }
 
   const nameOfChatId = await get(nameOf, chatId);
   const username = nameOfChatId || msg?.from?.username || nanoid();
 
   const blocked = await get(chatIdBlocked, chatId);
-  if (blocked) {
-    send(
-      chatId,
-      `You are currently blocked from using the bot. Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
-      rem,
-    );
-    return;
-  }
+  if (blocked) return send(chatId, t.blockedUser, rem);
 
   if (!nameOfChatId) {
     set(nameOf, chatId, username);
@@ -248,11 +234,7 @@ bot.on('message', async msg => {
             : ` Remember, your ${plan} plan includes ${available} free ".sbs" domain${s}. Let's get your domain today!`;
       }
       set(state, chatId, 'action', 'choose-domain-to-buy');
-      send(
-        chatId,
-        `<b>Claim Your Corner of the Web!</b>  Please share the domain name you wish to purchase, like "abcpay.com".${text}`,
-        bc,
-      );
+      send(chatId, t.chooseDomainToBuy(text), bc);
     },
     'plan-pay': () => {
       const { plan } = info;
@@ -502,7 +484,7 @@ bot.on('message', async msg => {
   if (message === admin.blockUser) {
     if (!isAdmin(chatId)) return send(chatId, 'not authorized');
     set(state, chatId, 'action', 'block-user');
-    return send(chatId, 'Please share the username of the user that needs to be blocked.', bc);
+    return send(chatId, t.blockUser, bc);
   }
   if (action === 'block-user') {
     const userToBlock = message;
@@ -517,7 +499,7 @@ bot.on('message', async msg => {
   if (message === admin.unblockUser) {
     if (!isAdmin(chatId)) return send(chatId, 'not authorized');
     set(state, chatId, 'action', 'unblock-user');
-    return send(chatId, 'Please share the username of the user that needs to be unblocked.', bc);
+    return send(chatId, t.unblockUser, bc);
   }
   if (action === 'unblock-user') {
     const userToUnblock = message;
@@ -1116,22 +1098,16 @@ Nomadly Bot`;
     return;
   }
   if (message === 'Backup Data') {
-    if (!isDeveloper(chatId)) {
-      send(chatId, 'Apologies, but you do not have the authorization to access this content.');
-      return;
-    }
+    if (!isDeveloper(chatId)) return send(chatId, 'not authorized');
+
     backupTheData();
-    send(chatId, 'Backup created successfully.');
-    return;
+    return send(chatId, 'Backup created successfully.');
   }
   if (message === 'Restore Data') {
-    if (!isDeveloper(chatId)) {
-      send(chatId, 'Apologies, but you do not have the authorization to access this content.');
-      return;
-    }
+    if (!isDeveloper(chatId)) return send(chatId, 'not authorized');
+
     restoreData();
-    send(chatId, 'Data restored successfully.');
-    return;
+    return send(chatId, 'Data restored successfully.');
   }
   if (message === admin.viewUsers) {
     if (!isAdmin(chatId)) return send(chatId, 'not authorized');
@@ -1571,7 +1547,7 @@ const tryConnectReseller = async () => {
     axios.get('https://api.ipify.org/').then(ip => {
       const message = `Please add <code>${ip.data}</code> to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`;
       log(message);
-      send(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' })
+      send(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' });
       send(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' });
     });
     //

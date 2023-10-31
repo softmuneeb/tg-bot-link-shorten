@@ -62,6 +62,13 @@ Nomadly Bot`,
 
   chooseFreeDomainText: `<b>Great News!</b> This domain is available for free with your subscription. Would you like to claim it?`,
 
+  chooseDomainToBuy: text =>
+    `<b>Claim Your Corner of the Web!</b>  Please share the domain name you wish to purchase, like "abcpay.com".${text}`,
+
+  blockUser: `Please share the username of the user that needs to be blocked.`,
+  unblockUser: `Please share the username of the user that needs to be unblocked.`,
+  blockedUser: `You are currently blocked from using the bot. Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+
   greet: `Keep your eyes on this space! We're gearing up to launch our URL shortening application that will make your links short, sweet, and to the point. Stay tuned for our big reveal!
 
 Support ${SUPPORT_USERNAME} at Telegram.`,
@@ -179,8 +186,8 @@ ${ngn} NGN`,
 
   walletBalanceLow: `Please top up wallet to continue`,
 
-  walletPay:(thing, usd)=> ``,
-  walletPayPlanNgn:()=> ``,
+  walletPay: (thing, usd) => ``,
+  walletPayPlanNgn: () => ``,
 };
 
 const tickerOf = {
