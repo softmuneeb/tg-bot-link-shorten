@@ -41,7 +41,14 @@ const u = {
 };
 
 const t = {
+  showDepositNgnInfo:
+    ngn => `Please remit ${ngn} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your wallet will updated.
+
+Best regards,
+Nomadly Bot`,
+
   askEmail: `Please provide an email for payment confirmation.`,
+  askValidAmount: 'Please provide a valid number',
   askValidEmail: 'Please provide a valid email',
   askValidCrypto: 'Please choose a valid crypto currency',
   askValidPayOption: 'Please choose a valid payment option',
@@ -53,6 +60,7 @@ const t = {
 
 (Exclusive to ".sbs" domains.)`,
 
+  errorPaidLessPrice: `Sent price less than needed`,
   planSubscribed: `Your payment was successful, and you're now subscribed to our {{plan}} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
 
 Best,
@@ -158,6 +166,30 @@ Discover more: t.me/nomadly`,
 Best regards,
 Nomadly Bot`,
 
+  bankPayDomain: (
+    priceNGN,
+    domain,
+  ) => `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} domain will be seamlessly activated.
+
+Best regards,
+Nomadly Bot`,
+
+  showDepositCryptoInfoPlan: (priceCrypto, tickerView, address, plan) =>
+    `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
+    
+Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
+    
+Best regards,
+Nomadly Bot`,
+
+  showDepositCryptoInfoDomain: (priceCrypto, tickerView, address, domain) =>
+    `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
+    
+Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} domain will be seamlessly activated.
+    
+Best regards,
+Nomadly Bot`,
+
   showDepositCryptoInfo: (priceCrypto, tickerView, address) =>
     `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
 
@@ -165,12 +197,13 @@ Please note, crypto transactions can take up to 30 minutes to complete. Once the
 
 Best regards,
 Nomadly Bot`,
-  confirmationDepositCrypto: (
+  confirmationDepositMoney: (
     amount,
     usd,
   ) => `Your payment of ${amount} ($${usd}) is processed. Thank you for choosing us.
 Best,
 Nomadly Bot`,
+
   showWallet: (usd, ngn) => `Wallet Balance:
 $${usd}
 ${ngn} NGN`,
@@ -185,9 +218,6 @@ ${usd} USD
 ${ngn} NGN`,
 
   walletBalanceLow: `Please top up wallet to continue`,
-
-  walletPay: (thing, usd) => ``,
-  walletPayPlanNgn: () => ``,
 };
 
 const tickerOf = {

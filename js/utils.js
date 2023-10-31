@@ -33,16 +33,30 @@ async function usdToNgn(amountInUSD) {
     const apiUrl = `https://openexchangerates.org/api/latest.json?app_id=${API_KEY_CURRENCY_EXCHANGE}`;
 
     const response = await axios.get(apiUrl);
-    const usdToNgnRate = response.data.rates['NGN']; // Get the exchange rate for USD to Naira
-
+    const usdToNgnRate = response.data.rates['NGN'];
     const nairaAmount = Number(amountInUSD) * usdToNgnRate * (1 + PERCENT_INCREASE_USD_TO_NAIRA);
     return nairaAmount.toFixed();
   } catch (error) {
-    console.error(`Error converting currency: ${error.message}`);
+    console.error(`Error usdToNgn: ${error.message}`);
     return error.message;
   }
 }
-// usdToNgn(1).then(console.log);
+// usdToNgn(1).then(log);
+
+async function ngnToUsd(ngn) {
+  try {
+    const apiUrl = `https://openexchangerates.org/api/latest.json?app_id=${API_KEY_CURRENCY_EXCHANGE}`;
+
+    const response = await axios.get(apiUrl);
+    const usdToNgnRate = response.data.rates['NGN'];
+    const usd = Number(ngn) / (usdToNgnRate * (1 + PERCENT_INCREASE_USD_TO_NAIRA));
+    return usd;
+  } catch (error) {
+    console.error(`Error ngnToUsd: ${error.message}`);
+    return error.message;
+  }
+}
+// ngnToUsd(1000).then(log);
 
 function today() {
   const currentDate = new Date();
@@ -145,6 +159,7 @@ module.exports = {
   month,
   isAdmin,
   usdToNgn,
+  ngnToUsd,
   isValidUrl,
   sendQrCode,
   getBalance,

@@ -69,7 +69,6 @@ process.env['NTBA_FIX_350'] = 1;
 const DB_NAME = process.env.DB_NAME;
 const SELF_URL = process.env.SELF_URL;
 const FREE_LINKS = Number(process.env.FREE_LINKS);
-const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_DEV_CHAT_ID = process.env.TELEGRAM_DEV_CHAT_ID;
 const TELEGRAM_ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID;
@@ -141,7 +140,7 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`);
   set(planEndingTime, 6687923716, 0);
-  // set(freeShortLinksOf, 6687923716, FREE_LINKS);
+  set(freeShortLinksOf, 6687923716, FREE_LINKS);
   adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID);
 };
 const client = new MongoClient(process.env.MONGO_URL);
@@ -360,18 +359,17 @@ bot.on('message', async msg => {
       send(chatId, t.askEmailForNGN, bc);
       set(state, chatId, 'action', a.askEmailForNGN);
     },
-    [a.showDepositNgnInfo]: () => {
-      const { priceNGN, tickerView, address, email } = info;
+    showDepositNgnInfo: async () => {
       const ref = nanoid();
+      const { depositAmountNgn: ngn, email } = info;
+
       log({ ref });
-      set(state, chatId, 'ref', ref, email);
-      set(state, chatId, 'action', 'none');
-      send(chatId, t.showDepositNgnInfo(priceNGN, tickerView, address), o);
-    },
-    confirmationDepositNgn: amountWithTicker => {
-      // check how much amount received and add to wallet
-      del(state, chatId, 'ref');
-      send(chatId, t.confirmationDepositNgn(amountWithTicker));
+      set(chatIdOfPayment, ref, { ngn });
+      const { url, error } = await createCheckout(ngn, `/bank-wallet?a=b&ref=${ref}&`, email, username);
+
+      if (error) return send(chatId, error, o);
+      send(chatId, t.showDepositNgnInfo(ngn), payBank(url));
+      return send(chatId, `Bank ₦aira + Card 🌐︎`, o);
     },
     //
     [a.depositUSD]: () => {
@@ -382,7 +380,7 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', a.selectCryptoToDeposit);
       send(chatId, t.selectCryptoToDeposit, k.of(tickerViews));
     },
-    [a.showDepositCryptoInfo]: async () => {
+    showDepositCryptoInfo: async () => {
       const ref = nanoid();
       const { amount, tickerView } = info;
       const ticker = tickerOf[tickerView];
@@ -458,8 +456,7 @@ bot.on('message', async msg => {
       }
 
       const domain = info?.chosenDomainForPayment;
-      const error = await buyDomainFullProcess(chatId, domain);
-      if (error) send(chatId, error);
+      await buyDomainFullProcess(chatId, domain);
     },
     'leads-generate-pay': async () => {},
     'leads-validate-pay': async () => {},
@@ -661,36 +658,22 @@ bot.on('message', async msg => {
     return send(chatId, t.askValidPayOption);
   }
   if (action === 'bank-pay-domain') {
+    const email = message;
     const price = info?.chosenDomainPrice;
     const domain = info?.chosenDomainForPayment;
     if (message === 'Back') return goto['domain-pay'](domain, price);
-
-    const email = message;
-
     if (!isValidEmail(email)) return send(chatId, t.askValidEmail);
 
-    const priceNGN = Number(await usdToNgn(price));
     const ref = nanoid();
+
     log({ ref });
     set(chatIdOfPayment, ref, chatId);
-    const { url, error } = await createCheckout(priceNGN, `/bank-payment-for-domain?a=b&ref=${ref}&`, email, username);
-    if (error) {
-      send(chatId, error, o);
-      set(state, chatId, 'action', 'none');
-      return;
-    }
-
-    send(
-      chatId,
-      `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
-
-Best regards,
-Nomadly Bot`,
-      payBank(url),
-    );
-    send(chatId, `Bank ₦aira + Card 🌐︎`, o);
     set(state, chatId, 'action', 'none');
-    return;
+    const priceNGN = Number(await usdToNgn(price));
+    const { url, error } = await createCheckout(priceNGN, `/bank-pay-domain?a=b&ref=${ref}&`, email, username);
+    if (error) return send(chatId, error, o);
+    send(chatId, t.bankPayDomain(priceNGN, domain), payBank(url));
+    return send(chatId, `Bank ₦aira + Card 🌐︎`, o);
   }
   if (action === 'crypto-pay-domain') {
     const priceUSD = info?.chosenDomainPrice;
@@ -699,36 +682,19 @@ Nomadly Bot`,
     if (message === 'Back') return goto['domain-pay'](domain, priceUSD);
 
     const tickerView = message;
-    const ticker = tickerOf[tickerView];
-    if (!ticker) return send(chatId, t.askValidCrypto);
+    const coin = tickerOf[tickerView];
+    if (!coin) return send(chatId, t.askValidCrypto);
 
     const ref = nanoid();
     log({ ref });
-    const { address, bb } = await getCryptoDepositAddress(
-      ticker,
-      chatId,
-      SELF_URL,
-      `/crypto-payment-for-domain?a=b&ref=${ref}&`,
-    );
+    const { address, bb } = await getCryptoDepositAddress(coin, chatId, SELF_URL, `/crypto-pay-domain?a=b&ref=${ref}&`);
 
     set(chatIdOfPayment, ref, chatId);
 
-    const priceCrypto = await convert(priceUSD, 'usd', ticker);
-    set(state, chatId, 'cryptoPaymentSession', {
-      priceCrypto,
-      ticker,
-      ref,
-    });
-
-    const text = `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
-
-Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} will be seamlessly activated.
-
-Best regards,
-Nomadly Bot`;
+    const priceCrypto = await convert(priceUSD, 'usd', coin);
 
     sendQrCode(bot, chatId, bb);
-    send(chatId, text, o);
+    send(chatId, t.showDepositCryptoInfoDomain(priceCrypto, tickerView, address, domain), o);
     set(state, chatId, 'action', 'none');
     return;
   }
@@ -740,104 +706,73 @@ Nomadly Bot`;
     const domain = info?.chosenDomainForPayment;
     const error = await buyDomainFullProcess(chatId, domain);
     if (!error) decrement(freeDomainNamesAvailableFor, chatId);
-    else send(chatId, error);
 
     return set(state, chatId, 'action', 'none');
   }
   //
   //
   if (message === user.buyPlan) {
-    if (await isSubscribed(chatId)) {
-      send(chatId, 'You are currently enrolled in a subscription plan.');
-      return;
-    }
-    goto['choose-subscription']();
-    return;
+    if (await isSubscribed(chatId)) return send(chatId, 'You are currently enrolled in a subscription plan.');
+    return goto['choose-subscription']();
   }
   if (action === 'choose-subscription') {
     const plan = message;
-
     if (!planOptions.includes(plan)) return send(chatId, 'Please choose a valid plan', chooseSubscription);
-
     await saveInfo('plan', plan);
     return goto['plan-pay']();
   }
   if (action === 'plan-pay') {
     if (message === 'Back') return goto['choose-subscription']();
     const payOption = message;
-
     if (payOption === payIn.crypto) {
       set(state, chatId, 'action', 'crypto-pay-plan');
       return send(chatId, `Please choose a crypto currency`, k.of(tickerViews));
     }
-
     if (payOption === payIn.bank) {
       set(state, chatId, 'action', 'bank-pay-plan');
       return send(chatId, t.askEmail, bc);
     }
-
     if (payOption === payIn.wallet) {
       set(state, chatId, 'lastStep', 'plan-pay');
-
       return goto.walletSelectCurrency();
     }
     return send(chatId, t.askValidPayOption);
   }
   if (action === 'bank-pay-plan') {
-    const plan = info?.plan;
     if (message === 'Back') return goto['plan-pay']();
 
     const email = message;
-
     if (!isValidEmail(email)) return send(chatId, t.askValidEmail);
 
+    const plan = info?.plan;
     const priceNGN = Number(await usdToNgn(priceOf[plan]));
-    const ref = nanoid();
-    log({ ref });
-    set(chatIdOfPayment, ref, chatId);
-    const { url, error } = await createCheckout(priceNGN, `/bank-pay-plan?a=b&ref=${ref}&`, email, username);
-    if (error) {
-      set(state, chatId, 'action', 'none');
-      return send(chatId, error, o);
-    }
 
-    send(chatId, t['bank-pay-plan'](priceNGN, plan), payBank(url));
+    const ref = nanoid();
     set(state, chatId, 'action', 'none');
-    return send(chatId, `Bank ₦aira + Card 🌐︎`, o);
+    set(chatIdOfPayment, ref, { chatId, plan });
+    const { url, error } = await createCheckout(priceNGN, `/bank-pay-plan?a=b&ref=${ref}&`, email, username);
+
+    log({ ref });
+    if (error) return send(chatId, error, o);
+    send(chatId, `Bank ₦aira + Card 🌐︎`, o);
+    return send(chatId, t['bank-pay-plan'](priceNGN, plan), payBank(url));
   }
   if (action === 'crypto-pay-plan') {
-    const plan = info?.plan;
-    const priceUSD = priceOf[plan];
-
     if (message === 'Back') return goto['plan-pay']();
 
+    const ref = nanoid();
     const tickerView = message;
     const ticker = tickerOf[tickerView];
     if (!ticker) return send(chatId, t.askValidCrypto);
-
-    const priceCrypto = await convert(priceUSD, 'usd', ticker);
-
-    const ref = nanoid();
-    log({ ref });
     const { address, bb } = await getCryptoDepositAddress(ticker, chatId, SELF_URL, `/crypto-pay-plan?a=b&ref=${ref}&`);
-    set(chatIdOfPayment, ref, chatId);
-    set(state, chatId, 'cryptoPaymentSession', {
-      priceCrypto,
-      ticker,
-      ref,
-    });
 
-    const text = `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
-
-Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
-
-Best regards,
-Nomadly Bot`;
-
+    log({ ref });
+    const plan = info?.plan;
     sendQrCode(bot, chatId, bb);
-    send(chatId, text, o);
     set(state, chatId, 'action', 'none');
-    return;
+    set(chatIdOfPayment, ref, { chatId, plan });
+    const priceCrypto = await convert(priceOf[plan], 'usd', ticker);
+    return send(chatId, t.showDepositCryptoInfoPlan(priceCrypto, tickerView, address, plan), o);
   }
   //
   //
@@ -999,6 +934,10 @@ Nomadly Bot`;
 
   if (action === a.depositNGN) {
     if (message === 'Back') return goto[a.selectCurrencyToDeposit]();
+
+    const amount = message;
+    if (isNaN(amount)) return send(chatId, t.askValidAmount);
+    await saveInfo('depositAmountNgn', Number(amount));
     return goto[a.askEmailForNGN]();
   }
   if (action === a.askEmailForNGN) {
@@ -1007,7 +946,7 @@ Nomadly Bot`;
     const email = message;
     if (!isValidEmail(email)) return send(chatId, t.askValidEmail);
     await saveInfo('email', email);
-    return goto[a.showDepositNgnInfo]();
+    return goto.showDepositNgnInfo();
   }
 
   if (action === a.depositUSD) {
@@ -1026,7 +965,7 @@ Nomadly Bot`;
     const ticker = tickerOf[tickerView];
     if (!ticker) return send(chatId, t.askValidCrypto);
     await saveInfo('tickerView', tickerView);
-    return goto[a.showDepositCryptoInfo]();
+    return goto.showDepositCryptoInfo();
   }
   //
   //
@@ -1302,9 +1241,153 @@ Nomadly Bot`,
   return false; // error = false
 };
 
+const logReq = (req, res, next) => {
+  log(req.hostname + req.originalUrl);
+  next();
+};
+const auth = async (req, res, next) => {
+  const ref = req?.query?.ref;
+  const pay = await get(chatIdOfPayment, ref);
+  if (!pay) return log(t.payError) || res.send(html(t.payError));
+  req.pay = { ...pay, ref };
+  next();
+};
+
 const app = express();
 app.use(cors());
+app.use(logReq);
 app.set('json spaces', 2);
+let serverStartTime = new Date();
+//
+//
+app.get('/bank-pay-plan', auth, async (req, res) => {
+  // Validate
+  const { ref, chatId, plan } = req.pay;
+
+  // Subscribe Plan
+  subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot);
+
+  // Logs
+  res.send(html());
+  del(chatIdOfPayment, ref);
+  const name = await get(nameOf, chatId);
+  set(payments, ref, `Bank, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${name}, ${new Date()}`);
+});
+app.get('/bank-pay-domain', auth, async (req, res) => {
+  // Validate
+  const { ref, chatId, domain, price } = req.pay;
+
+  // Buy Domain
+  const error = await buyDomainFullProcess(chatId, domain);
+  if (error) return res.send(html(error));
+
+  // Logs
+  res.send(html());
+  del(chatIdOfPayment, ref);
+  const name = await get(nameOf, chatId);
+  set(payments, ref, `Bank, Domain, ${domain}, $${price}, ${chatId}, ${name}, ${new Date()}`);
+});
+app.get('/bank-wallet', auth, async (req, res) => {
+  // Validate
+  const { ref, chatId, ngnIn } = req.pay;
+
+  // Update Wallet
+  const wallet = await get(walletOf, chatId);
+  const ngnInTotal = (wallet?.ngnIn || 0) + ngnIn;
+  await set(walletOf, chatId, 'ngnIn', ngnInTotal);
+  const { usdBal, ngnBal } = await getBalance(walletOf, chatId);
+  send(chatId, t.showWallet(usdBal, ngnBal));
+  const usdIn = await usdToNgn(ngnIn);
+  send(chatId, t.confirmationDepositMoney(`${ngnIn} NGN`, usdIn));
+
+  // Logs
+  res.send(html());
+  del(chatIdOfPayment, ref);
+  const name = await get(nameOf, chatId);
+  set(payments, ref, `Bank,Wallet,wallet,$${usdIn},${chatId},${name},${new Date()},${ngnIn} NGN`);
+});
+//
+//
+app.get('/crypto-pay-plan', auth, async (req, res) => {
+  // Validate
+  const { ref, chatId, plan } = req.pay;
+  const coin = req?.query?.coin;
+  const value = Number(req?.query?.value_forwarded_coin);
+  const usdIn = Number(await convert(value * 1.06, coin, 'usd'));
+  if (usdIn < priceOf[plan]) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice));
+
+  // Subscribe Plan
+  subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot);
+
+  // Logs
+  res.send(html());
+  del(chatIdOfPayment, ref);
+  const name = await get(nameOf, chatId);
+  set(payments, ref, `Crypto,Plan,${plan},$${priceOf[plan]},${chatId},${name},${new Date()},${value} ${coin}`);
+});
+app.get('/crypto-pay-domain', auth, async (req, res) => {
+  // Validate
+  const { ref, chatId, domain, price } = req.pay;
+  const coin = req?.query?.coin;
+  const value = req?.query?.value_forwarded_coin;
+  const usdIn = Number(await convert(value, coin, 'usd'));
+  const usdInUp = usdIn * 1.06;
+  if (usdInUp < price) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice));
+
+  // Buy Domain
+  const error = await buyDomainFullProcess(chatId, domain);
+  if (error) return res.send(html(error));
+
+  // Logs
+  res.send(html());
+  del(chatIdOfPayment, ref);
+  const name = await get(nameOf, chatId);
+  set(payments, ref, `Crypto,Domain,${domain},$${price},${chatId},${name},${new Date()},${value} ${coin}`);
+});
+
+app.get('/crypto-wallet', auth, async (req, res) => {
+  // Validate
+  const { ref, chatId } = req.pay;
+  const coin = req?.query?.coin;
+  const value = req?.query?.value_forwarded_coin;
+
+  // Update Wallet
+  const usdIn = Number(await convert(value, coin, 'usd'));
+  const wallet = await get(walletOf, chatId);
+  const usdInTotal = (wallet?.usdIn || 0) + usdIn;
+  await set(walletOf, chatId, 'usdIn', usdInTotal);
+  const { usdBal, ngnBal } = await getBalance(walletOf, chatId);
+  send(chatId, t.confirmationDepositMoney(value + ' ' + tickerViewOf[coin], usdIn));
+  send(chatId, t.showWallet(usdBal, ngnBal));
+
+  // Logs
+  res.send(html());
+  del(chatIdOfPayment, ref);
+  const name = await get(nameOf, chatId);
+  set(payments, ref, `Crypto,Wallet,wallet,$${usdIn},${chatId},${name},${new Date()},${value} ${coin}`);
+});
+//
+//
+app.get('/:id', async (req, res) => {
+  const id = req?.params?.id;
+  if (id === '') return res.json({ message: 'Salam', from: req.hostname });
+
+  const shortUrl = `${req.hostname}/${id}`;
+  const shortUrlSanitized = shortUrl.replace('.', '@');
+  const url = await get(fullUrlOf, shortUrlSanitized);
+  if (!url) return res.status(404).send('Link not found');
+  if (!(await isValid(shortUrlSanitized))) return res.status(404).send(html(t.linkExpired));
+
+  res.redirect(url);
+  increment(clicksOf, 'total');
+  increment(clicksOf, today());
+  increment(clicksOf, week());
+  increment(clicksOf, month());
+  increment(clicksOf, year());
+  increment(clicksOn, shortUrlSanitized);
+});
+//
+//
 app.get('/', (req, res) => {
   res.send(html(t.greet));
 });
@@ -1312,169 +1395,6 @@ app.get('/health', (req, res) => {
   tryConnectReseller();
   res.send(html('ok'));
 });
-app.get('/bank-pay-plan', async (req, res) => {
-  log(req?.hostname + req?.originalUrl);
-
-  // Validations
-  const ref = req?.query?.ref;
-  const chatId = await get(chatIdOfPayment, ref);
-  const plan = (await get(state, chatId))?.plan;
-  log(`bank-pay-plan ref: ${ref} chatId: ${chatId} plan: ${plan}`);
-  if (!plan) {
-    res.send(html('Payment already processed or not found'));
-    return;
-  }
-
-  // Subscribe Plan
-  subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot);
-
-  // Logs
-  res.send(html());
-  del(state, chatId);
-  del(chatIdOfPayment, ref);
-  const name = await get(nameOf, chatId);
-  set(payments, ref, `Bank, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${name}, ${new Date()}`);
-});
-app.get('/bank-payment-for-domain', async (req, res) => {
-  log(req?.hostname + req?.originalUrl);
-
-  // Validations
-  const ref = req?.query?.ref;
-  const chatId = await get(chatIdOfPayment, ref);
-  const info = await get(state, chatId);
-  const domain = info?.chosenDomainForPayment;
-  log(`bank-payment-for-domain ref: ${ref} chatId: ${chatId} domain: ${domain}`);
-  if (!domain) {
-    res.send(html('Payment already processed or not found'));
-    return;
-  }
-
-  // Buy Domain
-  const error = await buyDomainFullProcess(chatId, domain);
-  if (error) {
-    return res.send(html(error));
-  }
-
-  // Logs
-  res.send(html());
-  del(state, chatId);
-  del(chatIdOfPayment, ref);
-  const name = await get(nameOf, chatId);
-  const chosenDomainPrice = info?.chosenDomainPrice;
-  set(payments, ref, `Bank, Domain, ${domain}, $${chosenDomainPrice}, ${chatId}, ${name}, ${new Date()}`);
-});
-
-//
-app.get('/crypto-pay-plan', async (req, res) => {
-  log(req?.hostname + req?.originalUrl);
-
-  // Validations
-  const ref = req?.query?.ref;
-  const coin = req?.query?.coin;
-  const value_coin = req?.query?.value_forwarded_coin;
-
-  const chatId = await get(chatIdOfPayment, ref);
-  const info = await get(state, chatId);
-  const session = info?.cryptoPaymentSession;
-  const plan = info?.plan;
-  log(`crypto-pay-plan ref: ${ref} chatId: ${chatId} plan: ${plan}`);
-  if (!plan) {
-    res.send(html(t.payError));
-    return;
-  }
-  const { priceCrypto, ticker } = session;
-  const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
-  if (!(Number(value_coin) >= price && coin === ticker)) {
-    res.send(html('Wrong coin or wrong price'));
-    return;
-  }
-
-  // Subscribe Plan
-  subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot);
-
-  // Logs
-  res.send(html());
-  del(state, chatId);
-  const date = new Date();
-  del(chatIdOfPayment, ref);
-  const name = await get(nameOf, chatId);
-  set(payments, ref, `Crypto, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${name}, ${date}, ${value_coin} ${coin}`);
-});
-app.get('/crypto-payment-for-domain', async (req, res) => {
-  log(req?.hostname + req?.originalUrl);
-
-  // Validations
-  const ref = req?.query?.ref;
-  const coin = req?.query?.coin;
-  const value_coin = req?.query?.value_forwarded_coin;
-  const chatId = await get(chatIdOfPayment, ref);
-  const info = await get(state, chatId);
-  const session = info?.cryptoPaymentSession;
-  const domain = info?.chosenDomainForPayment;
-  log(`crypto-payment-for-domain ref: ${ref} chatId: ${chatId} domain: ${domain}`);
-  if (!domain) {
-    res.send(html(t.payError));
-    return;
-  }
-  const { priceCrypto, ticker } = session;
-  const price = Number(priceCrypto) - Number(priceCrypto) * 0.06;
-  if (!(Number(value_coin) >= price && coin === ticker)) {
-    res.send(html('Payment invalid, either less value sent or coin sent is not correct'));
-    return;
-  }
-
-  // Buy Domain
-  const error = await buyDomainFullProcess(chatId, domain);
-  if (error) {
-    res.send(html(error));
-    return;
-  }
-
-  // Logs
-  res.send(html());
-
-  // TODO: do some thing better than delete to be high quality
-  del(state, chatId);
-  const date = new Date();
-  del(chatIdOfPayment, ref);
-  const name = await get(nameOf, chatId);
-  const chosenDomainPrice = info?.chosenDomainPrice;
-  set(payments, ref, `Crypto,Domain,${domain},$${chosenDomainPrice},${chatId},${name},${date},${value_coin} ${coin}`);
-});
-app.get('/crypto-wallet', async (req, res) => {
-  log(req?.hostname + req?.originalUrl);
-  // Validations
-  const refReceived = req?.query?.ref;
-  const coin = req?.query?.coin;
-  const value_coin = req?.query?.value_forwarded_coin; // ? value_coin or coin with
-  const chatId = await get(chatIdOfPayment, refReceived);
-  const info = await get(state, chatId);
-  const ref = info?.ref;
-  const usdIn = Number(await convert(value_coin, coin, 'usd'));
-  log(`crypto-wallet ref: ${ref} chatId: ${chatId}`);
-  if (!(ref && ref === refReceived)) {
-    log(t.payError);
-    return res.send(html(t.payError));
-  }
-
-  const wallet = await get(walletOf, chatId);
-  const usdInTotal = (wallet?.usdIn || 0) + usdIn;
-  await set(walletOf, chatId, 'usdIn', usdInTotal);
-  const { usdBal, ngnBal } = await getBalance(walletOf, chatId);
-
-  send(chatId, t.showWallet(usdBal, ngnBal));
-  send(chatId, t.confirmationDepositCrypto(value_coin + ' ' + tickerViewOf[coin], usdIn));
-
-  // Logs
-  res.send(html());
-  const date = new Date();
-  del(chatIdOfPayment, ref);
-  set(state, chatId, 'ref', null);
-  const name = await get(nameOf, chatId);
-  set(payments, ref, `Crypto,Wallet,wallet,$${usdIn},${chatId},${name},${date},${value_coin} ${coin}`);
-});
-
-//
 app.get('/json1444', async (req, res) => {
   await backupTheData();
   const fileName = 'backup.json';
@@ -1489,46 +1409,11 @@ app.get('/payments', async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   fs.createReadStream(fileName).pipe(res);
 });
-
-let serverStartTime = new Date();
 app.get('/uptime', (req, res) => {
   let now = new Date();
   let uptimeInMilliseconds = now - serverStartTime;
   let uptimeInHours = uptimeInMilliseconds / (1000 * 60 * 60);
   res.send(html(`Server has been running for ${uptimeInHours.toFixed(2)} hours.`));
-});
-
-app.get('/:id', async (req, res) => {
-  log(req?.hostname + req?.originalUrl);
-
-  const id = req?.params?.id;
-  if (id === '') {
-    res.json({ message: 'Salam', from: req.hostname });
-    return;
-  }
-  const shortUrl = `${req.hostname}/${id}`;
-  const shortUrlSanitized = shortUrl.replace('.', '@');
-  const url = await get(fullUrlOf, shortUrlSanitized);
-
-  if (!url) {
-    res.status(404).send('Link not found');
-    return;
-  }
-
-  if (!(await isValid(shortUrlSanitized))) {
-    res.status(404).send(html(t.linkExpired));
-    return;
-  }
-
-  res.redirect(url);
-
-  increment(clicksOf, 'total');
-  increment(clicksOf, today());
-  increment(clicksOf, week());
-  increment(clicksOf, month());
-  increment(clicksOf, year());
-
-  increment(clicksOn, shortUrlSanitized);
 });
 const startServer = () => {
   const port = process.env.PORT || 3000;
