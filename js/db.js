@@ -11,7 +11,7 @@ const increment = async (c, key, val = 1) => {
     const count = (await get(c, key)) || 0;
     await set(c, key, count + val);
   } catch (error) {
-    console.error(`Error db increment ${key} from ${c.collectionName}:`, error);
+    console.error(`Error increment: ${key} from ${c.collectionName}:`, error);
     return null;
   }
 };
@@ -36,7 +36,7 @@ async function get(c, key) {
 
     return result?.val || result || undefined;
   } catch (error) {
-    console.error(`Error db getting ${key} from ${c.collectionName}:`, error);
+    console.error(`Error get: ${key} from ${c.collectionName}:`, error);
     return null;
   }
 }
@@ -46,7 +46,7 @@ async function getAll(c) {
     const result = await c.find({}).toArray();
     return result;
   } catch (error) {
-    console.error(`Error db getting all documents from ${c}:`, error);
+    console.error(`Error getAll: ${c}:`, error);
     return null;
   }
 }
@@ -63,17 +63,17 @@ async function set(c, key, value, valueInside) {
     // a = a === undefined ? '' : ` ${a}`;
     // console.log(`${key}: ${JSON.stringify(value)}${a} set in ${c.collectionName}`);
   } catch (error) {
-    console.error(`Error db setting ${key} -> ${JSON.stringify(value)} in ${c.collectionName}:`, error);
+    console.error(`Error set: ${key} -> ${JSON.stringify(value)} in ${c.collectionName}:`, error);
   }
 }
 
-async function del(c, chatId) {
+async function del(c, _id) {
   try {
-    const result = await c.deleteOne({ _id: chatId });
+    const result = await c.deleteOne({ _id });
     // console.log(`Deleted ${result.deletedCount >= 1 ? 'True' : 'False'} in ${c.collectionName} for ${chatId}`);
     return result.deletedCount === 1;
   } catch (error) {
-    console.error('Error db deleting user state:', error);
+    console.error('Error del:', error);
     return false;
   }
 }
