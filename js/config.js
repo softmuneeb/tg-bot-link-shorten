@@ -41,6 +41,7 @@ const u = {
 }
 
 const t = {
+  argsErr: `dev: sent wrong args`,
   showDepositNgnInfo:
     ngn => `Please remit ${ngn} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your wallet will updated.
 
