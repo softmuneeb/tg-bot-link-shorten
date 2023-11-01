@@ -138,10 +138,13 @@ const sendQrCode = async (bot, chatId, bb) => {
 
 const getBalance = async (walletOf, chatId) => {
   const wallet = await get(walletOf, chatId)
-  const usdBal = (wallet?.usdIn || 0) - (wallet?.usdOut || 0)
-  const ngnBal = (isNaN(wallet?.ngnIn) || 0) - (isNaN(wallet?.ngnOut) || 0)
 
-  return { usdBal, ngnBal }
+  const usdBal = (wallet?.usdIn || 0) - (wallet?.usdOut || 0)
+
+  const ngnIn = isNaN(wallet?.ngnIn) ? 0 : Number(wallet?.ngnIn)
+  const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
+
+  return { usdBal, ngnBal: ngnIn - ngnOut }
 }
 
 const subscribePlan = async (planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot, keyboard) => {
