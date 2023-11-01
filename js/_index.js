@@ -606,35 +606,21 @@ bot.on('message', async msg => {
   //
   //
   if (message === user.buyDomainName) {
-    goto['choose-domain-to-buy']()
-    return
+    return goto['choose-domain-to-buy']()
   }
   if (action === 'choose-domain-to-buy') {
     const domain = message.toLowerCase()
     const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/
-
-    if (!domainRegex.test(domain)) {
-      send(chatId, 'Domain name is invalid. Please try another domain name.')
-      return
-    }
-
+    if (!domainRegex.test(domain)) return send(chatId, 'Domain name is invalid. Please try another domain name.')
     const { available, price, originalPrice } = await checkDomainPriceOnline(domain)
-
-    if (!available) {
-      send(chatId, 'Domain is not available. Please try another domain name.', rem)
-      return
-    }
-
+    if (!available) return send(chatId, 'Domain is not available. Please try another domain name.', rem)
     set(state, chatId, 'chosenDomainForPayment', domain)
-
     if (originalPrice <= 2 && (await isSubscribed(chatId))) {
       const available = (await get(freeDomainNamesAvailableFor, chatId)) || 0
       if (available > 0) return goto['get-free-domain']()
     }
-
     set(state, chatId, 'chosenDomainPrice', price)
-    goto['domain-pay'](domain, price)
-    return
+    return goto['domain-pay'](domain, price)
   }
   if (action === 'domain-pay') {
     if (message === 'Back') return goto['choose-domain-to-buy']()
@@ -667,36 +653,33 @@ bot.on('message', async msg => {
     const ref = nanoid()
 
     log({ ref })
-    set(chatIdOfPayment, ref, chatId)
+    set(chatIdOfPayment, ref, { chatId, domain, price })
     set(state, chatId, 'action', 'none')
     const priceNGN = Number(await usdToNgn(price))
     const { url, error } = await createCheckout(priceNGN, `/bank-pay-domain?a=b&ref=${ref}&`, email, username)
     if (error) return send(chatId, error, o)
-    send(chatId, t.bankPayDomain(priceNGN, domain), payBank(url))
-    return send(chatId, `Bank ₦aira + Card 🌐︎`, o)
+    send(chatId, `Bank ₦aira + Card 🌐︎`, o)
+    return send(chatId, t.bankPayDomain(priceNGN, domain), payBank(url))
   }
   if (action === 'crypto-pay-domain') {
-    const priceUSD = info?.chosenDomainPrice
+    const price = info?.chosenDomainPrice
     const domain = info?.chosenDomainForPayment
 
-    if (message === 'Back') return goto['domain-pay'](domain, priceUSD)
+    if (message === 'Back') return goto['domain-pay'](domain, price)
 
     const tickerView = message
     const coin = tickerOf[tickerView]
     if (!coin) return send(chatId, t.askValidCrypto)
 
     const ref = nanoid()
-    log({ ref })
+    set(chatIdOfPayment, ref, { chatId, domain, price })
     const { address, bb } = await getCryptoDepositAddress(coin, chatId, SELF_URL, `/crypto-pay-domain?a=b&ref=${ref}&`)
 
-    set(chatIdOfPayment, ref, chatId)
-
-    const priceCrypto = await convert(priceUSD, 'usd', coin)
-
+    log({ ref })
     sendQrCode(bot, chatId, bb)
-    send(chatId, t.showDepositCryptoInfoDomain(priceCrypto, tickerView, address, domain), o)
     set(state, chatId, 'action', 'none')
-    return
+    const priceCrypto = await convert(price, 'usd', coin)
+    return send(chatId, t.showDepositCryptoInfoDomain(priceCrypto, tickerView, address, domain), o)
   }
   if (action === 'get-free-domain') {
     if (message === 'Back' || message === 'No') return goto['choose-domain-to-buy']()
