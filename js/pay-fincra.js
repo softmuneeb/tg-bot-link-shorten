@@ -2,7 +2,7 @@
 const axios = require('axios')
 require('dotenv').config()
 
-const createCheckout = async (amount, redirectPath, email, name) => {
+const createCheckout = async (amount, redirectPath, email, name, ref) => {
   const options = {
     method: 'POST',
     url: `https://${process.env.FINCRA_ENDPOINT}/checkout/payments`,
@@ -15,10 +15,11 @@ const createCheckout = async (amount, redirectPath, email, name) => {
     },
     data: {
       currency: 'NGN',
-      customer: { name: name + ' test name', email },
+      customer: { name: 'Name is ' + name, email },
       paymentMethods: ['bank_transfer', 'card'],
       amount,
       redirectUrl: `${process.env.SELF_URL}${redirectPath}`,
+      reference: ref,
       feeBearer: 'business', // 'customer',
       settlementDestination: 'wallet',
       defaultPaymentMethod: 'bank_transfer',
@@ -44,13 +45,10 @@ const getBusinessId = async () => {
     },
   }
 
-  await axios.request(options)
+  return (await axios.request(options)).data
 }
-
-// getBusinessId();
-// createCheckout('1', '/success?a=b&ref=tx1234').then(console.log);
-// getBankDepositAddress('100', '1234567');
-// getBankDepositAddress('100', '55667788');
-// getAmountsPaid('64c95e7366ea9f0b4a98dc2e', '64c95e7316ea9f0b4a98dc2e');
+// getBusinessId().then(log)
+// createCheckout('100', '/uptime?a=b&ref=two_tx__70', 'softmuneeb@gmail.com', 'M', 'two_tx__70').then(console.log)
+// createCheckout('100', '/uptime?a=b&ref=two_tx__130', 'softmuneeb@gmail.com', 'M', 'two_tx__130').then(console.log)
 
 module.exports = { createCheckout, getBusinessId }

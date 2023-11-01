@@ -1,5 +1,5 @@
 /*global process */
-
+// TODO uncomment saveDomainInServer
 const {
   o,
   t,
@@ -364,8 +364,8 @@ bot.on('message', async msg => {
       const { depositAmountNgn: ngn, email } = info
 
       log({ ref })
-      set(chatIdOfPayment, ref, { chatId, ngnIn: ngn })
-      const { url, error } = await createCheckout(ngn, `/bank-wallet?a=b&ref=${ref}&`, email, username)
+      set(chatIdOfPayment, ref, { chatId, ngnIn: ngn, endpoint: `/bank-wallet` })
+      const { url, error } = await createCheckout(ngn, `/bank-wallet?a=b&ref=${ref}&`, email, username, ref)
 
       set(state, chatId, 'action', 'none')
       if (error) return send(chatId, error, o)
@@ -657,10 +657,10 @@ bot.on('message', async msg => {
     const ref = nanoid()
 
     log({ ref })
-    set(chatIdOfPayment, ref, { chatId, domain, price })
     set(state, chatId, 'action', 'none')
     const priceNGN = Number(await usdToNgn(price))
-    const { url, error } = await createCheckout(priceNGN, `/bank-pay-domain?a=b&ref=${ref}&`, email, username)
+    set(chatIdOfPayment, ref, { chatId, domain, price, endpoint: `/bank-pay-domain` })
+    const { url, error } = await createCheckout(priceNGN, `/bank-pay-domain?a=b&ref=${ref}&`, email, username, ref)
     if (error) return send(chatId, error, o)
     send(chatId, `Bank ₦aira + Card 🌐︎`, o)
     return send(chatId, t.bankPayDomain(priceNGN, domain), payBank(url))
@@ -736,8 +736,8 @@ bot.on('message', async msg => {
 
     const ref = nanoid()
     set(state, chatId, 'action', 'none')
-    set(chatIdOfPayment, ref, { chatId, plan })
-    const { url, error } = await createCheckout(priceNGN, `/bank-pay-plan?a=b&ref=${ref}&`, email, username)
+    set(chatIdOfPayment, ref, { chatId, plan, endpoint: `/bank-pay-plan` })
+    const { url, error } = await createCheckout(priceNGN, `/bank-pay-plan?a=b&ref=${ref}&`, email, username, ref)
 
     log({ ref })
     if (error) return send(chatId, error, o)
@@ -1226,11 +1226,11 @@ Nomadly Bot`,
 }
 
 const logReq = (req, res, next) => {
-  log(req.hostname + req.originalUrl)
+  log(req.hostname + req.originalUrl + ' ' + (req?.body || ''))
   next()
 }
 const auth = async (req, res, next) => {
-  const ref = req?.query?.ref
+  const ref = req?.query?.ref || req?.body?.reference // first for crypto and second for webhook fincra
   const pay = await get(chatIdOfPayment, ref)
   if (!pay) return log(t.payError) || res.send(html(t.payError))
   req.pay = { ...pay, ref }
@@ -1240,58 +1240,76 @@ const auth = async (req, res, next) => {
 const app = express()
 app.use(cors())
 app.use(logReq)
+app.use(express.json())
 app.set('json spaces', 2)
 let serverStartTime = new Date()
 //
 //
-app.get('/bank-pay-plan', auth, async (req, res) => {
-  // Validate
-  const { ref, chatId, plan } = req.pay
-  if (!ref || !chatId || !plan) return log(t.argsErr) || res.send(html(t.argsErr))
+const bankApis = {
+  '/bank-pay-plan': async (req, res, valueNgn) => {
+    // Validate
+    const { ref, chatId, plan } = req.pay
+    if (!ref || !chatId || !plan) return log(t.argsErr) || res.send(html(t.argsErr))
+    const usdIn = Number(await ngnToUsd(valueNgn * 1.06))
+    if (usdIn < priceOf[plan]) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice))
 
-  // Subscribe Plan
-  subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot)
+    // Subscribe Plan
+    subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot)
 
-  // Logs
-  res.send(html())
-  del(chatIdOfPayment, ref)
-  const name = await get(nameOf, chatId)
-  set(payments, ref, `Bank, Plan, ${plan}, $${priceOf[plan]}, ${chatId}, ${name}, ${new Date()}`)
-})
-app.get('/bank-pay-domain', auth, async (req, res) => {
-  // Validate
-  const { ref, chatId, domain, price } = req.pay
-  if (!ref || !chatId || !domain || !price) return log(t.argsErr) || res.send(html(t.argsErr))
+    // Logs
+    res.send(html())
+    del(chatIdOfPayment, ref)
+    const name = await get(nameOf, chatId)
+    set(payments, ref, `Bank, Plan, ${plan}, $${usdIn}, ${chatId}, ${name}, ${new Date()}`)
+  },
+  '/bank-pay-domain': async (req, res, valueNgn) => {
+    // Validate
+    const { ref, chatId, domain, price } = req.pay
+    if (!ref || !chatId || !domain || !price) return log(t.argsErr) || res.send(html(t.argsErr))
+    const usdIn = Number(await ngnToUsd(valueNgn * 1.06))
+    if (usdIn < price) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice))
 
-  // Buy Domain
-  const error = await buyDomainFullProcess(chatId, domain)
-  if (error) return res.send(html(error))
+    // Buy Domain
+    const error = await buyDomainFullProcess(chatId, domain)
+    if (error) return res.send(html(error))
 
-  // Logs
-  res.send(html())
-  del(chatIdOfPayment, ref)
-  const name = await get(nameOf, chatId)
-  set(payments, ref, `Bank, Domain, ${domain}, $${price}, ${chatId}, ${name}, ${new Date()}`)
-})
-app.get('/bank-wallet', auth, async (req, res) => {
-  // Validate
-  const { ref, chatId, ngnIn } = req.pay
-  if (!ref || !chatId || !ngnIn) return log(t.argsErr) || res.send(html(t.argsErr))
+    // Logs
+    res.send(html())
+    del(chatIdOfPayment, ref)
+    const name = await get(nameOf, chatId)
+    set(payments, ref, `Bank, Domain, ${domain}, $${usdIn}, ${chatId}, ${name}, ${new Date()}`)
+  },
+  '/bank-wallet': async (req, res, valueNgn) => {
+    // Validate
+    const { ref, chatId } = req.pay
+    if (!ref || !chatId) return log(t.argsErr) || res.send(html(t.argsErr))
 
-  // Update Wallet
-  const wallet = await get(walletOf, chatId)
-  const ngnInTotal = (wallet?.ngnIn || 0) + ngnIn
-  await set(walletOf, chatId, 'ngnIn', ngnInTotal)
-  const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
-  send(chatId, t.showWallet(usdBal, ngnBal))
-  const usdIn = await ngnToUsd(ngnIn)
-  send(chatId, t.confirmationDepositMoney(`${ngnIn} NGN`, usdIn))
+    // Update Wallet
+    const ngnIn = valueNgn
+    const wallet = await get(walletOf, chatId)
+    const ngnInTotal = (wallet?.ngnIn || 0) + ngnIn
+    await set(walletOf, chatId, 'ngnIn', ngnInTotal)
+    const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
+    send(chatId, t.showWallet(usdBal, ngnBal))
+    const usdIn = await ngnToUsd(ngnIn)
+    send(chatId, t.confirmationDepositMoney(`${ngnIn} NGN`, usdIn))
 
-  // Logs
-  res.send(html())
-  del(chatIdOfPayment, ref)
-  const name = await get(nameOf, chatId)
-  set(payments, ref, `Bank,Wallet,wallet,$${usdIn},${chatId},${name},${new Date()},${ngnIn} NGN`)
+    // Logs
+    res.send(html())
+    del(chatIdOfPayment, ref)
+    const name = await get(nameOf, chatId)
+    set(payments, ref, `Bank,Wallet,wallet,$${usdIn},${chatId},${name},${new Date()},${ngnIn} NGN`)
+  },
+}
+//
+//
+app.post('/webhook', auth, (req, res) => {
+  const value = req?.body?.amountReceived
+  const coin = req?.body?.currency
+  const endpoint = req?.pay?.endpoint
+  if (coin !== 'NGN' || isNaN(value) || !bankApis[endpoint]) return log(t.argsErr) || res.send(html(t.argsErr))
+
+  bankApis[endpoint](req, res, value)
 })
 //
 //
@@ -1357,26 +1375,6 @@ app.get('/crypto-wallet', auth, async (req, res) => {
 })
 //
 //
-app.get('/:id', async (req, res) => {
-  const id = req?.params?.id
-  if (id === '') return res.json({ message: 'Salam', from: req.hostname })
-
-  const shortUrl = `${req.hostname}/${id}`
-  const shortUrlSanitized = shortUrl.replace('.', '@')
-  const url = await get(fullUrlOf, shortUrlSanitized)
-  if (!url) return res.status(404).send('Link not found')
-  if (!(await isValid(shortUrlSanitized))) return res.status(404).send(html(t.linkExpired))
-
-  res.redirect(url)
-  increment(clicksOf, 'total')
-  increment(clicksOf, today())
-  increment(clicksOf, week())
-  increment(clicksOf, month())
-  increment(clicksOf, year())
-  increment(clicksOn, shortUrlSanitized)
-})
-//
-//
 app.get('/', (req, res) => {
   res.send(html(t.greet))
 })
@@ -1403,6 +1401,25 @@ app.get('/uptime', (req, res) => {
   let uptimeInMilliseconds = now - serverStartTime
   let uptimeInHours = uptimeInMilliseconds / (1000 * 60 * 60)
   res.send(html(`Server has been running for ${uptimeInHours.toFixed(2)} hours.`))
+})
+//
+app.get('/:id', async (req, res) => {
+  const id = req?.params?.id
+  if (id === '') return res.json({ message: 'Salam', from: req.hostname })
+
+  const shortUrl = `${req.hostname}/${id}`
+  const shortUrlSanitized = shortUrl.replace('.', '@')
+  const url = await get(fullUrlOf, shortUrlSanitized)
+  if (!url) return res.status(404).send('Link not found')
+  if (!(await isValid(shortUrlSanitized))) return res.status(404).send(html(t.linkExpired))
+
+  res.redirect(url)
+  increment(clicksOf, 'total')
+  increment(clicksOf, today())
+  increment(clicksOf, week())
+  increment(clicksOf, month())
+  increment(clicksOf, year())
+  increment(clicksOn, shortUrlSanitized)
 })
 const startServer = () => {
   const port = process.env.PORT || 3000
