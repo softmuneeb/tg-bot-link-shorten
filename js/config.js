@@ -61,7 +61,8 @@ Nomadly Bot`,
 
 (Exclusive to ".sbs" domains.)`,
 
-  askCoupon: usd => `The price is $${usd}, Enter coupon code if you have it, other wise press "Skip"?`,
+  askCoupon: usd =>
+    `The price is $${usd}. Would you like to apply a coupon code? If you have one, please enter it now. Otherwise, you can press 'Skip'.`,
   enterCoupon: `Please enter coupon code:`,
   planPrice: (plan, price) => `Price of ${plan} subscription is $${price} Please choose payment method.`,
   planPriceOff: (plan, price, priceOff) =>
