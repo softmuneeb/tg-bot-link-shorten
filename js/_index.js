@@ -18,12 +18,13 @@ const {
   payBank,
   linkType,
   tickerOf,
+  discountOn,
+  planOptions,
   linkOptions,
   tickerViews,
   tickerViewOf,
   dnsRecordType,
   chooseSubscription,
-  planOptions,
 } = require('./config.js')
 const {
   week,
@@ -90,7 +91,6 @@ let state = {},
   expiryOf = {},
   fullUrlOf = {},
   domainsOf = {},
-  discountOn = {},
   chatIdBlocked = {},
   planEndingTime = {},
   chatIdOfPayment = {},
@@ -123,7 +123,6 @@ const loadData = async () => {
   expiryOf = db.collection('expiryOf')
   fullUrlOf = db.collection('fullUrlOf')
   domainsOf = db.collection('domainsOf')
-  discountOn = db.collection('discountOn')
   chatIdBlocked = db.collection('chatIdBlocked')
   planEndingTime = db.collection('planEndingTime')
   chatIdOfPayment = db.collection('chatIdOfPayment')
@@ -140,9 +139,6 @@ const loadData = async () => {
   chatIdOf = db.collection('chatIdOf')
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
-
-  set(discountOn, 'off20', 20)
-  set(discountOn, 'off13', 13)
 
   set(planEndingTime, 6687923716, 0)
   set(freeShortLinksOf, 6687923716, FREE_LINKS)
@@ -653,7 +649,7 @@ bot.on('message', async msg => {
     if (message === 'Skip') return (await saveInfo('couponApplied', false)) || goto['plan-pay']()
 
     const coupon = message
-    const discount = await get(discountOn, coupon)
+    const discount = discountOn[coupon]
     if (isNaN(discount)) return send(chatId, t.couponInvalid)
 
     const { price } = info
@@ -752,7 +748,7 @@ bot.on('message', async msg => {
     if (message === 'Skip') return (await saveInfo('couponApplied', false)) || goto['plan-pay']()
 
     const coupon = message
-    const discount = await get(discountOn, coupon)
+    const discount = discountOn[coupon]
     if (isNaN(discount)) return send(chatId, t.couponInvalid)
 
     const priceOff = price - (price * discount) / 100
@@ -1177,7 +1173,6 @@ function restoreData() {
     Object.assign(fullUrlOf, restoredData.fullUrlOf)
     Object.assign(domainsOf, restoredData.domainsOf)
     Object.assign(nameOf, restoredData.nameOfChatId)
-    Object.assign(discountOn, restoredData.discountOn)
     Object.assign(chatIdOf, restoredData.chatIdOfName)
     Object.assign(chatIdBlocked, restoredData.chatIdBlocked)
     Object.assign(planEndingTime, restoredData.planEndingTime)
@@ -1199,7 +1194,6 @@ async function backupTheData() {
     expiryOf: await getAll(expiryOf),
     fullUrlOf: await getAll(fullUrlOf),
     domainsOf: await getAll(domainsOf),
-    discountOn: await getAll(discountOn),
     chatIdBlocked: await getAll(chatIdBlocked),
     planEndingTime: await getAll(planEndingTime),
     chatIdOfPayment: await getAll(chatIdOfPayment),

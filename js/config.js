@@ -10,6 +10,12 @@ const WEEKLY_PLAN_FREE_DOMAINS = Number(process.env.WEEKLY_PLAN_FREE_DOMAINS)
 const FREE_LINKS_HOURS = Number(process.env.FREE_LINKS_TIME_SECONDS) / 60 / 60
 const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS)
 
+const discountOn = {}
+discountOn['OFF20'] = 20 // Percent
+discountOn['OFF15'] = 13 // Percent
+discountOn['14AUG'] = 10 // Percent
+discountOn['COOL_DAY'] = 5 // Percent
+
 // Note: these button labels must not mix with each other, other wise it may mess up bot
 const admin = {
   viewAnalytics: '📈 View Analytics',
@@ -413,6 +419,7 @@ module.exports = {
   admin,
   yes_no,
   timeOf,
+  discountOn,
   payBank,
   priceOf,
   tickerOf,
