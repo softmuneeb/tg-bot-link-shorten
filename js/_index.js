@@ -1390,7 +1390,7 @@ app.get('/crypto-pay-domain', auth, async (req, res) => {
   // Validate
   const { ref, chatId, domain, price } = req.pay
   const coin = req?.query?.coin
-  const value =   req?.query?.value_forwarded_coin
+  const value = req?.query?.value_forwarded_coin
   if (!ref || !chatId || !domain || !price || !coin || !value) return log(t.argsErr) || res.send(html(t.argsErr))
   const usdIn = Number(await convert(value, coin, 'usd'))
   const usdInUp = usdIn * 1.06

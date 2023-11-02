@@ -35,7 +35,7 @@ async function usdToNgn(amountInUSD) {
     const response = await axios.get(apiUrl)
     const usdToNgnRate = response.data.rates['NGN']
     const nairaAmount = Number(amountInUSD) * usdToNgnRate * (1 + PERCENT_INCREASE_USD_TO_NAIRA)
-    return nairaAmount.toFixed()
+    return Number(nairaAmount.toFixed())
   } catch (error) {
     console.error(`Error usdToNgn: ${error.message}`)
     return error.message
