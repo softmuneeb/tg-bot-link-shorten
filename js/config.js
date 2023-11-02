@@ -67,6 +67,11 @@ Nomadly Bot`,
   planPrice: (plan, price) => `Price of ${plan} subscription is $${price} Please choose payment method.`,
   planPriceOff: (plan, price, priceOff) =>
     `Price of ${plan} subscription is now $${priceOff} <s>($${price})</s> Please choose payment method.`,
+
+  domainPrice: (domain, price) => `Price of ${domain} is ${price} USD. Choose payment method.`,
+  domainPriceOff: (domain, price, priceOff) =>
+    `Price of ${domain} is now $${priceOff} <s>($${price})</s> Choose payment method.`,
+
   couponInvalid: `Invalid coupon code, Please enter coupon code again:`,
 
   errorPaidLessPrice: `Sent price less than needed`,

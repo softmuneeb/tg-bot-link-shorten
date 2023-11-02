@@ -226,7 +226,7 @@ bot.on('message', async msg => {
   }
   const goto = {
     askCoupon: () => {
-      send(chatId, t.askCoupon(priceOf[info?.plan]), k.of(['Skip']))
+      send(chatId, t.askCoupon(info?.price), k.of(['Skip']))
       set(state, chatId, 'action', a.askCoupon)
     },
     enterCoupon: () => {
@@ -234,8 +234,10 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', a.enterCoupon)
     },
     'domain-pay': () => {
-      const { chosenDomainForPayment, chosenDomainPrice } = info
-      send(chatId, `Price of ${chosenDomainForPayment} is ${chosenDomainPrice} USD. Choose payment method.`, k.pay)
+      const { domain, price, couponApplied, oldPrice } = info
+      couponApplied
+        ? send(chatId, t.domainPriceOff(domain, oldPrice, price), k.pay)
+        : send(chatId, t.domainPrice(domain, price), k.pay)
       set(state, chatId, 'action', 'domain-pay')
     },
     'choose-domain-to-buy': async () => {
@@ -456,7 +458,7 @@ bot.on('message', async msg => {
 
     'domain-pay': async coin => {
       set(state, chatId, 'action', 'none')
-      const price = info?.chosenDomainPrice
+      const price = info?.price
       const wallet = await get(walletOf, chatId)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
 
@@ -467,7 +469,7 @@ bot.on('message', async msg => {
       if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
 
       // buy domain
-      const domain = info?.chosenDomainForPayment
+      const domain = info?.domain
       const error = await buyDomainFullProcess(chatId, domain)
       if (error) return
 
@@ -638,16 +640,32 @@ bot.on('message', async msg => {
     if (!domainRegex.test(domain)) return send(chatId, 'Domain name is invalid. Please try another domain name.')
     const { available, price, originalPrice } = await checkDomainPriceOnline(domain)
     if (!available) return send(chatId, 'Domain is not available. Please try another domain name.', rem)
-    await saveInfo('chosenDomainForPayment', domain)
+    await saveInfo('domain', domain)
     if (originalPrice <= 2 && (await isSubscribed(chatId))) {
       const available = (await get(freeDomainNamesAvailableFor, chatId)) || 0
       if (available > 0) return goto['get-free-domain']()
     }
-    await saveInfo('chosenDomainPrice', price)
+    await saveInfo('price', price)
+    return goto.askCoupon()
+  }
+  if (action === a.askCoupon) {
+    if (message === 'Back') return goto['choose-domain-to-buy']()
+    if (message === 'Skip') return (await saveInfo('couponApplied', false)) || goto['plan-pay']()
+
+    const coupon = message
+    const discount = await get(discountOn, coupon)
+    if (isNaN(discount)) return send(chatId, t.couponInvalid)
+
+    const { price } = info
+    await saveInfo('oldPrice', price)
+    const priceOff = price - (price * discount) / 100
+    await saveInfo('couponApplied', true)
+    await saveInfo('price', priceOff)
+
     return goto['domain-pay']()
   }
   if (action === 'domain-pay') {
-    if (message === 'Back') return goto['choose-domain-to-buy']()
+    if (message === 'Back') return goto.askCoupon()
     const payOption = message
 
     if (payOption === payIn.crypto) {
@@ -670,8 +688,8 @@ bot.on('message', async msg => {
   if (action === 'bank-pay-domain') {
     if (message === 'Back') return goto['domain-pay']()
     const email = message
-    const price = info?.chosenDomainPrice
-    const domain = info?.chosenDomainForPayment
+    const price = info?.price
+    const domain = info?.domain
     if (!isValidEmail(email)) return send(chatId, t.askValidEmail)
 
     const ref = nanoid()
@@ -689,8 +707,8 @@ bot.on('message', async msg => {
     if (message === 'Back') return goto['domain-pay']()
     const tickerView = message
     const coin = tickerOf[tickerView]
-    const price = info?.chosenDomainPrice
-    const domain = info?.chosenDomainForPayment
+    const price = info?.price
+    const domain = info?.domain
     if (!coin) return send(chatId, t.askValidCrypto)
 
     const ref = nanoid()
@@ -708,7 +726,7 @@ bot.on('message', async msg => {
 
     if (message !== 'Yes') return send(chatId, `?`)
 
-    const domain = info?.chosenDomainForPayment
+    const domain = info?.domain
     const error = await buyDomainFullProcess(chatId, domain)
     if (!error) decrement(freeDomainNamesAvailableFor, chatId)
 
@@ -724,6 +742,7 @@ bot.on('message', async msg => {
     const plan = message
     if (!planOptions.includes(plan)) return send(chatId, 'Please choose a valid plan', chooseSubscription)
     await saveInfo('plan', plan)
+    await saveInfo('price', priceOf[plan])
     return goto.askCoupon()
   }
   if (action === a.askCoupon) {
@@ -739,6 +758,7 @@ bot.on('message', async msg => {
     const priceOff = price - (price * discount) / 100
     await saveInfo('couponApplied', true)
     await saveInfo('price', priceOff)
+
     return goto['plan-pay']()
   }
   if (action === 'plan-pay') {
@@ -1370,7 +1390,7 @@ app.get('/crypto-pay-domain', auth, async (req, res) => {
   // Validate
   const { ref, chatId, domain, price } = req.pay
   const coin = req?.query?.coin
-  const value = req?.query?.value_forwarded_coin
+  const value =   req?.query?.value_forwarded_coin
   if (!ref || !chatId || !domain || !price || !coin || !value) return log(t.argsErr) || res.send(html(t.argsErr))
   const usdIn = Number(await convert(value, coin, 'usd'))
   const usdInUp = usdIn * 1.06
