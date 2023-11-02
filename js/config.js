@@ -61,6 +61,13 @@ Nomadly Bot`,
 
 (Exclusive to ".sbs" domains.)`,
 
+  askCoupon: usd => `The price is $${usd}, Enter coupon code if you have it, other wise press "Skip"?`,
+  enterCoupon: `Please enter coupon code:`,
+  planPrice: (plan, price) => `Price of ${plan} subscription is $${price} Please choose payment method.`,
+  planPriceOff: (plan, price, priceOff) =>
+    `Price of ${plan} subscription is now $${priceOff} <s>($${price})</s> Please choose payment method.`,
+  couponInvalid: `Invalid coupon code, Please enter coupon code again:`,
+
   errorPaidLessPrice: `Sent price less than needed`,
   planSubscribed: `Your payment was successful, and you're now subscribed to our {{plan}} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
 
@@ -259,6 +266,7 @@ const k = {
     reply_markup: {
       keyboard: [Object.values(payIn), _bc],
     },
+    parse_mode: 'HTML',
   },
 }
 

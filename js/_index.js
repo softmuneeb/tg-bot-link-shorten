@@ -90,6 +90,7 @@ let state = {},
   expiryOf = {},
   fullUrlOf = {},
   domainsOf = {},
+  discountOn = {},
   chatIdBlocked = {},
   planEndingTime = {},
   chatIdOfPayment = {},
@@ -122,6 +123,7 @@ const loadData = async () => {
   expiryOf = db.collection('expiryOf')
   fullUrlOf = db.collection('fullUrlOf')
   domainsOf = db.collection('domainsOf')
+  discountOn = db.collection('discountOn')
   chatIdBlocked = db.collection('chatIdBlocked')
   planEndingTime = db.collection('planEndingTime')
   chatIdOfPayment = db.collection('chatIdOfPayment')
@@ -138,6 +140,10 @@ const loadData = async () => {
   chatIdOf = db.collection('chatIdOf')
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
+
+  set(discountOn, 'off20', 20)
+  set(discountOn, 'off13', 13)
+
   set(planEndingTime, 6687923716, 0)
   set(freeShortLinksOf, 6687923716, FREE_LINKS)
   adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
@@ -214,8 +220,19 @@ bot.on('message', async msg => {
 
     walletPayNgn: 'walletPayNgn',
     walletPayNgnConfirm: 'walletPayNgnConfirm',
+
+    askCoupon: 'askCoupon',
+    enterCoupon: 'enterCoupon',
   }
   const goto = {
+    askCoupon: () => {
+      send(chatId, t.askCoupon(priceOf[info?.plan]), k.of(['Skip']))
+      set(state, chatId, 'action', a.askCoupon)
+    },
+    enterCoupon: () => {
+      send(chatId, t.enterCoupon, bc)
+      set(state, chatId, 'action', a.enterCoupon)
+    },
     'domain-pay': (domain, price) => {
       send(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, k.pay)
       set(state, chatId, 'action', 'domain-pay')
@@ -235,8 +252,10 @@ bot.on('message', async msg => {
       send(chatId, t.chooseDomainToBuy(text), bc)
     },
     'plan-pay': () => {
-      const { plan } = info
-      send(chatId, `Price of ${plan} subscription is ${priceOf[plan]} USD. Choose payment method.`, k.pay)
+      const { plan, price, couponApplied } = info
+      couponApplied
+        ? send(chatId, t.planPriceOff(plan, priceOf[plan], price), k.pay)
+        : send(chatId, t.planPrice(plan, priceOf[plan]), k.pay)
       set(state, chatId, 'action', 'plan-pay')
     },
     'choose-subscription': () => {
@@ -411,17 +430,18 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', 'none')
 
       const plan = info?.plan
+      const price = info?.price
       const wallet = await get(walletOf, chatId)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
 
       if (coin === u.usd) {
-        const priceUsd = priceOf[plan]
+        const priceUsd = price
         if (usdBal < priceUsd) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
 
         const usdOut = (wallet?.usdOut || 0) + priceUsd
         await set(walletOf, chatId, 'usdOut', usdOut)
       } else {
-        const priceNgn = await usdToNgn(priceOf[plan])
+        const priceNgn = await usdToNgn(price)
         if (ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
 
         const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
@@ -705,10 +725,25 @@ bot.on('message', async msg => {
     const plan = message
     if (!planOptions.includes(plan)) return send(chatId, 'Please choose a valid plan', chooseSubscription)
     await saveInfo('plan', plan)
+    return goto.askCoupon()
+  }
+  if (action === a.askCoupon) {
+    if (message === 'Back') return goto['choose-subscription']()
+    const price = priceOf[info?.plan]
+    saveInfo('price', price)
+    if (message === 'Skip') return (await saveInfo('couponApplied', false)) || goto['plan-pay']()
+
+    const coupon = message
+    const discount = await get(discountOn, coupon)
+    if (isNaN(discount)) return send(chatId, t.couponInvalid)
+
+    const priceOff = price - (price * discount) / 100
+    await saveInfo('couponApplied', true)
+    await saveInfo('price', priceOff)
     return goto['plan-pay']()
   }
   if (action === 'plan-pay') {
-    if (message === 'Back') return goto['choose-subscription']()
+    if (message === 'Back') return goto.askCoupon()
     const payOption = message
     if (payOption === payIn.crypto) {
       set(state, chatId, 'action', 'crypto-pay-plan')
@@ -730,8 +765,8 @@ bot.on('message', async msg => {
     const email = message
     if (!isValidEmail(email)) return send(chatId, t.askValidEmail)
 
-    const plan = info?.plan
-    const priceNGN = Number(await usdToNgn(priceOf[plan]))
+    const { plan, price } = info
+    const priceNGN = Number(await usdToNgn(price))
 
     const ref = nanoid()
     set(state, chatId, 'action', 'none')
@@ -753,11 +788,11 @@ bot.on('message', async msg => {
     const { address, bb } = await getCryptoDepositAddress(ticker, chatId, SELF_URL, `/crypto-pay-plan?a=b&ref=${ref}&`)
 
     log({ ref })
-    const plan = info?.plan
     sendQrCode(bot, chatId, bb)
+    const { plan, price } = info
     set(state, chatId, 'action', 'none')
     set(chatIdOfPayment, ref, { chatId, plan })
-    const priceCrypto = await convert(priceOf[plan], 'usd', ticker)
+    const priceCrypto = await convert(price, 'usd', ticker)
     return send(chatId, t.showDepositCryptoInfoPlan(priceCrypto, tickerView, address, plan), o)
   }
   //
@@ -1123,6 +1158,7 @@ function restoreData() {
     Object.assign(fullUrlOf, restoredData.fullUrlOf)
     Object.assign(domainsOf, restoredData.domainsOf)
     Object.assign(nameOf, restoredData.nameOfChatId)
+    Object.assign(discountOn, restoredData.discountOn)
     Object.assign(chatIdOf, restoredData.chatIdOfName)
     Object.assign(chatIdBlocked, restoredData.chatIdBlocked)
     Object.assign(planEndingTime, restoredData.planEndingTime)
@@ -1144,6 +1180,7 @@ async function backupTheData() {
     expiryOf: await getAll(expiryOf),
     fullUrlOf: await getAll(fullUrlOf),
     domainsOf: await getAll(domainsOf),
+    discountOn: await getAll(discountOn),
     chatIdBlocked: await getAll(chatIdBlocked),
     planEndingTime: await getAll(planEndingTime),
     chatIdOfPayment: await getAll(chatIdOfPayment),
@@ -1247,10 +1284,10 @@ let serverStartTime = new Date()
 const bankApis = {
   '/bank-pay-plan': async (req, res, valueNgn) => {
     // Validate
-    const { ref, chatId, plan } = req.pay
+    const { ref, chatId, plan, price } = req.pay
     if (!ref || !chatId || !plan) return log(t.argsErr) || res.send(html(t.argsErr))
     const usdIn = Number(await ngnToUsd(valueNgn * 1.06))
-    if (usdIn < priceOf[plan]) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice))
+    if (usdIn < price) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice))
 
     // Subscribe Plan
     subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot)
@@ -1314,12 +1351,12 @@ app.post('/webhook', auth, (req, res) => {
 //
 app.get('/crypto-pay-plan', auth, async (req, res) => {
   // Validate
-  const { ref, chatId, plan } = req.pay
+  const { ref, chatId, plan, price } = req.pay
   const coin = req?.query?.coin
   const value = Number(req?.query?.value_forwarded_coin)
   if (!ref || !chatId || !plan || !coin || !value) return log(t.argsErr) || res.send(html(t.argsErr))
   const usdIn = Number(await convert(value * 1.06, coin, 'usd'))
-  if (usdIn < priceOf[plan]) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice))
+  if (usdIn < price) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice))
 
   // Subscribe Plan
   subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot)
@@ -1328,7 +1365,7 @@ app.get('/crypto-pay-plan', auth, async (req, res) => {
   res.send(html())
   del(chatIdOfPayment, ref)
   const name = await get(nameOf, chatId)
-  set(payments, ref, `Crypto,Plan,${plan},$${priceOf[plan]},${chatId},${name},${new Date()},${value} ${coin}`)
+  set(payments, ref, `Crypto,Plan,${plan},$${price},${chatId},${name},${new Date()},${value} ${coin}`)
 })
 app.get('/crypto-pay-domain', auth, async (req, res) => {
   // Validate
