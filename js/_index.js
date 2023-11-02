@@ -233,8 +233,9 @@ bot.on('message', async msg => {
       send(chatId, t.enterCoupon, bc)
       set(state, chatId, 'action', a.enterCoupon)
     },
-    'domain-pay': (domain, price) => {
-      send(chatId, `Price of ${domain} is ${price} USD. Choose payment method.`, k.pay)
+    'domain-pay': () => {
+      const { chosenDomainForPayment, chosenDomainPrice } = info
+      send(chatId, `Price of ${chosenDomainForPayment} is ${chosenDomainPrice} USD. Choose payment method.`, k.pay)
       set(state, chatId, 'action', 'domain-pay')
     },
     'choose-domain-to-buy': async () => {
@@ -637,13 +638,13 @@ bot.on('message', async msg => {
     if (!domainRegex.test(domain)) return send(chatId, 'Domain name is invalid. Please try another domain name.')
     const { available, price, originalPrice } = await checkDomainPriceOnline(domain)
     if (!available) return send(chatId, 'Domain is not available. Please try another domain name.', rem)
-    set(state, chatId, 'chosenDomainForPayment', domain)
+    await saveInfo('chosenDomainForPayment', domain)
     if (originalPrice <= 2 && (await isSubscribed(chatId))) {
       const available = (await get(freeDomainNamesAvailableFor, chatId)) || 0
       if (available > 0) return goto['get-free-domain']()
     }
-    set(state, chatId, 'chosenDomainPrice', price)
-    return goto['domain-pay'](domain, price)
+    await saveInfo('chosenDomainPrice', price)
+    return goto['domain-pay']()
   }
   if (action === 'domain-pay') {
     if (message === 'Back') return goto['choose-domain-to-buy']()
@@ -667,10 +668,10 @@ bot.on('message', async msg => {
     return send(chatId, t.askValidPayOption)
   }
   if (action === 'bank-pay-domain') {
+    if (message === 'Back') return goto['domain-pay']()
     const email = message
     const price = info?.chosenDomainPrice
     const domain = info?.chosenDomainForPayment
-    if (message === 'Back') return goto['domain-pay'](domain, price)
     if (!isValidEmail(email)) return send(chatId, t.askValidEmail)
 
     const ref = nanoid()
@@ -685,13 +686,11 @@ bot.on('message', async msg => {
     return send(chatId, t.bankPayDomain(priceNGN, domain), payBank(url))
   }
   if (action === 'crypto-pay-domain') {
-    const price = info?.chosenDomainPrice
-    const domain = info?.chosenDomainForPayment
-
-    if (message === 'Back') return goto['domain-pay'](domain, price)
-
+    if (message === 'Back') return goto['domain-pay']()
     const tickerView = message
     const coin = tickerOf[tickerView]
+    const price = info?.chosenDomainPrice
+    const domain = info?.chosenDomainForPayment
     if (!coin) return send(chatId, t.askValidCrypto)
 
     const ref = nanoid()
