@@ -1,5 +1,4 @@
 /*global process */
-// TODO uncomment saveDomainInServer
 const {
   o,
   t,
@@ -81,7 +80,7 @@ log('Bot ran!')
 
 const send = (chatId, message, options) => {
   log('reply:\t' + message + ' ' + (options?.reply_markup?.keyboard?.map(i => i) || '') + '\tto: ' + chatId)
-  bot.sendMessage(chatId, message, options)
+  bot.sendMessage(chatId, message, options).catch(e => log(e.message + ': ' + chatId))
 }
 
 // variables to implement core functionality
@@ -365,7 +364,7 @@ bot.on('message', async msg => {
 
       log({ ref })
       set(chatIdOfPayment, ref, { chatId, ngnIn: ngn, endpoint: `/bank-wallet` })
-      const { url, error } = await createCheckout(ngn, `/bank-wallet?a=b&ref=${ref}&`, email, username, ref)
+      const { url, error } = await createCheckout(ngn, `/ok?a=b&ref=${ref}&`, email, username, ref)
 
       set(state, chatId, 'action', 'none')
       if (error) return send(chatId, error, o)
@@ -660,7 +659,7 @@ bot.on('message', async msg => {
     set(state, chatId, 'action', 'none')
     const priceNGN = Number(await usdToNgn(price))
     set(chatIdOfPayment, ref, { chatId, domain, price, endpoint: `/bank-pay-domain` })
-    const { url, error } = await createCheckout(priceNGN, `/bank-pay-domain?a=b&ref=${ref}&`, email, username, ref)
+    const { url, error } = await createCheckout(priceNGN, `/ok?a=b&ref=${ref}&`, email, username, ref)
     if (error) return send(chatId, error, o)
     send(chatId, `Bank ₦aira + Card 🌐︎`, o)
     return send(chatId, t.bankPayDomain(priceNGN, domain), payBank(url))
@@ -737,7 +736,7 @@ bot.on('message', async msg => {
     const ref = nanoid()
     set(state, chatId, 'action', 'none')
     set(chatIdOfPayment, ref, { chatId, plan, endpoint: `/bank-pay-plan` })
-    const { url, error } = await createCheckout(priceNGN, `/bank-pay-plan?a=b&ref=${ref}&`, email, username, ref)
+    const { url, error } = await createCheckout(priceNGN, `/ok?a=b&ref=${ref}&`, email, username, ref)
 
     log({ ref })
     if (error) return send(chatId, error, o)
@@ -1226,11 +1225,11 @@ Nomadly Bot`,
 }
 
 const logReq = (req, res, next) => {
-  log(req.hostname + req.originalUrl + ' ' + (req?.body || ''))
+  log(req.hostname + req.originalUrl + ' ' + (JSON.stringify(req?.body, 0, 2) || ''))
   next()
 }
 const auth = async (req, res, next) => {
-  const ref = req?.query?.ref || req?.body?.reference // first for crypto and second for webhook fincra
+  const ref = req?.query?.ref || req?.body?.data?.reference // first for crypto and second for webhook fincra
   const pay = await get(chatIdOfPayment, ref)
   if (!pay) return log(t.payError) || res.send(html(t.payError))
   req.pay = { ...pay, ref }
@@ -1238,9 +1237,9 @@ const auth = async (req, res, next) => {
 }
 
 const app = express()
+app.use(express.json())
 app.use(cors())
 app.use(logReq)
-app.use(express.json())
 app.set('json spaces', 2)
 let serverStartTime = new Date()
 //
@@ -1304,8 +1303,8 @@ const bankApis = {
 //
 //
 app.post('/webhook', auth, (req, res) => {
-  const value = req?.body?.amountReceived
-  const coin = req?.body?.currency
+  const value = req?.body?.data?.amountReceived
+  const coin = req?.body?.data?.currency
   const endpoint = req?.pay?.endpoint
   if (coin !== 'NGN' || isNaN(value) || !bankApis[endpoint]) return log(t.argsErr) || res.send(html(t.argsErr))
 
@@ -1378,6 +1377,9 @@ app.get('/crypto-wallet', auth, async (req, res) => {
 app.get('/', (req, res) => {
   res.send(html(t.greet))
 })
+app.get('/ok', (req, res) => {
+  res.send(html())
+})
 app.get('/health', (req, res) => {
   tryConnectReseller()
   res.send(html('ok'))
@@ -1410,7 +1412,7 @@ app.get('/:id', async (req, res) => {
   const shortUrl = `${req.hostname}/${id}`
   const shortUrlSanitized = shortUrl.replace('.', '@')
   const url = await get(fullUrlOf, shortUrlSanitized)
-  if (!url) return res.status(404).send('Link not found')
+  if (!url) return res.status(404).send(html('Link not found'))
   if (!(await isValid(shortUrlSanitized))) return res.status(404).send(html(t.linkExpired))
 
   res.redirect(url)
