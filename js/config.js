@@ -206,16 +206,16 @@ Best,
 Nomadly Bot`,
 
   showWallet: (usd, ngn) => `Wallet Balance:
-$${usd}
+$${Number(usd).toFixed(2)}
 ${ngn} NGN`,
 
   wallet: (usd, ngn) => `Wallet Balance:
-$${usd}
+$${Number(usd).toFixed(2)}
 ${ngn} NGN
 
 Select wallet option:`,
   walletSelectCurrency: (usd, ngn) => `Please select currency to pay from your Wallet Balance:
-${usd} USD
+${Number(usd).toFixed(2)} USD
 ${ngn} NGN`,
 
   walletBalanceLow: `Please top up wallet to continue`,
