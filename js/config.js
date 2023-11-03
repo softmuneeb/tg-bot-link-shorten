@@ -11,7 +11,7 @@ const FREE_LINKS_HOURS = Number(process.env.FREE_LINKS_TIME_SECONDS) / 60 / 60
 const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS)
 
 const discountOn = {}
-discountOn['COOL10'] = 10 // Percent
+discountOn['10OFF'] = 10 // Percent
 
 // Note: these button labels must not mix with each other, other wise it may mess up bot
 const admin = {
@@ -66,7 +66,7 @@ Nomadly Bot`,
 
   askCoupon: usd =>
     `The price is $${usd}. Would you like to apply a coupon code? If you have one, please enter it now. Otherwise, you can press 'Skip'.`,
-  enterCoupon: `Please enter coupon code:`,
+  enterCoupon: `Please enter a coupon code:`,
   planPrice: (plan, price) => `Price of ${plan} subscription is $${price} Please choose payment method.`,
   planPriceOff: (plan, price, priceOff) =>
     `Price of ${plan} subscription is now $${view(priceOff)} <s>($${price})</s> Please choose payment method.`,
@@ -75,7 +75,7 @@ Nomadly Bot`,
   domainPriceOff: (domain, price, priceOff) =>
     `Price of ${domain} is now $${view(priceOff)} <s>($${price})</s> Choose payment method.`,
 
-  couponInvalid: `Invalid coupon code, Please enter coupon code again:`,
+  couponInvalid: `Invalid coupon code, Please enter your coupon code again:`,
 
   lowPrice: `Sent price less than needed`,
   planSubscribed: `Your payment was successful, and you're now subscribed to our {{plan}} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
@@ -236,12 +236,12 @@ Select wallet option:`,
 $${view(usd)}
 ₦${view(ngn)}`,
 
-  walletBalanceLow: `Please top up wallet to continue`,
+  walletBalanceLow: `Please top up your wallet to continue`,
 
   sentLessMoney: (expected, got) =>
-    `You sent less money than expected so we put this money into your wallet. Expected ${expected}, Got ${got}`,
+    `You sent less money than expected so we credited amount received into your wallet. We expected ${expected} but recieved ${got}`,
   sentMoreMoney: (expected, got) =>
-    `You sent more money than expected so we put extra money into your wallet. Expected ${expected}, Got ${got}`,
+    `You sent more money than expected so we credited the extra amount into your wallet. We expected ${expected} but received ${got}`,
 }
 
 const tickerOf = {
