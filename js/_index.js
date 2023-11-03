@@ -653,7 +653,7 @@ bot.on('message', async msg => {
     if (message === 'Back') return goto['choose-domain-to-buy']()
     if (message === 'Skip') return (await saveInfo('couponApplied', false)) || goto['domain-pay']()
 
-    const coupon = message
+    const coupon = message.toUpperCase()
     const discount = discountOn[coupon]
     if (isNaN(discount)) return send(chatId, t.couponInvalid)
 
@@ -751,7 +751,7 @@ bot.on('message', async msg => {
     saveInfo('price', price)
     if (message === 'Skip') return (await saveInfo('couponApplied', false)) || goto['plan-pay']()
 
-    const coupon = message
+    const coupon = message.toUpperCase()
     const discount = discountOn[coupon]
     if (isNaN(discount)) return send(chatId, t.couponInvalid)
 
