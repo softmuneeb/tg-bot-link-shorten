@@ -11,7 +11,7 @@ const FREE_LINKS_HOURS = Number(process.env.FREE_LINKS_TIME_SECONDS) / 60 / 60
 const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS)
 
 const discountOn = {}
-discountOn['OFF10'] = 10 // Percent
+discountOn['10OFF'] = 10 // Percent
 
 // Note: these button labels must not mix with each other, other wise it may mess up bot
 const admin = {
