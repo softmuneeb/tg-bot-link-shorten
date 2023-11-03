@@ -1514,9 +1514,7 @@ app.get('/:id', async (req, res) => {
 })
 const startServer = () => {
   const port = process.env.PORT || 3000
-  app.listen(port, () => {
-    log(`Server ran away!\nhttp://localhost:${port}`)
-  })
+  app.listen(port, () => log(`Server ran away!\nhttp://localhost:${port}`))
 }
 startServer()
 
@@ -1528,7 +1526,6 @@ const tryConnectReseller = async () => {
     //
     axios.get('https://api.ipify.org/').then(ip => {
       const message = `Please add <code>${ip.data}</code> to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`
-      log(message)
       send(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' })
       send(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' })
     })
