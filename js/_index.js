@@ -155,9 +155,8 @@ client
 
 bot.on('message', async msg => {
   const chatId = msg?.chat?.id
-  const message = msg?.text
+  const message = msg?.text || ''
   log('message: \t' + message + '\tfrom: ' + chatId + '\t' + msg?.from?.username)
-
   tryConnectReseller() // our ip may change on railway hosting so make sure its correct
 
   if (!db) return send(chatId, 'Bot starting, please wait')
@@ -539,8 +538,9 @@ bot.on('message', async msg => {
     return goto[admin.messageUsers]()
   }
   if (action === admin.messageUsers) {
-    await set(state, chatId, 'messageContent', message)
-    info = await get(state, chatId)
+    const fileId = msg?.photo?.[0]?.file_id
+    set(state, chatId, 'messageContent', fileId || message)
+    set(state, chatId, 'messageMethod', fileId ? 'sendPhoto' : 'sendMessage')
     return goto.adminConfirmMessage()
   }
   if (action === 'adminConfirmMessage') {
@@ -548,8 +548,8 @@ bot.on('message', async msg => {
     if (message !== 'Yes') return send(chatId, `?`)
 
     set(state, chatId, 'action', 'none')
-    sendMessageToAllUsers(bot, info?.messageContent, nameOf, chatId)
-    return send(chatId, 'Sent all all users', aO)
+    sendMessageToAllUsers(bot, info?.messageContent, info?.messageMethod, nameOf, chatId)
+    return send(chatId, 'Sent to all users', aO)
   }
   //
   //

@@ -111,11 +111,11 @@ const nextNumber = arr => {
   return n
 }
 
-const sendMessageToAllUsers = async (bot, message, nameOf, myChatId) => {
+const sendMessageToAllUsers = async (bot, message, method, nameOf, myChatId) => {
   const chatIds = await getChatIds(nameOf)
   const total = chatIds.length
   bot.sendMessage(myChatId, `Total users: ${total}`)
-  for (let i = 0; i < total; i++) bot.sendMessage(chatIds[i], message).catch(err => log(err.message, chatIds[i]))
+  for (let i = 0; i < total; i++) bot[method](chatIds[i], message).catch(err => log(err.message, chatIds[i]))
 }
 
 const getChatIds = async nameOf => {
