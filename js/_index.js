@@ -1471,8 +1471,7 @@ app.get('/ok', (req, res) => {
   res.send(html())
 })
 app.get('/health', (req, res) => {
-  tryConnectReseller()
-  res.send(html('ok'))
+  res.send(html('health ok'))
 })
 app.get('/json1444', async (req, res) => {
   await backupTheData()
