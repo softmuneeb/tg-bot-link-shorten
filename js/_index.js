@@ -69,6 +69,7 @@ process.env['NTBA_FIX_350'] = 1
 const DB_NAME = process.env.DB_NAME
 const SELF_URL = process.env.SELF_URL
 const FREE_LINKS = Number(process.env.FREE_LINKS)
+const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const TELEGRAM_DEV_CHAT_ID = process.env.TELEGRAM_DEV_CHAT_ID
 const TELEGRAM_ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID
@@ -1240,14 +1241,14 @@ const formatLinks = links => {
 }
 
 const buyDomainFullProcess = async (chatId, domain) => {
-  // const { error: buyDomainError } = await buyDomain(chatId, domain);
-  // if (buyDomainError) {
-  //   const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`;
-  //   log(m);
-  //   send(TELEGRAM_DEV_CHAT_ID, m);
-  //   send(chatId, m);
-  //   return m;
-  // }
+  const { error: buyDomainError } = await buyDomain(chatId, domain)
+  if (buyDomainError) {
+    const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`
+    log(m)
+    send(TELEGRAM_DEV_CHAT_ID, m)
+    send(chatId, m)
+    return m
+  }
   send(
     chatId,
     `Domain ${domain} is now yours. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain} Thank you for choosing us.
@@ -1257,20 +1258,20 @@ Nomadly Bot`,
     o,
   )
 
-  // const { server, error } = await saveDomainInServer(domain); // save domain in railway // can do separately maybe or just send messages of progress to user
-  // if (error) {
-  //   const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`;
-  //   send(chatId, m);
-  //   return m;
-  // }
+  const { server, error } = await saveDomainInServer(domain) // save domain in railway // can do separately maybe or just send messages of progress to user
+  if (error) {
+    const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`
+    send(chatId, m)
+    return m
+  }
   send(chatId, `Linking domain with your account...`) // save railway in domain
 
-  // const { error: saveServerInDomainError } = await saveServerInDomain(domain, server);
-  // if (saveServerInDomainError) {
-  //   const m = `Error saving server in domain ${saveServerInDomainError}`;
-  //   send(chatId, m);
-  //   return m;
-  // }
+  const { error: saveServerInDomainError } = await saveServerInDomain(domain, server)
+  if (saveServerInDomainError) {
+    const m = `Error saving server in domain ${saveServerInDomainError}`
+    send(chatId, m)
+    return m
+  }
   send(chatId, t.domainBought.replace('{{domain}}', domain))
   regularCheckDns(bot, chatId, domain)
   return false // error = false
