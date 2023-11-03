@@ -543,7 +543,7 @@ bot.on('message', async msg => {
     return goto.adminConfirmMessage()
   }
   if (action === 'adminConfirmMessage') {
-    if (message === 'Back' || message === 'No') goto[admin.messageUsers]()
+    if (message === 'Back' || message === 'No') return goto[admin.messageUsers]()
     if (message !== 'Yes') return send(chatId, `?`)
 
     set(state, chatId, 'action', 'none')
@@ -919,8 +919,7 @@ bot.on('message', async msg => {
     }
     id-- // User See id as 1,2,3 and we see as 0,1,2
 
-    goto['type-dns-record-data-to-update'](id, dnsRecords[id]?.recordType)
-    return
+    return goto['type-dns-record-data-to-update'](id, dnsRecords[id]?.recordType)
   }
   if (action === 'type-dns-record-data-to-update') {
     if (message === 'Back') return goto['select-dns-record-id-to-update']()
