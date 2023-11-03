@@ -543,7 +543,9 @@ bot.on('message', async msg => {
     return goto.adminConfirmMessage()
   }
   if (action === 'adminConfirmMessage') {
-    if (message === 'No' || message === 'Back') goto[admin.messageUsers]()
+    if (message === 'Back' || message === 'No') goto[admin.messageUsers]()
+    if (message !== 'Yes') return send(chatId, `?`)
+
     set(state, chatId, 'action', 'none')
     sendMessageToAllUsers(bot, info?.messageContent, nameOf, chatId)
     return send(chatId, 'Sent all all users', aO)
@@ -721,7 +723,6 @@ bot.on('message', async msg => {
   }
   if (action === 'get-free-domain') {
     if (message === 'Back' || message === 'No') return goto['choose-domain-to-buy']()
-
     if (message !== 'Yes') return send(chatId, `?`)
 
     const domain = info?.domain
