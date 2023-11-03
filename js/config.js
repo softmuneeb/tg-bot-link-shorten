@@ -108,7 +108,7 @@ Discover more: t.me/nomadly`,
 
   successPayment: `Payment Processed Successfully! You can now close this window.`,
 
-  welcome: `Thank you for choosing the URL Shortener Bot! Please choose an option:`,
+  welcome: `Thank you for choosing Nomadly Bot! Please choose an option below:`,
 
   welcomeFreeTrial: `Welcome to Nomadly! Enjoy our one-time free trial - shorten ${FREE_LINKS} URLs, active for ${FREE_LINKS_HOURS} hours. Experience the Nomadly difference!`,
 
