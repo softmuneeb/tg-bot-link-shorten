@@ -11,10 +11,7 @@ const FREE_LINKS_HOURS = Number(process.env.FREE_LINKS_TIME_SECONDS) / 60 / 60
 const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS)
 
 const discountOn = {}
-discountOn['OFF20'] = 20 // Percent
-discountOn['OFF15'] = 13 // Percent
-discountOn['14AUG'] = 10 // Percent
-discountOn['COOL_DAY'] = 5 // Percent
+discountOn['COOL10'] = 10 // Percent
 
 // Note: these button labels must not mix with each other, other wise it may mess up bot
 const admin = {
@@ -45,7 +42,7 @@ const u = {
   usd: 'USD',
   ngn: 'NGN',
 }
-
+const view = num => Number(num).toFixed(2)
 const t = {
   argsErr: `dev: sent wrong args`,
   showDepositNgnInfo:
@@ -72,11 +69,11 @@ Nomadly Bot`,
   enterCoupon: `Please enter coupon code:`,
   planPrice: (plan, price) => `Price of ${plan} subscription is $${price} Please choose payment method.`,
   planPriceOff: (plan, price, priceOff) =>
-    `Price of ${plan} subscription is now $${priceOff.toFixed(2)} <s>($${price})</s> Please choose payment method.`,
+    `Price of ${plan} subscription is now $${view(priceOff)} <s>($${price})</s> Please choose payment method.`,
 
   domainPrice: (domain, price) => `Price of ${domain} is ${price} USD. Choose payment method.`,
   domainPriceOff: (domain, price, priceOff) =>
-    `Price of ${domain} is now $${priceOff.toFixed(2)} <s>($${price})</s> Choose payment method.`,
+    `Price of ${domain} is now $${view(priceOff)} <s>($${price})</s> Choose payment method.`,
 
   couponInvalid: `Invalid coupon code, Please enter coupon code again:`,
 
@@ -217,6 +214,7 @@ Please note, crypto transactions can take up to 30 minutes to complete. Once the
 
 Best regards,
 Nomadly Bot`,
+
   confirmationDepositMoney: (
     amount,
     usd,
@@ -225,17 +223,18 @@ Best,
 Nomadly Bot`,
 
   showWallet: (usd, ngn) => `Wallet Balance:
-$${Number(usd).toFixed(2)}
-${ngn} NGN`,
+$${view(usd)}
+₦${view(ngn)}`,
 
   wallet: (usd, ngn) => `Wallet Balance:
-$${Number(usd).toFixed(2)}
-${ngn} NGN
+$${view(usd)}
+₦${view(ngn)}
 
 Select wallet option:`,
+
   walletSelectCurrency: (usd, ngn) => `Please select currency to pay from your Wallet Balance:
-${Number(usd).toFixed(2)} USD
-${ngn} NGN`,
+$${view(usd)}
+₦${view(ngn)}`,
 
   walletBalanceLow: `Please top up wallet to continue`,
 
