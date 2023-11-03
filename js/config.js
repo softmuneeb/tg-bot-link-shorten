@@ -26,13 +26,13 @@ const admin = {
 }
 const user = {
   // main keyboard
+  wallet: '💰 My Wallet',
   urlShortener: '🔗 URL Shortener',
   viewShortLinks: '🔍 View Analytics',
   buyDomainName: '🌐 Buy Domain Names',
   viewDomainNames: '👀 My Domain Names',
   dnsManagement: '😎 DNS Management',
   buyPlan: '📋 Subscribe Here',
-  wallet: '💰 Wallet',
   viewPlan: '🔍 My Plan',
   getSupport: '🛠️ Get Support',
 }
