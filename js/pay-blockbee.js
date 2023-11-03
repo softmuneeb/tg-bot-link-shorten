@@ -6,7 +6,7 @@ const API_KEY_BLOCKBEE = process.env.API_KEY_BLOCKBEE
 const convert = async (value, from_coin, to_coin) => {
   try {
     const conversion = await BlockBee.getConvert(to_coin, value, from_coin, API_KEY_BLOCKBEE)
-    return conversion?.value_coin
+    return Number(conversion?.value_coin)
   } catch (error) {
     console.log(error)
     console.log(

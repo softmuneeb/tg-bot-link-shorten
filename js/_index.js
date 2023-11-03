@@ -140,6 +140,8 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
+  // addFundsTo(walletOf, 6687923716, 'ngn', 51.5)
+
   set(planEndingTime, 6687923716, 0)
   set(freeShortLinksOf, 6687923716, FREE_LINKS)
   adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
@@ -221,9 +223,9 @@ bot.on('message', async msg => {
     enterCoupon: 'enterCoupon',
   }
   const goto = {
-    askCoupon: () => {
+    askCoupon: action => {
       send(chatId, t.askCoupon(info?.price), k.of(['Skip']))
-      set(state, chatId, 'action', a.askCoupon)
+      set(state, chatId, 'action', a.askCoupon + action)
     },
     enterCoupon: () => {
       send(chatId, t.enterCoupon, bc)
@@ -642,11 +644,11 @@ bot.on('message', async msg => {
       if (available > 0) return goto['get-free-domain']()
     }
     await saveInfo('price', price)
-    return goto.askCoupon()
+    return goto.askCoupon('choose-domain-to-buy')
   }
-  if (action === a.askCoupon) {
+  if (action === a.askCoupon + 'choose-domain-to-buy') {
     if (message === 'Back') return goto['choose-domain-to-buy']()
-    if (message === 'Skip') return (await saveInfo('couponApplied', false)) || goto['plan-pay']()
+    if (message === 'Skip') return (await saveInfo('couponApplied', false)) || goto['domain-pay']()
 
     const coupon = message
     const discount = discountOn[coupon]
@@ -661,7 +663,7 @@ bot.on('message', async msg => {
     return goto['domain-pay']()
   }
   if (action === 'domain-pay') {
-    if (message === 'Back') return goto.askCoupon()
+    if (message === 'Back') return goto.askCoupon('choose-domain-to-buy')
     const payOption = message
 
     if (payOption === payIn.crypto) {
@@ -693,7 +695,7 @@ bot.on('message', async msg => {
     log({ ref })
     set(state, chatId, 'action', 'none')
     const priceNGN = Number(await usdToNgn(price))
-    set(chatIdOfPayment, ref, { chatId, domain, price, endpoint: `/bank-pay-domain` })
+    set(chatIdOfPayment, ref, { chatId, price, domain, endpoint: `/bank-pay-domain` })
     const { url, error } = await createCheckout(priceNGN, `/ok?a=b&ref=${ref}&`, email, username, ref)
     if (error) return send(chatId, error, o)
     send(chatId, `Bank ₦aira + Card 🌐︎`, o)
@@ -708,7 +710,7 @@ bot.on('message', async msg => {
     if (!coin) return send(chatId, t.askValidCrypto)
 
     const ref = nanoid()
-    set(chatIdOfPayment, ref, { chatId, domain, price })
+    set(chatIdOfPayment, ref, { chatId, price, domain })
     const { address, bb } = await getCryptoDepositAddress(coin, chatId, SELF_URL, `/crypto-pay-domain?a=b&ref=${ref}&`)
 
     log({ ref })
@@ -739,9 +741,9 @@ bot.on('message', async msg => {
     if (!planOptions.includes(plan)) return send(chatId, 'Please choose a valid plan', chooseSubscription)
     await saveInfo('plan', plan)
     await saveInfo('price', priceOf[plan])
-    return goto.askCoupon()
+    return goto.askCoupon('choose-subscription')
   }
-  if (action === a.askCoupon) {
+  if (action === a.askCoupon + 'choose-subscription') {
     if (message === 'Back') return goto['choose-subscription']()
     const price = priceOf[info?.plan]
     saveInfo('price', price)
@@ -758,7 +760,7 @@ bot.on('message', async msg => {
     return goto['plan-pay']()
   }
   if (action === 'plan-pay') {
-    if (message === 'Back') return goto.askCoupon()
+    if (message === 'Back') return goto.askCoupon('choose-subscription')
     const payOption = message
     if (payOption === payIn.crypto) {
       set(state, chatId, 'action', 'crypto-pay-plan')
@@ -785,7 +787,7 @@ bot.on('message', async msg => {
 
     const ref = nanoid()
     set(state, chatId, 'action', 'none')
-    set(chatIdOfPayment, ref, { chatId, plan, endpoint: `/bank-pay-plan` })
+    set(chatIdOfPayment, ref, { chatId, price, plan, endpoint: `/bank-pay-plan` })
     const { url, error } = await createCheckout(priceNGN, `/ok?a=b&ref=${ref}&`, email, username, ref)
 
     log({ ref })
@@ -806,7 +808,7 @@ bot.on('message', async msg => {
     sendQrCode(bot, chatId, bb)
     const { plan, price } = info
     set(state, chatId, 'action', 'none')
-    set(chatIdOfPayment, ref, { chatId, plan })
+    set(chatIdOfPayment, ref, { chatId, price, plan })
     const priceCrypto = await convert(price, 'usd', ticker)
     return send(chatId, t.showDepositCryptoInfoPlan(priceCrypto, tickerView, address, plan), o)
   }
@@ -1292,15 +1294,35 @@ app.use(cors())
 app.use(logReq)
 app.set('json spaces', 2)
 let serverStartTime = new Date()
+
+const addFundsTo = async (walletOf, chatId, coin, valueIn) => {
+  if (!['usd', 'ngn'].includes(coin)) throw Error('Dev Please Debug')
+
+  const key = `${coin}In`
+  await increment(walletOf, chatId, key, valueIn)
+  const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
+  send(chatId, t.showWallet(usdBal, ngnBal))
+}
 //
 //
 const bankApis = {
-  '/bank-pay-plan': async (req, res, valueNgn) => {
+  '/bank-pay-plan': async (req, res, ngnIn) => {
     // Validate
-    const { ref, chatId, plan, price } = req.pay
-    if (!ref || !chatId || !plan) return log(t.argsErr) || res.send(html(t.argsErr))
-    const usdIn = Number(await ngnToUsd(valueNgn * 1.06))
-    if (usdIn < price) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice))
+    const { ref, chatId, price, plan } = req.pay
+    if (!ref || !chatId || !price || !plan) return log(t.argsErr) || res.send(html(t.argsErr))
+    if (('' + ref + chatId + price + plan).includes('undefined')) return log(t.argsErr) || res.send(html(t.argsErr))
+
+    // Update Wallet
+    const usdIn = await ngnToUsd(ngnIn)
+    const ngnPrice = await usdToNgn(price)
+    if (usdIn * 1.06 < price) {
+      send(chatId, t.sentLessMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
+      return addFundsTo(walletOf, chatId, 'ngn', ngnIn) || log(t.lowPrice) || res.send(html(t.lowPrice))
+    }
+    if (ngnIn > ngnPrice) {
+      addFundsTo(walletOf, chatId, 'ngn', ngnIn - ngnPrice)
+      send(chatId, t.sentMoreMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
+    }
 
     // Subscribe Plan
     subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot)
@@ -1311,12 +1333,22 @@ const bankApis = {
     const name = await get(nameOf, chatId)
     set(payments, ref, `Bank, Plan, ${plan}, $${usdIn}, ${chatId}, ${name}, ${new Date()}`)
   },
-  '/bank-pay-domain': async (req, res, valueNgn) => {
+  '/bank-pay-domain': async (req, res, ngnIn) => {
     // Validate
-    const { ref, chatId, domain, price } = req.pay
-    if (!ref || !chatId || !domain || !price) return log(t.argsErr) || res.send(html(t.argsErr))
-    const usdIn = Number(await ngnToUsd(valueNgn * 1.06))
-    if (usdIn < price) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice))
+    const { ref, chatId, price, domain } = req.pay
+    if (!ref || !chatId || !price || !domain) return log(t.argsErr) || res.send(html(t.argsErr))
+
+    // Update Wallet
+    const usdIn = await ngnToUsd(ngnIn)
+    const ngnPrice = await usdToNgn(price)
+    if (usdIn * 1.06 < price) {
+      send(chatId, t.sentLessMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
+      return addFundsTo(walletOf, chatId, 'ngn', ngnIn) || log(t.lowPrice) || res.send(html(t.lowPrice))
+    }
+    if (ngnIn > ngnPrice) {
+      addFundsTo(walletOf, chatId, 'ngn', ngnIn - ngnPrice)
+      send(chatId, t.sentMoreMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
+    }
 
     // Buy Domain
     const error = await buyDomainFullProcess(chatId, domain)
@@ -1328,19 +1360,14 @@ const bankApis = {
     const name = await get(nameOf, chatId)
     set(payments, ref, `Bank, Domain, ${domain}, $${usdIn}, ${chatId}, ${name}, ${new Date()}`)
   },
-  '/bank-wallet': async (req, res, valueNgn) => {
+  '/bank-wallet': async (req, res, ngnIn) => {
     // Validate
     const { ref, chatId } = req.pay
     if (!ref || !chatId) return log(t.argsErr) || res.send(html(t.argsErr))
 
     // Update Wallet
-    const ngnIn = valueNgn
-    const wallet = await get(walletOf, chatId)
-    const ngnInTotal = (wallet?.ngnIn || 0) + ngnIn
-    await set(walletOf, chatId, 'ngnIn', ngnInTotal)
-    const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
-    send(chatId, t.showWallet(usdBal, ngnBal))
     const usdIn = await ngnToUsd(ngnIn)
+    addFundsTo(walletOf, chatId, 'ngn', ngnIn)
     send(chatId, t.confirmationDepositMoney(`${ngnIn} NGN`, usdIn))
 
     // Logs
@@ -1358,18 +1385,27 @@ app.post('/webhook', auth, (req, res) => {
   const endpoint = req?.pay?.endpoint
   if (coin !== 'NGN' || isNaN(value) || !bankApis[endpoint]) return log(t.argsErr) || res.send(html(t.argsErr))
 
-  bankApis[endpoint](req, res, value)
+  bankApis[endpoint](req, res, Number(value))
 })
 //
 //
 app.get('/crypto-pay-plan', auth, async (req, res) => {
   // Validate
-  const { ref, chatId, plan, price } = req.pay
+  const { ref, chatId, price, plan } = req.pay
   const coin = req?.query?.coin
-  const value = Number(req?.query?.value_forwarded_coin)
+  const value = req?.query?.value_forwarded_coin
   if (!ref || !chatId || !plan || !coin || !value) return log(t.argsErr) || res.send(html(t.argsErr))
-  const usdIn = Number(await convert(value * 1.06, coin, 'usd'))
-  if (usdIn < price) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice))
+
+  // Update Wallet
+  const usdIn = await convert(value, coin, 'usd')
+  if (usdIn * 1.06 < price) {
+    send(chatId, t.sentLessMoney(`$${price}`, `$${usdIn}`))
+    return addFundsTo(walletOf, chatId, 'usd', usdIn) || log(t.lowPrice) || res.send(html(t.lowPrice))
+  }
+  if (usdIn > price) {
+    addFundsTo(walletOf, chatId, 'usd', usdIn - price)
+    send(chatId, t.sentMoreMoney(`$${price}`, `$${usdIn}`))
+  }
 
   // Subscribe Plan
   subscribePlan(planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot)
@@ -1382,13 +1418,21 @@ app.get('/crypto-pay-plan', auth, async (req, res) => {
 })
 app.get('/crypto-pay-domain', auth, async (req, res) => {
   // Validate
-  const { ref, chatId, domain, price } = req.pay
+  const { ref, chatId, price, domain } = req.pay
   const coin = req?.query?.coin
   const value = req?.query?.value_forwarded_coin
   if (!ref || !chatId || !domain || !price || !coin || !value) return log(t.argsErr) || res.send(html(t.argsErr))
-  const usdIn = Number(await convert(value, coin, 'usd'))
-  const usdInUp = usdIn * 1.06
-  if (usdInUp < price) return log(t.errorPaidLessPrice) || res.send(html(t.errorPaidLessPrice))
+
+  // Update Wallet
+  const usdIn = await convert(value, coin, 'usd')
+  if (usdIn * 1.06 < price) {
+    send(chatId, t.sentLessMoney(`$${price}`, `$${usdIn}`))
+    return addFundsTo(walletOf, chatId, 'usd', usdIn) || log(t.lowPrice) || res.send(html(t.lowPrice))
+  }
+  if (usdIn > price) {
+    addFundsTo(walletOf, chatId, 'usd', usdIn - price)
+    send(chatId, t.sentMoreMoney(`$${price}`, `$${usdIn}`))
+  }
 
   // Buy Domain
   const error = await buyDomainFullProcess(chatId, domain)
@@ -1408,13 +1452,9 @@ app.get('/crypto-wallet', auth, async (req, res) => {
   if (!ref || !chatId || !coin || !value) return log(t.argsErr) || res.send(html(t.argsErr))
 
   // Update Wallet
-  const usdIn = Number(await convert(value, coin, 'usd'))
-  const wallet = await get(walletOf, chatId)
-  const usdInTotal = (wallet?.usdIn || 0) + usdIn
-  await set(walletOf, chatId, 'usdIn', usdInTotal)
-  const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
+  const usdIn = await convert(value, coin, 'usd')
+  addFundsTo(walletOf, chatId, 'usd', usdIn)
   send(chatId, t.confirmationDepositMoney(value + ' ' + tickerViewOf[coin], usdIn))
-  send(chatId, t.showWallet(usdBal, ngnBal))
 
   // Logs
   res.send(html())

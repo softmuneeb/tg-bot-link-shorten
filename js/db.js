@@ -6,8 +6,14 @@
 // }
 // del should be some mark X instead of del
 
-const increment = async (c, key, val = 1) => {
+const increment = async (c, key, val = 1, valueInside) => {
   try {
+    if (valueInside) {
+      const count = (await get(c, key))?.[val] || 0
+      await set(c, key, val, Number(count) + Number(valueInside))
+      return
+    }
+
     const count = (await get(c, key)) || 0
     await set(c, key, count + val)
   } catch (error) {

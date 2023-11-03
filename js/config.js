@@ -72,15 +72,15 @@ Nomadly Bot`,
   enterCoupon: `Please enter coupon code:`,
   planPrice: (plan, price) => `Price of ${plan} subscription is $${price} Please choose payment method.`,
   planPriceOff: (plan, price, priceOff) =>
-    `Price of ${plan} subscription is now $${priceOff} <s>($${price})</s> Please choose payment method.`,
+    `Price of ${plan} subscription is now $${priceOff.toFixed(2)} <s>($${price})</s> Please choose payment method.`,
 
   domainPrice: (domain, price) => `Price of ${domain} is ${price} USD. Choose payment method.`,
   domainPriceOff: (domain, price, priceOff) =>
-    `Price of ${domain} is now $${priceOff} <s>($${price})</s> Choose payment method.`,
+    `Price of ${domain} is now $${priceOff.toFixed(2)} <s>($${price})</s> Choose payment method.`,
 
   couponInvalid: `Invalid coupon code, Please enter coupon code again:`,
 
-  errorPaidLessPrice: `Sent price less than needed`,
+  lowPrice: `Sent price less than needed`,
   planSubscribed: `Your payment was successful, and you're now subscribed to our {{plan}} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
 
 Best,
@@ -238,6 +238,11 @@ ${Number(usd).toFixed(2)} USD
 ${ngn} NGN`,
 
   walletBalanceLow: `Please top up wallet to continue`,
+
+  sentLessMoney: (expected, got) =>
+    `You sent less money than expected so we put this money into your wallet. Expected ${expected}, Got ${got}`,
+  sentMoreMoney: (expected, got) =>
+    `You sent more money than expected so we put extra money into your wallet. Expected ${expected}, Got ${got}`,
 }
 
 const tickerOf = {
