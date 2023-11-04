@@ -146,7 +146,7 @@ Discover more: t.me/nomadly`,
     'CNAME Record': `Please provide CNAME record. i.e, abc.hello.org`,
 
     NS: `Please enter your NS record. i.e., dell.ns.cloudflare.com. A new NS record will be added to the current ones.`,
-    'NS Record': `Please enter your NS record. i.e., dell.ns.cloudflare.com. A new NS record will be added to the current ones.`,
+    'NS Record': `Please enter your NS record. i.e., dell.ns.cloudflare.com .If N1-N4 already exists, please update record instead`,
   },
   askUpdateDnsContent: {
     A: `Please provide A record. i.e, 108.0.56.98`,
