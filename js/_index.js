@@ -141,8 +141,6 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
-  // addFundsTo(walletOf, 6687923716, 'ngn', 51.5)
-
   set(planEndingTime, 6687923716, 0)
   set(freeShortLinksOf, 6687923716, FREE_LINKS)
   adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
@@ -1277,11 +1275,8 @@ Nomadly Bot`,
   return false // error = false
 }
 
-const logReq = (req, res, next) => {
-  log(req.hostname + req.originalUrl + ' ' + (JSON.stringify(req?.body, 0, 2) || ''))
-  next()
-}
 const auth = async (req, res, next) => {
+  log(req.hostname + req.originalUrl)
   const ref = req?.query?.ref || req?.body?.data?.reference // first for crypto and second for webhook fincra
   const pay = await get(chatIdOfPayment, ref)
   if (!pay) return log(t.payError) || res.send(html(t.payError))
@@ -1292,7 +1287,6 @@ const auth = async (req, res, next) => {
 const app = express()
 app.use(express.json())
 app.use(cors())
-app.use(logReq)
 app.set('json spaces', 2)
 let serverStartTime = new Date()
 
