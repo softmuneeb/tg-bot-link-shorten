@@ -1394,7 +1394,7 @@ app.get('/crypto-pay-plan', auth, async (req, res) => {
   // Validate
   const { ref, chatId, price, plan } = req.pay
   const coin = req?.query?.coin
-  const value = req?.query?.value_forwarded_coin
+  const value = req?.query?.value_coin
   if (!ref || !chatId || !plan || !coin || !value) return log(t.argsErr) || res.send(html(t.argsErr))
 
   // Update Wallet
@@ -1421,7 +1421,7 @@ app.get('/crypto-pay-domain', auth, async (req, res) => {
   // Validate
   const { ref, chatId, price, domain } = req.pay
   const coin = req?.query?.coin
-  const value = req?.query?.value_forwarded_coin
+  const value = req?.query?.value_coin
   if (!ref || !chatId || !domain || !price || !coin || !value) return log(t.argsErr) || res.send(html(t.argsErr))
 
   // Update Wallet
@@ -1449,7 +1449,7 @@ app.get('/crypto-wallet', auth, async (req, res) => {
   // Validate
   const { ref, chatId } = req.pay
   const coin = req?.query?.coin
-  const value = req?.query?.value_forwarded_coin
+  const value = req?.query?.value_coin
   if (!ref || !chatId || !coin || !value) return log(t.argsErr) || res.send(html(t.argsErr))
 
   // Update Wallet
