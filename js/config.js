@@ -23,6 +23,7 @@ const admin = {
 }
 const user = {
   // main keyboard
+  buyLeads: '🙎‍♂️ Buy Leads',
   wallet: '💰 My Wallet',
   urlShortener: '🔗 URL Shortener',
   viewShortLinks: '🔍 View Analytics',
@@ -43,6 +44,7 @@ const u = {
   ngn: 'NGN',
 }
 const view = num => Number(num).toFixed(2)
+const yesNo = ['Yes', 'No']
 const t = {
   argsErr: `dev: sent wrong args`,
   showDepositNgnInfo:
@@ -242,7 +244,25 @@ $${view(usd)}
     `You sent less money than expected so we credited amount received into your wallet. We expected ${expected} but recieved ${got}`,
   sentMoreMoney: (expected, got) =>
     `You sent more money than expected so we credited the extra amount into your wallet. We expected ${expected} but received ${got}`,
+
+  buyLeadsSelectCountry: 'Please select country',
+  buyLeadsSelectSmsVoice: 'Please select SMS / Voice',
+  buyLeadsSelectArea: 'Please select area',
+  buyLeadsSelectAreaCode: 'Please select area code',
+  buyLeadsSelectCarrier: 'Please select carrier',
+  buyLeadsSelectCnam: 'You want to search the owner name? CNAME costs extra 10$ per 1000 leads',
+  buyLeadsSelectAmount: 'How much from the numbers you want to validate? Select or type a number.',
+  buyLeadsSelectFormat: 'Choose format i.e Local 5535... International +15535...',
+  buyLeadsSuccess: n => `Congrats you ${n} leads are downloaded.`,
 }
+const buyLeadsSelectCountry = ['US', 'Canada', 'New Zealand', 'Australia', 'UK']
+const buyLeadsSelectSmsVoice = ['SMS (Price 10$ for 1000)', 'Voice (Price 12$ for 1000)']
+const buyLeadsSelectArea = ['Mixed Area Codes', 'New York', 'Nevada', 'Texas']
+const buyLeadsSelectAreaCode = ['Mixed', '205', '334', '256', '123', '256']
+const buyLeadsSelectCnam = yesNo
+const buyLeadsSelectCarrier = ['Mixed Carriers', 'T-mobile', 'AT&T', 'Sprint']
+const buyLeadsSelectAmount = ['1000', '2000', '3000', '4000', '5000']
+const buyLeadsSelectFormat = ['Local Format', 'International Format']
 
 const tickerOf = {
   BTC: 'btc',
@@ -265,12 +285,21 @@ const payIn = {
 const tickerViews = Object.keys(tickerOf)
 const reverseObject = o => Object.fromEntries(Object.entries(o).map(([key, val]) => [val, key]))
 const tickerViewOf = reverseObject(tickerOf)
+
+const kOf = list => ({
+  reply_markup: {
+    keyboard: [...list.map(a => [a]), _bc],
+  },
+})
+const yes_no = {
+  parse_mode: 'HTML',
+  reply_markup: {
+    keyboard: [yesNo, _bc],
+  },
+  disable_web_page_preview: true,
+}
 const k = {
-  of: list => ({
-    reply_markup: {
-      keyboard: [...list.map(a => [a]), _bc],
-    },
-  }),
+  of: kOf,
 
   wallet: {
     reply_markup: {
@@ -284,6 +313,15 @@ const k = {
     },
     parse_mode: 'HTML',
   },
+
+  buyLeadsSelectCountry: kOf(buyLeadsSelectCountry),
+  buyLeadsSelectSmsVoice: kOf(buyLeadsSelectSmsVoice),
+  buyLeadsSelectArea: kOf(buyLeadsSelectArea),
+  buyLeadsSelectAreaCode: kOf(buyLeadsSelectAreaCode),
+  buyLeadsSelectCarrier: kOf(buyLeadsSelectCarrier),
+  buyLeadsSelectCnam: kOf(yesNo),
+  buyLeadsSelectAmount: kOf(buyLeadsSelectAmount),
+  buyLeadsSelectFormat: kOf(buyLeadsSelectFormat),
 }
 
 const adminKeyboard = {
@@ -363,13 +401,6 @@ const dnsRecordType = {
   },
   disable_web_page_preview: true,
 }
-const yes_no = {
-  parse_mode: 'HTML',
-  reply_markup: {
-    keyboard: [['Yes', 'No'], _bc],
-  },
-  disable_web_page_preview: true,
-}
 
 const linkType = {
   reply_markup: {
@@ -423,18 +454,26 @@ module.exports = {
   admin,
   yes_no,
   timeOf,
-  discountOn,
   payBank,
   priceOf,
   tickerOf,
   linkType,
+  discountOn,
   tickerViews,
   linkOptions,
+  planOptions,
   tickerViewOf,
   dnsRecordType,
   freeDomainsOf,
   o: userKeyboard,
   aO: adminKeyboard,
   chooseSubscription,
-  planOptions,
+  buyLeadsSelectArea,
+  buyLeadsSelectCnam,
+  buyLeadsSelectAmount,
+  buyLeadsSelectFormat,
+  buyLeadsSelectCountry,
+  buyLeadsSelectCarrier,
+  buyLeadsSelectSmsVoice,
+  buyLeadsSelectAreaCode,
 }

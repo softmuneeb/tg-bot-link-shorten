@@ -18,9 +18,10 @@ New Features:
 Testing and Text Updates and New Wishes take alot time, so planning needs to be done good, like todays meeting,...
 2 Days Make Figma
 1 Days send message to all users + improve code base
-4 Days, Wallet Functionality (user can deposit into the wallet to pay for phone number validator or lead purchase)
-4 Days, Phone Number Validator (Pay-as-you-go), User can upload a file, or Paste Phone Numbers.
-4 Days, Buy Phone Number Leads (Pay-as-you-go), User can buy already validated phone numbers
+5 Days, Wallet Functionality (user can deposit into the wallet to pay for phone number validator or lead purchase)
+5 Days, Phone Number Validator (Pay-as-you-go), User can upload a file, or Paste Phone Numbers.
+5 Days, Buy Phone Number Leads (Pay-as-you-go), User can buy already validated phone numbers
+3 Days, Buy Generator
 
 3 Days, Crypto Incomplete Payment Flow Alert, If the amount paid is less than the required amount, the system alert, and the user can pay the remainder to the same address if possible and then get confirmation.
 

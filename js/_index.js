@@ -25,6 +25,14 @@ const {
   tickerViewOf,
   dnsRecordType,
   chooseSubscription,
+  buyLeadsSelectCountry,
+  buyLeadsSelectSmsVoice,
+  buyLeadsSelectArea,
+  buyLeadsSelectAreaCode,
+  buyLeadsSelectCarrier,
+  buyLeadsSelectCnam,
+  buyLeadsSelectFormat,
+  buyLeadsSelectAmount: amounts,
 } = require('./config.js')
 const {
   week,
@@ -186,16 +194,6 @@ bot.on('message', async msg => {
   }
   const action = info?.action
 
-  const firstSteps = [
-    'block-user',
-    'unblock-user',
-    'choose-subscription',
-    'choose-domain-to-buy',
-    'choose-url-to-shorten',
-    'choose-domain-to-manage',
-    admin.messageUsers,
-    user.wallet,
-  ]
   // actions
   const a = {
     selectCurrencyToWithdraw: 'selectCurrencyToWithdraw',
@@ -218,16 +216,32 @@ bot.on('message', async msg => {
     walletPayNgnConfirm: 'walletPayNgnConfirm',
 
     askCoupon: 'askCoupon',
-    enterCoupon: 'enterCoupon',
+
+    // buyLeads
+    buyLeadsSelectCountry: 'buyLeadsSelectCountry',
+    buyLeadsSelectSmsVoice: 'buyLeadsSelectSmsVoice',
+    buyLeadsSelectArea: 'buyLeadsSelectArea',
+    buyLeadsSelectAreaCode: 'buyLeadsSelectAreaCode',
+    buyLeadsSelectCarrier: 'buyLeadsSelectCarrier',
+    buyLeadsSelectCnam: 'buyLeadsSelectCnam',
+    buyLeadsSelectAmount: 'buyLeadsSelectAmount',
+    buyLeadsSelectFormat: 'buyLeadsSelectFormat',
   }
+  const firstSteps = [
+    'block-user',
+    'unblock-user',
+    'choose-subscription',
+    'choose-domain-to-buy',
+    'choose-url-to-shorten',
+    'choose-domain-to-manage',
+    admin.messageUsers,
+    user.wallet,
+    a.buyLeadsSelectCountry,
+  ]
   const goto = {
     askCoupon: action => {
       send(chatId, t.askCoupon(info?.price), k.of(['Skip']))
       set(state, chatId, 'action', a.askCoupon + action)
-    },
-    enterCoupon: () => {
-      send(chatId, t.enterCoupon, bc)
-      set(state, chatId, 'action', a.enterCoupon)
     },
     'domain-pay': () => {
       const { domain, price, couponApplied, oldPrice } = info
@@ -423,6 +437,41 @@ bot.on('message', async msg => {
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
       send(chatId, t.walletSelectCurrency(usdBal, ngnBal), k.of([u.usd, u.ngn]))
     },
+    //
+    //
+    // buyLeads
+    buyLeadsSelectCountry: () => {
+      send(chatId, t.buyLeadsSelectCountry, k.buyLeadsSelectCountry)
+      set(state, chatId, 'action', a.buyLeadsSelectCountry)
+    },
+    buyLeadsSelectSmsVoice: () => {
+      send(chatId, t.buyLeadsSelectSmsVoice, k.buyLeadsSelectSmsVoice)
+      set(state, chatId, 'action', a.buyLeadsSelectSmsVoice)
+    },
+    buyLeadsSelectArea: () => {
+      send(chatId, t.buyLeadsSelectArea, k.buyLeadsSelectArea)
+      set(state, chatId, 'action', a.buyLeadsSelectArea)
+    },
+    buyLeadsSelectAreaCode: () => {
+      send(chatId, t.buyLeadsSelectAreaCode, k.buyLeadsSelectAreaCode)
+      set(state, chatId, 'action', a.buyLeadsSelectAreaCode)
+    },
+    buyLeadsSelectCarrier: () => {
+      send(chatId, t.buyLeadsSelectCarrier, k.buyLeadsSelectCarrier)
+      set(state, chatId, 'action', a.buyLeadsSelectCarrier)
+    },
+    buyLeadsSelectCnam: () => {
+      send(chatId, t.buyLeadsSelectCnam, k.buyLeadsSelectCnam)
+      set(state, chatId, 'action', a.buyLeadsSelectCnam)
+    },
+    buyLeadsSelectAmount: () => {
+      send(chatId, t.buyLeadsSelectAmount, k.buyLeadsSelectAmount)
+      set(state, chatId, 'action', a.buyLeadsSelectAmount)
+    },
+    buyLeadsSelectFormat: () => {
+      send(chatId, t.buyLeadsSelectFormat, k.buyLeadsSelectFormat)
+      set(state, chatId, 'action', a.buyLeadsSelectFormat)
+    },
   }
   const walletOk = {
     'plan-pay': async coin => {
@@ -481,7 +530,9 @@ bot.on('message', async msg => {
       const { usdBal: usd, ngnBal: ngn } = await getBalance(walletOf, chatId)
       send(chatId, t.showWallet(usd, ngn), o)
     },
-    'leads-generate-pay': async () => {},
+    [a.buyLeadsSelectFormat]: async coin => {
+      send(chatId, t.buyLeadsSuccess(coin), o)
+    },
     'leads-validate-pay': async () => {},
   }
 
@@ -1023,6 +1074,64 @@ bot.on('message', async msg => {
     if (message === 'Back') return goto.walletSelectCurrency()
 
     return walletOk[info?.lastStep](u.ngn)
+  }
+  //
+  //
+  if (message === user.buyLeads) {
+    return goto.buyLeadsSelectCountry()
+  }
+  if (action === a.buyLeadsSelectCountry) {
+    saveInfo('country', message)
+    if (!buyLeadsSelectCountry.includes(message)) return send(chatId, `?`)
+    return goto.buyLeadsSelectSmsVoice()
+  }
+  if (action === a.buyLeadsSelectSmsVoice) {
+    if (message === 'Back') return goto.buyLeadsSelectCountry()
+    if (!buyLeadsSelectSmsVoice.includes(message)) return send(chatId, `?`)
+    saveInfo('smsVoice', message)
+    return goto.buyLeadsSelectArea()
+  }
+  if (action === a.buyLeadsSelectArea) {
+    if (message === 'Back') return goto.buyLeadsSelectSmsVoice()
+    if (!buyLeadsSelectArea.includes(message)) return send(chatId, `?`)
+    saveInfo('area', message)
+    return goto.buyLeadsSelectAreaCode()
+  }
+  if (action === a.buyLeadsSelectAreaCode) {
+    if (message === 'Back') return goto.buyLeadsSelectArea()
+    if (!buyLeadsSelectAreaCode.includes(message)) return send(chatId, `?`)
+    saveInfo('areaCode', message)
+    return goto.buyLeadsSelectCarrier()
+  }
+  if (action === a.buyLeadsSelectCarrier) {
+    if (message === 'Back') return goto.buyLeadsSelectAreaCode()
+    if (!buyLeadsSelectCarrier.includes(message)) return send(chatId, `?`)
+    saveInfo('carrier', message)
+    return goto.buyLeadsSelectCnam()
+  }
+  if (action === a.buyLeadsSelectCnam) {
+    if (message === 'Back') return goto.buyLeadsSelectCarrier()
+    if (!buyLeadsSelectCnam.includes(message)) return send(chatId, `?`)
+    saveInfo('cnam', message)
+    return goto.buyLeadsSelectAmount()
+  }
+  if (action === a.buyLeadsSelectAmount) {
+    if (message === 'Back') return goto.buyLeadsSelectCnam()
+    if (isNaN(message) || message <= 0 || message > amounts[amounts.length - 1]) return send(chatId, `?`)
+    saveInfo('amount', Number(message))
+    return goto.buyLeadsSelectFormat()
+  }
+  if (action === a.buyLeadsSelectFormat) {
+    if (message === 'Back') return goto.buyLeadsSelectAmount()
+    if (!buyLeadsSelectFormat.includes(message)) return send(chatId, `?`)
+    saveInfo('format', message)
+    return goto.askCoupon(a.buyLeadsSelectFormat)
+  }
+  if (action === a.askCoupon + a.buyLeadsSelectFormat) {
+    if (message === 'Back') return goto.buyLeadsSelectFormat()
+    saveInfo('format', message)
+    await saveInfo('lastStep', a.buyLeadsSelectFormat)
+    return goto.walletSelectCurrency()
   }
 
   //
