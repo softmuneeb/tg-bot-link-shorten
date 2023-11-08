@@ -76,6 +76,8 @@ const { getCryptoDepositAddress, convert } = require('./pay-blockbee.js')
 process.env['NTBA_FIX_350'] = 1
 const DB_NAME = process.env.DB_NAME
 const SELF_URL = process.env.SELF_URL
+const RATE_LEAD = Number(process.env.RATE_LEAD)
+const RATE_CNAM = Number(process.env.RATE_CNAM)
 const FREE_LINKS = Number(process.env.FREE_LINKS)
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
@@ -89,7 +91,7 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 log('Bot ran!')
 
 const send = (chatId, message, options) => {
-  log('reply:\t' + message + ' ' + (options?.reply_markup?.keyboard?.map(i => i) || '') + '\tto: ' + chatId)
+  log('reply:\t' + message + ' ' + (options?.reply_markup?.keyboard?.map(i => i) || '') + '\tto: ' + chatId + '\n')
   bot.sendMessage(chatId, message, options).catch(e => log(e.message + ': ' + chatId))
 }
 
@@ -244,9 +246,9 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', a.askCoupon + action)
     },
     'domain-pay': () => {
-      const { domain, price, couponApplied, oldPrice } = info
+      const { domain, price, couponApplied, newPrice } = info
       couponApplied
-        ? send(chatId, t.domainPriceOff(domain, oldPrice, price), k.pay)
+        ? send(chatId, t.domainNewPrice(domain, price, newPrice), k.pay)
         : send(chatId, t.domainPrice(domain, price), k.pay)
       set(state, chatId, 'action', 'domain-pay')
     },
@@ -265,10 +267,10 @@ bot.on('message', async msg => {
       send(chatId, t.chooseDomainToBuy(text), bc)
     },
     'plan-pay': () => {
-      const { plan, price, couponApplied } = info
+      const { plan, price, couponApplied, newPrice } = info
       couponApplied
-        ? send(chatId, t.planPriceOff(plan, priceOf[plan], price), k.pay)
-        : send(chatId, t.planPrice(plan, priceOf[plan]), k.pay)
+        ? send(chatId, t.planNewPrice(plan, price, newPrice), k.pay)
+        : send(chatId, t.planPrice(plan, price), k.pay)
       set(state, chatId, 'action', 'plan-pay')
     },
     'choose-subscription': () => {
@@ -478,7 +480,7 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', 'none')
 
       const plan = info?.plan
-      const price = info?.price
+      const price = info?.couponApplied ? info?.newPrice : info?.price
       const wallet = await get(walletOf, chatId)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
 
@@ -503,7 +505,7 @@ bot.on('message', async msg => {
 
     'domain-pay': async coin => {
       set(state, chatId, 'action', 'none')
-      const price = info?.price
+      const price = info?.couponApplied ? info?.newPrice : info?.price
       const wallet = await get(walletOf, chatId)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
 
@@ -532,6 +534,7 @@ bot.on('message', async msg => {
     },
     [a.buyLeadsSelectFormat]: async coin => {
       send(chatId, t.buyLeadsSuccess(coin), o)
+      set(state, chatId, 'action', 'none')
     },
     'leads-validate-pay': async () => {},
   }
@@ -702,15 +705,15 @@ bot.on('message', async msg => {
     if (message === 'Back') return goto['choose-domain-to-buy']()
     if (message === 'Skip') return (await saveInfo('couponApplied', false)) || goto['domain-pay']()
 
+    const { price } = info
+
     const coupon = message.toUpperCase()
     const discount = discountOn[coupon]
     if (isNaN(discount)) return send(chatId, t.couponInvalid)
 
-    const { price } = info
-    await saveInfo('oldPrice', price)
-    const priceOff = price - (price * discount) / 100
+    const newPrice = price - (price * discount) / 100
+    await saveInfo('newPrice', newPrice)
     await saveInfo('couponApplied', true)
-    await saveInfo('price', priceOff)
 
     return goto['domain-pay']()
   }
@@ -804,9 +807,9 @@ bot.on('message', async msg => {
     const discount = discountOn[coupon]
     if (isNaN(discount)) return send(chatId, t.couponInvalid)
 
-    const priceOff = price - (price * discount) / 100
+    const newPrice = price - (price * discount) / 100
+    await saveInfo('newPrice', newPrice)
     await saveInfo('couponApplied', true)
-    await saveInfo('price', priceOff)
 
     return goto['plan-pay']()
   }
@@ -1081,8 +1084,8 @@ bot.on('message', async msg => {
     return goto.buyLeadsSelectCountry()
   }
   if (action === a.buyLeadsSelectCountry) {
-    saveInfo('country', message)
     if (!buyLeadsSelectCountry.includes(message)) return send(chatId, `?`)
+    saveInfo('country', message)
     return goto.buyLeadsSelectSmsVoice()
   }
   if (action === a.buyLeadsSelectSmsVoice) {
@@ -1112,13 +1115,16 @@ bot.on('message', async msg => {
   if (action === a.buyLeadsSelectCnam) {
     if (message === 'Back') return goto.buyLeadsSelectCarrier()
     if (!buyLeadsSelectCnam.includes(message)) return send(chatId, `?`)
-    saveInfo('cnam', message)
+    saveInfo('cnam', message === 'Yes')
     return goto.buyLeadsSelectAmount()
   }
   if (action === a.buyLeadsSelectAmount) {
     if (message === 'Back') return goto.buyLeadsSelectCnam()
     if (isNaN(message) || message <= 0 || message > amounts[amounts.length - 1]) return send(chatId, `?`)
-    saveInfo('amount', Number(message))
+    const amount = Number(message)
+    saveInfo('amount', amount)
+    const price = amount * RATE_LEAD + (info?.cnam ? amount * RATE_CNAM : 0)
+    saveInfo('price', price)
     return goto.buyLeadsSelectFormat()
   }
   if (action === a.buyLeadsSelectFormat) {
@@ -1129,8 +1135,23 @@ bot.on('message', async msg => {
   }
   if (action === a.askCoupon + a.buyLeadsSelectFormat) {
     if (message === 'Back') return goto.buyLeadsSelectFormat()
-    saveInfo('format', message)
+    if (message === 'Skip') {
+      saveInfo('lastStep', a.buyLeadsSelectFormat)
+      return (await saveInfo('couponApplied', false)) || goto.walletSelectCurrency()
+    }
+
+    const { price } = info
+
+    const coupon = message.toUpperCase()
+    const discount = discountOn[coupon]
+    if (isNaN(discount)) return send(chatId, t.couponInvalid)
+
+    const newPrice = price - (price * discount) / 100
+    await saveInfo('newPrice', newPrice)
+    await saveInfo('couponApplied', true)
+
     await saveInfo('lastStep', a.buyLeadsSelectFormat)
+
     return goto.walletSelectCurrency()
   }
 

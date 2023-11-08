@@ -70,12 +70,12 @@ Nomadly Bot`,
     `The price is $${usd}. Would you like to apply a coupon code? If you have one, please enter it now. Otherwise, you can press 'Skip'.`,
   enterCoupon: `Please enter a coupon code:`,
   planPrice: (plan, price) => `Price of ${plan} subscription is $${price} Please choose payment method.`,
-  planPriceOff: (plan, price, priceOff) =>
-    `Price of ${plan} subscription is now $${view(priceOff)} <s>($${price})</s> Please choose payment method.`,
+  planNewPrice: (plan, price, newPrice) =>
+    `Price of ${plan} subscription is now $${view(newPrice)} <s>($${price})</s> Please choose payment method.`,
 
   domainPrice: (domain, price) => `Price of ${domain} is ${price} USD. Choose payment method.`,
-  domainPriceOff: (domain, price, priceOff) =>
-    `Price of ${domain} is now $${view(priceOff)} <s>($${price})</s> Choose payment method.`,
+  domainNewPrice: (domain, price, newPrice) =>
+    `Price of ${domain} is now $${view(newPrice)} <s>($${price})</s> Choose payment method.`,
 
   couponInvalid: `Invalid coupon code, Please enter your coupon code again:`,
 
@@ -254,6 +254,8 @@ $${view(usd)}
   buyLeadsSelectAmount: 'How much from the numbers you want to validate? Select or type a number.',
   buyLeadsSelectFormat: 'Choose format i.e Local 5535... International +15535...',
   buyLeadsSuccess: n => `Congrats you ${n} leads are downloaded.`,
+
+  buyLeadsNewPrice: (leads, price, newPrice) => `Price of ${leads} leads is now $${view(newPrice)} <s>($${price})</s>`,
 }
 const buyLeadsSelectCountry = ['US', 'Canada', 'New Zealand', 'Australia', 'UK']
 const buyLeadsSelectSmsVoice = ['SMS (Price 10$ for 1000)', 'Voice (Price 12$ for 1000)']
