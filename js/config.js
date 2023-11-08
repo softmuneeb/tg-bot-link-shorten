@@ -1,3 +1,5 @@
+const areasOfCountry = require('./areasOfCountry')
+
 /* global process */
 require('dotenv').config()
 const FREE_LINKS = Number(process.env.FREE_LINKS)
@@ -257,10 +259,10 @@ $${view(usd)}
 
   buyLeadsNewPrice: (leads, price, newPrice) => `Price of ${leads} leads is now $${view(newPrice)} <s>($${price})</s>`,
 }
-const buyLeadsSelectCountry = ['US', 'Canada', 'New Zealand', 'Australia', 'UK']
+const buyLeadsSelectCountry = Object.keys(areasOfCountry)
 const buyLeadsSelectSmsVoice = ['SMS (Price 10$ for 1000)', 'Voice (Price 12$ for 1000)']
-const buyLeadsSelectArea = ['Mixed Area Codes', 'New York', 'Nevada', 'Texas']
-const buyLeadsSelectAreaCode = ['Mixed', '205', '334', '256', '123', '256']
+const buyLeadsSelectArea = country => Object.keys(areasOfCountry?.[country])
+const buyLeadsSelectAreaCode = (country, area) => areasOfCountry?.[country]?.[area]
 const buyLeadsSelectCnam = yesNo
 const buyLeadsSelectCarrier = ['Mixed Carriers', 'T-mobile', 'AT&T', 'Sprint']
 const buyLeadsSelectAmount = ['1000', '2000', '3000', '4000', '5000']
@@ -318,8 +320,8 @@ const k = {
 
   buyLeadsSelectCountry: kOf(buyLeadsSelectCountry),
   buyLeadsSelectSmsVoice: kOf(buyLeadsSelectSmsVoice),
-  buyLeadsSelectArea: kOf(buyLeadsSelectArea),
-  buyLeadsSelectAreaCode: kOf(buyLeadsSelectAreaCode),
+  buyLeadsSelectArea: country => kOf(buyLeadsSelectArea(country)),
+  buyLeadsSelectAreaCode: (country, area) => kOf(buyLeadsSelectAreaCode(country, area)),
   buyLeadsSelectCarrier: kOf(buyLeadsSelectCarrier),
   buyLeadsSelectCnam: kOf(yesNo),
   buyLeadsSelectAmount: kOf(buyLeadsSelectAmount),

@@ -91,7 +91,7 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 log('Bot ran!')
 
 const send = (chatId, message, options) => {
-  log('reply:\t' + message + ' ' + (options?.reply_markup?.keyboard?.map(i => i) || '') + '\tto: ' + chatId + '\n')
+  log('reply: ' + message + ' ' + (options?.reply_markup?.keyboard?.map(i => i) || '') + '\tto: ' + chatId + '\n')
   bot.sendMessage(chatId, message, options).catch(e => log(e.message + ': ' + chatId))
 }
 
@@ -164,7 +164,7 @@ client
 bot.on('message', async msg => {
   const chatId = msg?.chat?.id
   const message = msg?.text || ''
-  log('message: \t' + message + '\tfrom: ' + chatId + '\t' + msg?.from?.username)
+  log('message: ' + message + '\tfrom: ' + chatId + ' ' + msg?.from?.username)
   tryConnectReseller() // our ip may change on railway hosting so make sure its correct
 
   if (!db) return send(chatId, 'Bot starting, please wait')
@@ -451,11 +451,11 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', a.buyLeadsSelectSmsVoice)
     },
     buyLeadsSelectArea: () => {
-      send(chatId, t.buyLeadsSelectArea, k.buyLeadsSelectArea)
+      send(chatId, t.buyLeadsSelectArea, k.buyLeadsSelectArea(info?.country))
       set(state, chatId, 'action', a.buyLeadsSelectArea)
     },
     buyLeadsSelectAreaCode: () => {
-      send(chatId, t.buyLeadsSelectAreaCode, k.buyLeadsSelectAreaCode)
+      send(chatId, t.buyLeadsSelectAreaCode, k.buyLeadsSelectAreaCode(info?.country, info?.area))
       set(state, chatId, 'action', a.buyLeadsSelectAreaCode)
     },
     buyLeadsSelectCarrier: () => {
@@ -1085,6 +1085,7 @@ bot.on('message', async msg => {
   }
   if (action === a.buyLeadsSelectCountry) {
     if (!buyLeadsSelectCountry.includes(message)) return send(chatId, `?`)
+    if ('US' !== message) return send(chatId, `Coming Soon`)
     saveInfo('country', message)
     return goto.buyLeadsSelectSmsVoice()
   }
@@ -1096,13 +1097,14 @@ bot.on('message', async msg => {
   }
   if (action === a.buyLeadsSelectArea) {
     if (message === 'Back') return goto.buyLeadsSelectSmsVoice()
-    if (!buyLeadsSelectArea.includes(message)) return send(chatId, `?`)
+    if (!buyLeadsSelectArea(info?.country).includes(message)) return send(chatId, `?`)
     saveInfo('area', message)
     return goto.buyLeadsSelectAreaCode()
   }
   if (action === a.buyLeadsSelectAreaCode) {
     if (message === 'Back') return goto.buyLeadsSelectArea()
-    if (!buyLeadsSelectAreaCode.includes(message)) return send(chatId, `?`)
+    const areaCodes = buyLeadsSelectAreaCode(info?.country, info?.area)
+    if (!areaCodes.includes(message)) return send(chatId, `?`)
     saveInfo('areaCode', message)
     return goto.buyLeadsSelectCarrier()
   }
