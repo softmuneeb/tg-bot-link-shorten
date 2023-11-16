@@ -29,7 +29,7 @@ const viewDNSRecords = async domain => {
   const details = await getDomainDetails(domain)
 
   const { websiteId, domainNameId, nameserver1, nameserver2, nameserver3, nameserver4 } = details?.responseData
-  if (!websiteId) {
+  if (!websiteId || !domainNameId) {
     log('No websiteId,', details?.responseMsg?.message)
     return
   }
@@ -47,7 +47,7 @@ const viewDNSRecords = async domain => {
 
   records = [...records, ...res.filter(r => r.recordType === 'CNAME')]
 
-  return records
+  return { records, domainNameId }
 }
 
 // viewDNSRecords('glasso.sbs').then(log);

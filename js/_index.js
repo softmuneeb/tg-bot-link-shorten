@@ -314,17 +314,16 @@ bot.on('message', async msg => {
 
     'choose-dns-action': async () => {
       const domain = info?.domainToManage
-      const detail = await viewDNSRecords(domain)
+      const { records, domainNameId } = await viewDNSRecords(domain)
 
-      const toSave = detail.map(({ dnszoneID, dnszoneRecordID, recordType, domainNameId, nsId, recordContent }) => ({
+      const toSave = records.map(({ dnszoneID, dnszoneRecordID, recordType, nsId, recordContent }) => ({
         dnszoneID,
         dnszoneRecordID,
         recordType,
-        domainNameId,
         nsId,
         recordContent,
       }))
-      const viewDnsRecords = detail
+      const viewDnsRecords = records
         .map(
           ({ recordType, recordContent, nsId }, i) =>
             `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
@@ -334,6 +333,7 @@ bot.on('message', async msg => {
         .join('\n')
 
       set(state, chatId, 'dnsRecords', toSave)
+      set(state, chatId, 'domainNameId', domainNameId)
       set(state, chatId, 'action', 'choose-dns-action')
       send(chatId, `${t.viewDnsRecords.replace('{{domain}}', domain)}\n${viewDnsRecords}`, dns)
     },
@@ -917,8 +917,8 @@ bot.on('message', async msg => {
 
     const { dnsRecords, domainToManage, delId } = info
     const nsRecords = dnsRecords.filter(r => r.recordType === 'NS')
-    const { dnszoneID, dnszoneRecordID, nsId, domainNameId } = dnsRecords[delId]
-    const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID, domainToManage, domainNameId, nsId, nsRecords)
+    const { dnszoneID, dnszoneRecordID, nsId } = dnsRecords[delId]
+    const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID, domainToManage, nsId, nsRecords)
     if (error) return send(chatId, `Error deleting dns record, ${error}, Provide value again`)
 
     send(chatId, t.dnsRecordDeleted)
@@ -943,8 +943,7 @@ bot.on('message', async msg => {
     const recordContent = message
     const dnsRecords = info?.dnsRecords
     const nsRecords = dnsRecords?.filter(r => r.recordType === 'NS')
-    const id = nsRecords.length - 1
-    const domainNameId = dnsRecords?.[id]?.domainNameId
+    const domainNameId = info?.domainNameId
 
     if (nsRecords.length >= 4 && t[recordType] === 'NS') {
       send(chatId, 'Maximum 4 NS records can be added, you can update or delete previous NS records')
@@ -979,10 +978,11 @@ bot.on('message', async msg => {
 
     const recordContent = message
     const dnsRecords = info?.dnsRecords
+    const domainNameId = info?.domainNameId
     const domain = info?.domainToManage
     const id = info?.dnsRecordIdToUpdate
 
-    const { dnszoneID, dnszoneRecordID, recordType, domainNameId, nsId } = dnsRecords[id]
+    const { dnszoneID, dnszoneRecordID, recordType, nsId } = dnsRecords[id]
     const { error } = await updateDNSRecord(
       dnszoneID,
       dnszoneRecordID,
