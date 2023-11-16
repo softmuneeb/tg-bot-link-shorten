@@ -21,6 +21,7 @@ const updateDNSRecordNs = async (domainNameId, websiteName, RecordValue, nsId, d
     // nsId = 1,2,3 or 4
     requestData['nameServer' + nsId] = RecordValue
 
+    log('updateDNSRecordNs', { requestData })
     const response = await axios.get(apiUrl, { params: requestData })
     log(
       'update DNS Record Ns ',
@@ -40,7 +41,7 @@ const updateDNSRecordNs = async (domainNameId, websiteName, RecordValue, nsId, d
       return { error }
     }
   } catch (error) {
-    const m = `Error update DNS Record Ns ${error.message}`
+    const m = `Error Update NS Record ${error.message}`
     log(JSON.stringify(error?.response?.data, null, 2), m)
     return { error: m }
   }
