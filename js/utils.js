@@ -100,6 +100,10 @@ const regularCheckDns = (bot, chatId, domain) => {
     bot.sendMessage(chatId, t.dnsNotPropagated.replace('{{domain}}', domain))
   }
   const intervalDnsPropagation = setInterval(checkDnsPropagation, UPDATE_DNS_INTERVAL * 1000)
+
+  setTimeout(() => {
+    clearInterval(intervalDnsPropagation)
+  }, 60 * 60 * 1000)
 }
 
 const nextNumber = arr => {

@@ -942,9 +942,9 @@ bot.on('message', async msg => {
     const recordType = info?.recordType
     const recordContent = message
     const dnsRecords = info?.dnsRecords
-    const nsRecords = dnsRecords.filter(r => r.recordType === 'NS')
+    const nsRecords = dnsRecords?.filter(r => r.recordType === 'NS')
     const id = nsRecords.length - 1
-    const { domainNameId } = dnsRecords[id]
+    const domainNameId = dnsRecords?.[id]?.domainNameId
 
     if (nsRecords.length >= 4 && t[recordType] === 'NS') {
       send(chatId, 'Maximum 4 NS records can be added, you can update or delete previous NS records')
