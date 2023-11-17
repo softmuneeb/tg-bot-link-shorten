@@ -915,10 +915,10 @@ bot.on('message', async msg => {
     if (message === 'Back' || message === 'No') return goto['select-dns-record-id-to-delete']()
     if (message !== 'Yes') return send(chatId, `?`)
 
-    const { dnsRecords, domainToManage, delId } = info
+    const { domainNameId, dnsRecords, domainToManage, delId } = info
     const nsRecords = dnsRecords.filter(r => r.recordType === 'NS')
     const { dnszoneID, dnszoneRecordID, nsId } = dnsRecords[delId]
-    const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID, domainToManage, nsId, nsRecords)
+    const { error } = await deleteDNSRecord(dnszoneID, dnszoneRecordID, domainToManage, domainNameId, nsId, nsRecords)
     if (error) return send(chatId, `Error deleting dns record, ${error}, Provide value again`)
 
     send(chatId, t.dnsRecordDeleted)
