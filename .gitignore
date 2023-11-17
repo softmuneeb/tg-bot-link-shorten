@@ -64,3 +64,5 @@ typings/
 
 # IDEs and editors
 .idea/
+.wwebjs_auth
+.wwebjs_cache

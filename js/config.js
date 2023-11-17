@@ -25,7 +25,7 @@ const admin = {
 }
 const user = {
   // main keyboard
-  buyLeads: '🙎‍♂️ Buy Leads',
+  // buyLeads: '🙎‍♂️ Buy Leads Coming Soon',
   wallet: '💰 My Wallet',
   urlShortener: '🔗 URL Shortener',
   viewShortLinks: '🔍 View Analytics',
