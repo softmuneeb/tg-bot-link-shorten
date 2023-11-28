@@ -2,6 +2,7 @@ const areasOfCountry = require('./areasOfCountry')
 
 /* global process */
 require('dotenv').config()
+const SELF_URL = process.env.SELF_URL
 const FREE_LINKS = Number(process.env.FREE_LINKS)
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
 const PRICE_DAILY = Number(process.env.PRICE_DAILY_SUBSCRIPTION)
@@ -48,6 +49,10 @@ const u = {
 const view = num => Number(num).toFixed(2)
 const yesNo = ['Yes', 'No']
 const t = {
+  subscribeRCS: p =>
+    `Subscribed! Unsubscribe anytime by clicking the <a href="${SELF_URL}/unsubscribe?a=b&Phone=${p}">link</a>`,
+  unsubscribeRCS: p =>
+    `You are unsubscribed! To subscribe again click on the <a href="${SELF_URL}/subscribe?a=b&Phone=${p}">link</a>`,
   argsErr: `dev: sent wrong args`,
   showDepositNgnInfo:
     ngn => `Please remit ${ngn} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your wallet will updated.

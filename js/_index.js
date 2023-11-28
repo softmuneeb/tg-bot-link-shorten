@@ -1627,6 +1627,20 @@ app.get('/uptime', (req, res) => {
   res.send(html(`Server has been running for ${uptimeInHours.toFixed(2)} hours.`))
 })
 //
+app.get('/subscribe', (req, res) => {
+  const phone = req?.query?.Phone
+  const name = req?.query?.['full-name']
+
+  log({ phone, name })
+  res.send(html(t.subscribeRCS(phone)))
+})
+app.get('/unsubscribe', (req, res) => {
+  const phone = req?.query?.Phone
+
+  log({ phone })
+  res.send(html(t.unsubscribeRCS(phone)))
+})
+//
 app.get('/:id', async (req, res) => {
   const id = req?.params?.id
   if (id === '') return res.json({ message: 'Salam', from: req.hostname })
