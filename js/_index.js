@@ -72,6 +72,7 @@ const { saveDomainInServer } = require('./rl-save-domain-in-server.js')
 const { get, set, del, increment, getAll, decrement } = require('./db.js')
 const { getRegisteredDomainNames } = require('./cr-domain-purchased-get.js')
 const { getCryptoDepositAddress, convert } = require('./pay-blockbee.js')
+const { validatePhones } = require('./validatePhones.js')
 
 process.env['NTBA_FIX_350'] = 1
 const DB_NAME = process.env.DB_NAME
@@ -533,8 +534,37 @@ bot.on('message', async msg => {
       send(chatId, t.showWallet(usd, ngn), o)
     },
     [a.buyLeadsSelectFormat]: async coin => {
-      send(chatId, t.buyLeadsSuccess(coin), o)
       set(state, chatId, 'action', 'none')
+      const price = info?.couponApplied ? info?.newPrice : info?.price
+      const wallet = await get(walletOf, chatId)
+      const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
+
+      // price validate
+      const priceUsd = price
+      if (coin === u.usd && usdBal < priceUsd) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
+      const priceNgn = await usdToNgn(price)
+      if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
+
+      // buy leads
+
+      // send regular updates to users on progress
+      // send 20 leads with CNAM to user and update him every 10 iterations or every 10 seconds
+      const res = await validatePhones(info?.amount, bot, chatId)
+      if (!res) return send(chatId, t.buyLeadsError)
+      send(chatId, res)
+      send(chatId, t.buyLeadsSuccess(20))
+
+      // wallet update
+      if (coin === u.usd) {
+        const usdOut = (wallet?.usdOut || 0) + priceUsd
+        await set(walletOf, chatId, 'usdOut', usdOut)
+      }
+      if (coin === u.ngn) {
+        const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
+        await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
+      }
+      const { usdBal: usd, ngnBal: ngn } = await getBalance(walletOf, chatId)
+      send(chatId, t.showWallet(usd, ngn), o)
     },
     'leads-validate-pay': async () => {},
   }
@@ -1098,7 +1128,7 @@ bot.on('message', async msg => {
   if (action === a.buyLeadsSelectArea) {
     if (message === 'Back') return goto.buyLeadsSelectSmsVoice()
     if (!buyLeadsSelectArea(info?.country).includes(message)) return send(chatId, `?`)
-    saveInfo('area', message)
+    await saveInfo('area', message)
     return goto.buyLeadsSelectAreaCode()
   }
   if (action === a.buyLeadsSelectAreaCode) {

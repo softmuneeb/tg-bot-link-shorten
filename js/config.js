@@ -26,7 +26,7 @@ const admin = {
 }
 const user = {
   // main keyboard
-  // buyLeads: '🙎‍♂️ Buy Leads Coming Soon',
+  buyLeads: '🙎‍♂️ Buy Leads',
   wallet: '💰 My Wallet',
   urlShortener: '🔗 URL Shortener',
   viewShortLinks: '🔍 View Analytics',
@@ -252,6 +252,9 @@ $${view(usd)}
   sentMoreMoney: (expected, got) =>
     `You sent more money than expected so we credited the extra amount into your wallet. We expected ${expected} but received ${got}`,
 
+  buyLeadsError: 'Error downloading leads, your wallet has not been charged',
+  buyLeadsProgress: (i, total) => `Downloading ${i}/${total} leads.  Please wait.`,
+
   buyLeadsSelectCountry: 'Please select country',
   buyLeadsSelectSmsVoice: 'Please select SMS / Voice',
   buyLeadsSelectArea: 'Please select area',
@@ -269,7 +272,16 @@ const buyLeadsSelectSmsVoice = ['SMS (Price 10$ for 1000)', 'Voice (Price 12$ fo
 const buyLeadsSelectArea = country => Object.keys(areasOfCountry?.[country])
 const buyLeadsSelectAreaCode = (country, area) => areasOfCountry?.[country]?.[area]
 const buyLeadsSelectCnam = yesNo
-const buyLeadsSelectCarrier = ['Mixed Carriers', 'T-mobile', 'AT&T', 'Sprint']
+const buyLeadsSelectCarrier = [
+  'Mixed Carriers',
+  'T-Mobile USA, Inc.',
+  'Verizon Wireless',
+  'CSC Wireless, LLC',
+  'Onvoy Spectrum, LLC',
+  'Dish Wireless, LLC',
+  'AT&T Wireless',
+  'Fibernetics - SVR',
+]
 const buyLeadsSelectAmount = ['1000', '2000', '3000', '4000', '5000']
 const buyLeadsSelectFormat = ['Local Format', 'International Format']
 
