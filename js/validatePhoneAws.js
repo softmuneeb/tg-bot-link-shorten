@@ -10,15 +10,18 @@ const client = new PinpointClient({
   },
 })
 
-const validatePhoneAws = async PhoneNumber => {
+const validatePhoneAws = async phone => {
   const command = new PhoneNumberValidateCommand({
     NumberValidateRequest: {
-      PhoneNumber,
+      PhoneNumber: phone,
     },
   })
   const res = await client.send(command)
-  // console.log(res)
-  return res?.NumberValidateResponse?.PhoneType !== 'INVALID'
+
+  return res
+
+  // return res?.NumberValidateResponse?.PhoneType !== 'INVALID'
+  // return res?.NumberValidateResponse?.PhoneType === 'MOBILE'
 }
-// validatePhoneAws('+16465807362').then(console.log)
+// validatePhoneAws('+18623752767') //.then(console.log)
 module.exports = validatePhoneAws

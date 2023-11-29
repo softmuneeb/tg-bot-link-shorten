@@ -57,7 +57,18 @@ async function ngnToUsd(ngn) {
   }
 }
 // ngnToUsd(1000).then(log);
+const addZero = number => (number < 10 ? '0' + number : number)
+const date = () => {
+  const currentDate = new Date()
+  const year = currentDate.getFullYear()
+  const month = addZero(currentDate.getMonth() + 1)
+  const day = addZero(currentDate.getDate())
+  const hours = addZero(currentDate.getHours())
+  const minutes = addZero(currentDate.getMinutes())
+  const seconds = addZero(currentDate.getSeconds())
 
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
 function today() {
   const currentDate = new Date()
   const day = currentDate.getDate()
@@ -105,6 +116,8 @@ const regularCheckDns = (bot, chatId, domain) => {
     clearInterval(intervalDnsPropagation)
   }, 60 * 60 * 1000)
 }
+
+const getRandom = n => Math.floor(Math.random() * n)
 
 const nextNumber = arr => {
   let n = 1
@@ -158,15 +171,18 @@ const subscribePlan = async (planEndingTime, freeDomainNamesAvailableFor, planOf
   bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan), keyboard)
   log('reply:\t' + t.planSubscribed.replace('{{plan}}', plan) + '\tto: ' + chatId)
 }
+const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 module.exports = {
   year,
   week,
   today,
   month,
+  sleep,
   isAdmin,
   usdToNgn,
   ngnToUsd,
+  getRandom,
   isValidUrl,
   sendQrCode,
   getBalance,
@@ -176,5 +192,6 @@ module.exports = {
   isNormalUser,
   subscribePlan,
   regularCheckDns,
+  date,
   sendMessageToAllUsers,
 }
