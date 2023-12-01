@@ -33,6 +33,7 @@ const {
   buyLeadsSelectCnam,
   buyLeadsSelectFormat,
   buyLeadsSelectAmount: amounts,
+  phoneNumberLeads,
 } = require('./config.js')
 const {
   week,
@@ -220,6 +221,8 @@ bot.on('message', async msg => {
     walletPayNgnConfirm: 'walletPayNgnConfirm',
 
     askCoupon: 'askCoupon',
+
+    phoneNumberLeads: 'phoneNumberLeads',
 
     // buyLeads
     buyLeadsSelectCountry: 'buyLeadsSelectCountry',
@@ -440,6 +443,11 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', a.walletSelectCurrency)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
       send(chatId, t.walletSelectCurrency(usdBal, ngnBal), k.of([u.usd, u.ngn]))
+    },
+    //
+    phoneNumberLeads: () => {
+      send(chatId, t.phoneNumberLeads, k.phoneNumberLeads)
+      set(state, chatId, 'action', a.phoneNumberLeads)
     },
     //
     //
@@ -1123,10 +1131,17 @@ bot.on('message', async msg => {
   }
   //
   //
-  if (message === user.buyLeads) {
-    return goto.buyLeadsSelectCountry()
+  if (message === user.phoneNumberLeads) {
+    return goto.phoneNumberLeads()
+  }
+  if (action === a.phoneNumberLeads) {
+    if (phoneNumberLeads[1] === message) return send(chatId, `Coming Soon`)
+    if (phoneNumberLeads[0] === message) return goto.buyLeadsSelectCountry()
+
+    return send(chatId, `?`)
   }
   if (action === a.buyLeadsSelectCountry) {
+    if (message === 'Back') goto.phoneNumberLeads()
     if (!buyLeadsSelectCountry.includes(message)) return send(chatId, `?`)
     if ('US' !== message) return send(chatId, `Coming Soon`)
     saveInfo('country', message)

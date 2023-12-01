@@ -26,7 +26,7 @@ const admin = {
 }
 const user = {
   // main keyboard
-  buyLeads: '🙎‍♂️ Buy Leads',
+  phoneNumberLeads: '☎️ Phone Number Leads',
   wallet: '💰 My Wallet',
   urlShortener: '🔗 URL Shortener',
   viewShortLinks: '🔍 View Analytics',
@@ -255,6 +255,8 @@ $${view(usd)}
   buyLeadsError: 'Error downloading leads, your wallet has not been charged',
   buyLeadsProgress: (i, total) => `Downloading ${i}/${total} leads. Please wait.`,
 
+  phoneNumberLeads: 'Please select an option',
+
   buyLeadsSelectCountry: 'Please select country',
   buyLeadsSelectSmsVoice: 'Please select SMS / Voice',
   buyLeadsSelectArea: 'Please select area',
@@ -267,6 +269,8 @@ $${view(usd)}
 
   buyLeadsNewPrice: (leads, price, newPrice) => `Price of ${leads} leads is now $${view(newPrice)} <s>($${price})</s>`,
 }
+const phoneNumberLeads = ['🙎‍♂️ Buy Leads', '☎️ Phone Number Validator']
+
 const buyLeadsSelectCountry = Object.keys(areasOfCountry)
 const buyLeadsSelectSmsVoice = ['SMS (Price 10$ for 1000)', 'Voice (Price 12$ for 1000)']
 const buyLeadsSelectArea = country => Object.keys(areasOfCountry?.[country])
@@ -334,6 +338,8 @@ const k = {
     },
     parse_mode: 'HTML',
   },
+
+  phoneNumberLeads: kOf(phoneNumberLeads),
 
   buyLeadsSelectCountry: kOf(buyLeadsSelectCountry),
   buyLeadsSelectSmsVoice: kOf(buyLeadsSelectSmsVoice),
@@ -487,6 +493,7 @@ module.exports = {
   dnsRecordType,
   freeDomainsOf,
   o: userKeyboard,
+  phoneNumberLeads,
   aO: adminKeyboard,
   chooseSubscription,
   buyLeadsSelectArea,

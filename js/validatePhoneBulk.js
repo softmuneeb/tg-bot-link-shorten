@@ -76,7 +76,7 @@ const validateBulkNumbers = async (phonesToGenerate, countryCode, areaCodes, cna
     // Publish Progress
     const progress = t.buyLeadsProgress(res.length > phonesToGenerate ? phonesToGenerate : res.length, phonesToGenerate)
     bot && bot.sendMessage(chatId, progress)
-    log(r[1], progress)
+    log(progress)
   }
   log(
     'elapsedTime',
