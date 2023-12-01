@@ -72,7 +72,8 @@ const { saveDomainInServer } = require('./rl-save-domain-in-server.js')
 const { get, set, del, increment, getAll, decrement } = require('./db.js')
 const { getRegisteredDomainNames } = require('./cr-domain-purchased-get.js')
 const { getCryptoDepositAddress, convert } = require('./pay-blockbee.js')
-const { validatePhones } = require('./validatePhones.js')
+const { validateBulkNumbers } = require('./validatePhoneBulk.js')
+const { countryCodeOf } = require('./areasOfCountry.js')
 
 process.env['NTBA_FIX_350'] = 1
 const DB_NAME = process.env.DB_NAME
@@ -546,13 +547,25 @@ bot.on('message', async msg => {
       if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
 
       // buy leads
-
-      // send regular updates to users on progress
-      // send 20 leads with CNAM to user and update him every 10 iterations or every 10 seconds
-      const res = await validatePhones(info?.amount, bot, chatId)
+      const res = await validateBulkNumbers(
+        info?.amount,
+        countryCodeOf[info?.country],
+        [info?.areaCode],
+        info?.cnam,
+        bot,
+        chatId,
+      )
       if (!res) return send(chatId, t.buyLeadsError)
-      send(chatId, res)
-      send(chatId, t.buyLeadsSuccess(20))
+
+      send(chatId, t.buyLeadsSuccess(res.length)) // send success message
+
+      const file1 = 'leads.txt'
+      fs.writeFile(file1, res.map(a => a[0]).join('\n'), () => bot.sendDocument(chatId, file1))
+
+      if (info?.cnam) {
+        const file2 = 'leads_with_cnam.txt'
+        fs.writeFile(file2, res.map(a => a[0] + ' ' + a[1]).join('\n'), () => bot.sendDocument(chatId, file2))
+      }
 
       // wallet update
       if (coin === u.usd) {
@@ -1121,6 +1134,7 @@ bot.on('message', async msg => {
   }
   if (action === a.buyLeadsSelectSmsVoice) {
     if (message === 'Back') return goto.buyLeadsSelectCountry()
+    if (buyLeadsSelectSmsVoice[1] === message) return send(chatId, `Coming Soon`)
     if (!buyLeadsSelectSmsVoice.includes(message)) return send(chatId, `?`)
     saveInfo('smsVoice', message)
     return goto.buyLeadsSelectArea()

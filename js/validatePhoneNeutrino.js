@@ -9,7 +9,8 @@ const neutrinoApiUrl = 'https://neutrinoapi.net/phone-validate'
 const validatePhoneNeutrino = async number => {
   const res = await axios.post(neutrinoApiUrl, { number }, { headers: neutrino_headers })
   // console.log(res.data)
-  return res.data.valid
+  // return res.data.valid
+  return res.data
 }
 // validatePhoneNeutrino('+16465807362').then(console.log)
 module.exports = validatePhoneNeutrino

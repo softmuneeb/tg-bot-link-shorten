@@ -3,7 +3,7 @@ const validatePhoneNpl = require('./validatePhoneNpl')
 const validatePhoneNeutrino = require('./validatePhoneNeutrino')
 const { customAlphabet } = require('nanoid')
 const { log } = require('console')
-const validateCnamTwilio = require('./validateCnamTwilio')
+const validatePhoneTwilioV1 = require('./validatePhoneTwilioV1')
 const part1 = customAlphabet('23456789', 1)
 const part2 = customAlphabet('0123456789', 6)
 
@@ -15,7 +15,7 @@ const validatePhone = async () => {
   const res1 = await validatePhoneNeutrino(phone)
   const res2 = res1 && (await validatePhoneNpl(phone))
   const res3 = res2 && (await validatePhoneAws(phone))
-  const res4 = res3 && (await validateCnamTwilio(phone))
+  const res4 = res3 && (await validatePhoneTwilioV1(phone))
 
   log(`${phone}, ${res1}, ${res2}, ${res3}, ${res4}, ${new Date()}`)
 }

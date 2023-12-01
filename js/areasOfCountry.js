@@ -126,4 +126,12 @@ const areasOfCountry = {
   UK: {},
 }
 
-module.exports = areasOfCountry
+const countryCodeOf = {
+  US: '1',
+  Canada: '1',
+  'New Zealand': '64',
+  Australia: '61',
+  UK: '44',
+}
+
+module.exports = { areasOfCountry, countryCodeOf }

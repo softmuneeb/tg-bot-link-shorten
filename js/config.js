@@ -1,4 +1,4 @@
-const areasOfCountry = require('./areasOfCountry')
+const { areasOfCountry } = require('./areasOfCountry')
 
 /* global process */
 require('dotenv').config()
@@ -253,7 +253,7 @@ $${view(usd)}
     `You sent more money than expected so we credited the extra amount into your wallet. We expected ${expected} but received ${got}`,
 
   buyLeadsError: 'Error downloading leads, your wallet has not been charged',
-  buyLeadsProgress: (i, total) => `Downloading ${i}/${total} leads.  Please wait.`,
+  buyLeadsProgress: (i, total) => `Downloading ${i}/${total} leads. Please wait.`,
 
   buyLeadsSelectCountry: 'Please select country',
   buyLeadsSelectSmsVoice: 'Please select SMS / Voice',
@@ -262,8 +262,8 @@ $${view(usd)}
   buyLeadsSelectCarrier: 'Please select carrier',
   buyLeadsSelectCnam: 'You want to search the owner name? CNAME costs extra 10$ per 1000 leads',
   buyLeadsSelectAmount: 'How much from the numbers you want to validate? Select or type a number.',
-  buyLeadsSelectFormat: 'Choose format i.e Local 5535... International +15535...',
-  buyLeadsSuccess: n => `Congrats you ${n} leads are downloaded.`,
+  buyLeadsSelectFormat: 'Choose format i.e Local (555) 123-4567, International +1 555-123-4567',
+  buyLeadsSuccess: n => `Congrats your ${n} leads are downloaded.`,
 
   buyLeadsNewPrice: (leads, price, newPrice) => `Price of ${leads} leads is now $${view(newPrice)} <s>($${price})</s>`,
 }

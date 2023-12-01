@@ -1,90 +1,97 @@
-const { customAlphabet, random } = require('nanoid')
-// const validatePhoneNpl = require('./validatePhoneNpl')
-const validatePhoneAws = require('./validatePhoneAws')
-const { date, getRandom, sleep } = require('./utils')
+const { t } = require('./config')
 const { log } = require('console')
-// const { log } = require('console')
-// const { date } = require('./utils')
+const { customAlphabet } = require('nanoid')
+const { getRandom, sleep } = require('./utils')
+const validatePhoneAlcazar = require('./validatePhoneAlcazar')
+const validatePhoneSignalwire = require('./validatePhoneSignalwire')
 const part1 = customAlphabet('23456789', 1)
 const part2 = customAlphabet('0123456789', 6)
 
-let count = 0
-let stop = false
-const duplicate = {}
+// config
+const parallelApiCalls = 5
+const waitAfterParallelApiCalls = 1 * 1000 // 1 second
 
-const validateNumber = async (countryCode, areaCode) => {
+const phoneGenTimeout = 60 * 60 * 1000 // 1 hour
+
+// core
+const duplicate = {}
+const areaCodeCount = {}
+
+const validateNumber = async (countryCode, areaCode, cnam) => {
   const phone = countryCode + areaCode + part1() + part2()
 
   if (duplicate[phone]) return log(`Duplicate ${phone}`)
   duplicate[phone] = true
 
-  const res = await validatePhoneAws(phone)
-  count++
+  const res1 = await validatePhoneAlcazar(phone)
+  if (!res1) return res1
 
-  res?.NumberValidateResponse?.PhoneType === 'MOBILE' &&
-    log(`${count}/${phonesToGenerate}, ${date()}, ${phone}, ${res?.NumberValidateResponse?.Carrier}`)
+  if (!cnam) {
+    return [res1]
+  }
+
+  return [res1, await validatePhoneSignalwire(phone)]
 }
 
-const validateNumbersParallel = async (length, countryCode, areaCode) => {
-  const promises = Array.from({ length }, () => validateNumber(countryCode, areaCode))
+const validateNumbersParallel = async (length, countryCode, areaCode, cnam) => {
+  const promises = Array.from({ length }, () => validateNumber(countryCode, areaCode, cnam))
   try {
     const results = (await Promise.all(promises)).filter(r => r)
+
+    const a = areaCodeCount[areaCode]
+    const totalHits = (a?.totalHits || 0) + length
+    const goodHits = (a?.goodHits || 0) + results.length
+    const percentage = Number((goodHits / totalHits) * 100).toFixed() + '% Good Hits'
+    areaCodeCount[areaCode] = { totalHits, goodHits, percentage }
+
     return results
   } catch (error) {
-    stop = true
     console.error('validateNumbersParallel error', error?.message)
   }
 }
 
-// let phonesToGenerate = 5000 * 7 * 2 // 7900/2=3950 good num // 5000 Valid Numbers Needed// * 5 for aws // * 2 for WA
-const countryCode = '+1'
-const areaCodes = ['310', '212']
-const parallelCalls = 20 // calls per second
+const validateBulkNumbers = async (phonesToGenerate, countryCode, areaCodes, cnam, bot, chatId) => {
+  log({ phonesToGenerate, countryCode, areaCodes }, '\n')
 
-const validateBulkNumbers = async (bot, phonesToGenerate) => {
-  phonesToGenerate *= 7 * 2
-  const iterations = phonesToGenerate / parallelCalls
-  for (let i = 0; i < iterations; i++) {
-    if (stop) break
+  let i = 0
+  const res = []
+  let elapsedTime = 0
+  const startTime = new Date()
 
-    const areaCode = areaCodes[getRandom(areaCodes.length)]
-
-    // number of users
-    await Promise.all([sleep(1000), validateNumbersParallel(parallelCalls, countryCode, areaCode)])
-  }
-}
-
-validateBulkNumbers()
-module.exports = { validateBulkNumbers }
-/* const init = async () => {
-  const total = 700 * 5
-  for (let i = 0; i < total; i++) {
-    const countryCode = '1'
-    const areaCode = '305'
-    const phone = countryCode + areaCode + part1() + part2()
-    // const res1 = await validatePhoneNpl(phone)
-
-    if (duplicate[phone]) {
-      log(`Duplicate ${phone}`)
-      continue
+  for (i = 0; res.length < phonesToGenerate; i++) {
+    // Timeout Check
+    elapsedTime = new Date() - startTime
+    if (elapsedTime > phoneGenTimeout) {
+      return log('Timeout', res)
     }
-    duplicate[phone] = true
 
-    const res = await validatePhoneAws(phone)
+    // Gen Phone Numbers and Verify
+    const areaCode = areaCodes[getRandom(areaCodes.length)]
+    const r = await Promise.all([
+      sleep(waitAfterParallelApiCalls),
+      validateNumbersParallel(parallelApiCalls, countryCode, areaCode, cnam),
+    ])
+    res.push(...r[1])
 
-    const carriers = [
-      'T-Mobile USA, Inc.',
-      'Verizon Wireless',
-      'CSC Wireless, LLC',
-      'Onvoy Spectrum, LLC',
-      'Dish Wireless, LLC',
-      'AT&T Wireless',
-     'Fibernetics - SVR',
-    ]
-
-    res?.NumberValidateResponse?.PhoneType === 'MOBILE' &&
-      log(i + `/${total},` + date() + ', ' + phone + ', ' + res?.NumberValidateResponse?.Carrier)
+    // Publish Progress
+    const progress = t.buyLeadsProgress(res.length > phonesToGenerate ? phonesToGenerate : res.length, phonesToGenerate)
+    bot && bot.sendMessage(chatId, progress)
+    log(r[1], progress)
   }
+  log(
+    'elapsedTime',
+    elapsedTime / 1000,
+    'seconds, total tries',
+    i * parallelApiCalls,
+    'got',
+    res.length,
+    'mobile numbers',
+    '\nareaCodeCount',
+    areaCodeCount,
+  ) // send to admin and dev
+  return res
 }
 
-init()*/
+// validateBulkNumbers(3, '1', ['310']) //.then(log)
+
+module.exports = { validateBulkNumbers }
