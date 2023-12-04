@@ -170,7 +170,7 @@ bot.on('message', async msg => {
   log('message: ' + message + '\tfrom: ' + chatId + ' ' + msg?.from?.username)
   tryConnectReseller() // our ip may change on railway hosting so make sure its correct
 
-  if (!db) return send(chatId, 'Bot starting, please wait')
+  if (!db) return send(chatId, 'Bot is starting, please wait')
   if (!connect_reseller_working) {
     await tryConnectReseller()
     if (!connect_reseller_working) return send(chatId, 'Bot starting, please wait')
