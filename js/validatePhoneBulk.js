@@ -4,26 +4,49 @@ const { customAlphabet } = require('nanoid')
 const { getRandom, sleep } = require('./utils')
 const validatePhoneAlcazar = require('./validatePhoneAlcazar')
 const validatePhoneSignalwire = require('./validatePhoneSignalwire')
+const validatePhoneNpl = require('./validatePhoneNpl')
+const validatePhoneNeutrino = require('./validatePhoneNeutrino')
+// const { validatePhoneTwilioV2 } = require('./validatePhoneTwilio')
+
 const part1 = customAlphabet('23456789', 1)
 const part2 = customAlphabet('0123456789', 6)
+const _part2 = customAlphabet('0123456789', 7)
 
 // config
-const parallelApiCalls = 5
+const parallelApiCalls = 3
 const waitAfterParallelApiCalls = 1 * 1000 // 1 second
 
 const phoneGenTimeout = 60 * 60 * 1000 // 1 hour
+const phoneGenStopAtNoXHits = 50 // 50 Hits with 0 phone number found then break the loop
 
 // core
 const duplicate = {}
 const areaCodeCount = {}
+let first = 0
 
 const validateNumber = async (countryCode, areaCode, cnam) => {
-  const phone = countryCode + areaCode + part1() + part2()
+  const part = ['61', '44'].includes(countryCode) ? _part2 : part2
+  // validatePhoneNpl can improved to multiple queries in one go, alcazar is already optimized
+  const validatePhone = countryCode === '1' ? validatePhoneAlcazar : validatePhoneNpl
+  const phone = countryCode + areaCode + part1() + part()
+
+  if (first < parallelApiCalls) {
+    log('Phone', phone)
+    first++
+  }
 
   if (duplicate[phone]) return log(`Duplicate ${phone}`)
   duplicate[phone] = true
 
-  const res1 = await validatePhoneAlcazar(phone)
+  // neutrino for countries not US
+  if (countryCode !== '1') {
+    const res0 = await validatePhoneNeutrino(phone)
+    if (!res0) return res0
+  }
+
+  const res1 = await validatePhone(phone)
+
+  // log(phone, res1)
   if (!res1) return res1
 
   if (!cnam) {
@@ -47,6 +70,7 @@ const validateNumbersParallel = async (length, countryCode, areaCode, cnam) => {
     return results
   } catch (error) {
     console.error('validateNumbersParallel error', error?.message)
+    return []
   }
 }
 
@@ -56,27 +80,34 @@ const validateBulkNumbers = async (phonesToGenerate, countryCode, areaCodes, cna
   let i = 0
   const res = []
   let elapsedTime = 0
+  let noHitCount = 0
   const startTime = new Date()
 
   for (i = 0; res.length < phonesToGenerate; i++) {
-    // Timeout Check
-    elapsedTime = new Date() - startTime
-    if (elapsedTime > phoneGenTimeout) {
-      return log('Timeout', res)
-    }
-
     // Gen Phone Numbers and Verify
     const areaCode = areaCodes[getRandom(areaCodes.length)]
     const r = await Promise.all([
       sleep(waitAfterParallelApiCalls),
       validateNumbersParallel(parallelApiCalls, countryCode, areaCode, cnam),
     ])
-    res.push(...r[1])
+    r[1] && res.push(...r[1])
 
     // Publish Progress
     const progress = t.buyLeadsProgress(res.length > phonesToGenerate ? phonesToGenerate : res.length, phonesToGenerate)
     bot && bot.sendMessage(chatId, progress)
     log(progress)
+
+    // Timeout Checks
+    elapsedTime = new Date() - startTime
+    if (elapsedTime > phoneGenTimeout) {
+      bot && bot.sendMessage(chatId, t.phoneGenTimeout)
+      return log(t.phoneGenTimeout, res)
+    }
+    noHitCount = r[1].length === 0 ? noHitCount + parallelApiCalls : 0
+    if (noHitCount > phoneGenStopAtNoXHits) {
+      bot && bot.sendMessage(chatId, t.phoneGenNoGoodHits)
+      return log(t.phoneGenNoGoodHits, res)
+    }
   }
   log(
     'elapsedTime',
@@ -92,6 +123,11 @@ const validateBulkNumbers = async (phonesToGenerate, countryCode, areaCodes, cna
   return res
 }
 
-// validateBulkNumbers(3, '1', ['310']) //.then(log)
+//
+// validateBulkNumbers(1, '1', ['310'], true) //.then(log) // US
+// validateBulkNumbers(10, '1', ['416'], true).then(log) // Canada
+// validateBulkNumbers(1, '61', ['4']) //.then(log) // Australia
+// validateBulkNumbers(1, '44', ['77']) //.then(log) // UK
+// validateBulkNumbers(1, '64', ['27']) //.then(log) // New Zealand
 
 module.exports = { validateBulkNumbers }

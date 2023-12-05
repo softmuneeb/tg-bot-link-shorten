@@ -13,9 +13,12 @@ const validatePhoneTwilioV1 = async phone => {
 const validatePhoneTwilioV2 = async phone => {
   const res = await client.lookups.v2.phoneNumbers(phone).fetch({ type: 'carrier', fields: 'caller_name' })
   // console.log(res)
-  // return res?.callerName?.caller_name
-  return res
+  // return res
+  return res?.callerName?.caller_name
 }
+// validatePhoneTwilioV2('+64 274 533 559').then(console.log)
+// validatePhoneTwilioV2('+447770510576').then(console.log)
+// validatePhoneTwilioV2('+64 27 208 4274').then(console.log)
+// validatePhoneTwilioV2('+44 7977 406133').then(console.log)
 
-// validatePhoneTwilioV1('+13106999737').then(console.log)
 module.exports = { validatePhoneTwilioV1, validatePhoneTwilioV2 }

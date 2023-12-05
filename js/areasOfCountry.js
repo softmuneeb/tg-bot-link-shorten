@@ -120,10 +120,28 @@ const areasOfCountry = {
     'Puerto Rico': ['787', '939'],
     'U.S. Virgin Islands': ['340'],
   },
-  Canada: {},
-  'New Zealand': {},
-  Australia: {},
-  UK: {},
+  Canada: {
+    Manitoba: ['204'],
+    Saskatchewan: ['306'],
+    Alberta: ['403', '780'],
+    Ontario: ['416', '613', '519', '807', '705', '905', '647', '289', '343'],
+    Quebec: ['418', '514', '819', '450', '438'],
+    'British Columbia': ['604', '250'],
+    'Nova Scotia, Prince Edward Island': ['902'],
+    'New Brunswick': ['506'],
+    'Newfoundland and Labrador': ['709'],
+    'Northwest Territories, Yukon, Nunavut': ['867'],
+  },
+
+  'New Zealand': {
+    'Mobile Area Codes': ['20', '21', '27'],
+  },
+  Australia: {
+    'Mobile Area Codes': ['4'],
+  },
+  UK: {
+    'Mobile Area Codes': ['71', '72', '73', '74', '75', '77', '78', '79'],
+  },
 }
 
 const countryCodeOf = {
@@ -134,4 +152,26 @@ const countryCodeOf = {
   UK: '44',
 }
 
-module.exports = { areasOfCountry, countryCodeOf }
+const carriersOf = {
+  US: [
+    'T-mobile', // T-mobile, Omnipoint and Metro pcs
+    'Metro PCS', // T-mobile, Omnipoint and Metro pcs
+    'Sprint', // T-mobile, Omnipoint and Metro pcs
+    'Verizon Wireless', // CELLCO
+    'AT&T', // Cingular,
+    'Mixed Carriers',
+  ],
+  Canada: [
+    'T-mobile', // T-mobile, Omnipoint and Metro pcs
+    'Metro PCS', // T-mobile, Omnipoint and Metro pcs
+    'Sprint', // T-mobile, Omnipoint and Metro pcs
+    'Verizon Wireless', // CELLCO
+    'AT&T', // Cingular,
+    'Mixed Carriers',
+  ],
+  'New Zealand': ['Spark', 'Vodafone', '2Degrees'],
+  Australia: ['Telstra', 'Optus', 'TPG', 'Vodafone'],
+  UK: ['EE', 'Three', 'Vodafone', 'O2'],
+}
+
+module.exports = { areasOfCountry, countryCodeOf, carriersOf }

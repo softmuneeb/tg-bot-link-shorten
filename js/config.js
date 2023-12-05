@@ -1,4 +1,4 @@
-const { areasOfCountry } = require('./areasOfCountry')
+const { areasOfCountry, carriersOf } = require('./areasOfCountry')
 
 /* global process */
 require('dotenv').config()
@@ -49,6 +49,9 @@ const u = {
 const view = num => Number(num).toFixed(2)
 const yesNo = ['Yes', 'No']
 const t = {
+  phoneGenTimeout: 'Timeout',
+  phoneGenNoGoodHits: 'This area code is giving no results',
+
   subscribeRCS: p =>
     `Subscribed! Unsubscribe anytime by clicking the <a href="${SELF_URL}/unsubscribe?a=b&Phone=${p}">link</a>`,
   unsubscribeRCS: p =>
@@ -276,16 +279,7 @@ const buyLeadsSelectSmsVoice = ['SMS (Price 10$ for 1000)', 'Voice (Price 12$ fo
 const buyLeadsSelectArea = country => Object.keys(areasOfCountry?.[country])
 const buyLeadsSelectAreaCode = (country, area) => areasOfCountry?.[country]?.[area]
 const buyLeadsSelectCnam = yesNo
-const buyLeadsSelectCarrier = [
-  'Mixed Carriers',
-  'T-Mobile USA, Inc.',
-  'Verizon Wireless',
-  'CSC Wireless, LLC',
-  'Onvoy Spectrum, LLC',
-  'Dish Wireless, LLC',
-  'AT&T Wireless',
-  'Fibernetics - SVR',
-]
+const buyLeadsSelectCarrier = country => carriersOf[country]
 const buyLeadsSelectAmount = ['1000', '2000', '3000', '4000', '5000']
 const buyLeadsSelectFormat = ['Local Format', 'International Format']
 
@@ -345,7 +339,7 @@ const k = {
   buyLeadsSelectSmsVoice: kOf(buyLeadsSelectSmsVoice),
   buyLeadsSelectArea: country => kOf(buyLeadsSelectArea(country)),
   buyLeadsSelectAreaCode: (country, area) => kOf(buyLeadsSelectAreaCode(country, area)),
-  buyLeadsSelectCarrier: kOf(buyLeadsSelectCarrier),
+  buyLeadsSelectCarrier: country => kOf(buyLeadsSelectCarrier(country)),
   buyLeadsSelectCnam: kOf(yesNo),
   buyLeadsSelectAmount: kOf(buyLeadsSelectAmount),
   buyLeadsSelectFormat: kOf(buyLeadsSelectFormat),

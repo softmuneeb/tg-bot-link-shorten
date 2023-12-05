@@ -12,8 +12,16 @@ const validatePhoneSignalwire = async phone => {
     },
   }
 
-  const res = await axios(config)
-  return res?.data?.cnam?.caller_id || 'Not Found'
+  try {
+    const res = await axios(config)
+    // console.log(res?.data)
+    return res?.data?.cnam?.caller_id || 'None'
+  } catch (e) {
+    console.log(e?.message)
+    return 'Not Found'
+  }
 }
-// validatePhoneSignalwire('16465807362').then(console.log)
+// validatePhoneSignalwire('64274533559').then(console.log)
+// validatePhoneSignalwire('447770510576').then(console.log)
+// validatePhoneSignalwire('14169314476').then(console.log)
 module.exports = validatePhoneSignalwire

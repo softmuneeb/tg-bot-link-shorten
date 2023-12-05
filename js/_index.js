@@ -74,7 +74,7 @@ const { get, set, del, increment, getAll, decrement } = require('./db.js')
 const { getRegisteredDomainNames } = require('./cr-domain-purchased-get.js')
 const { getCryptoDepositAddress, convert } = require('./pay-blockbee.js')
 const { validateBulkNumbers } = require('./validatePhoneBulk.js')
-const { countryCodeOf } = require('./areasOfCountry.js')
+const { countryCodeOf, areasOfCountry } = require('./areasOfCountry.js')
 
 process.env['NTBA_FIX_350'] = 1
 const DB_NAME = process.env.DB_NAME
@@ -469,7 +469,7 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', a.buyLeadsSelectAreaCode)
     },
     buyLeadsSelectCarrier: () => {
-      send(chatId, t.buyLeadsSelectCarrier, k.buyLeadsSelectCarrier)
+      send(chatId, t.buyLeadsSelectCarrier, k.buyLeadsSelectCarrier(info?.country))
       set(state, chatId, 'action', a.buyLeadsSelectCarrier)
     },
     buyLeadsSelectCnam: () => {
@@ -554,12 +554,13 @@ bot.on('message', async msg => {
       const priceNgn = await usdToNgn(price)
       if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
 
+      const cc = countryCodeOf[info?.country]
       // buy leads
       const res = await validateBulkNumbers(
         info?.amount,
-        countryCodeOf[info?.country],
+        cc,
         [info?.areaCode],
-        info?.cnam,
+        cc === '1' ? info?.cnam : false,
         bot,
         chatId,
       )
@@ -567,12 +568,19 @@ bot.on('message', async msg => {
 
       send(chatId, t.buyLeadsSuccess(res.length)) // send success message
 
+      const format = info?.format
+      const l = format === buyLeadsSelectFormat[0]
+
       const file1 = 'leads.txt'
-      fs.writeFile(file1, res.map(a => a[0]).join('\n'), () => bot.sendDocument(chatId, file1))
+      fs.writeFile(file1, res.map(a => (l ? a[0].replace(cc, '') : a[0])).join('\n'), () =>
+        bot.sendDocument(chatId, file1),
+      )
 
       if (info?.cnam) {
         const file2 = 'leads_with_cnam.txt'
-        fs.writeFile(file2, res.map(a => a[0] + ' ' + a[1]).join('\n'), () => bot.sendDocument(chatId, file2))
+        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[1]).join('\n'), () =>
+          bot.sendDocument(chatId, file2),
+        )
       }
 
       // wallet update
@@ -1143,7 +1151,7 @@ bot.on('message', async msg => {
   if (action === a.buyLeadsSelectCountry) {
     if (message === 'Back') goto.phoneNumberLeads()
     if (!buyLeadsSelectCountry.includes(message)) return send(chatId, `?`)
-    if ('US' !== message) return send(chatId, `Coming Soon`)
+    if (areasOfCountry[message] && Object.keys(areasOfCountry[message]).length === 0) return send(chatId, `Coming Soon`)
     saveInfo('country', message)
     return goto.buyLeadsSelectSmsVoice()
   }
@@ -1169,18 +1177,22 @@ bot.on('message', async msg => {
   }
   if (action === a.buyLeadsSelectCarrier) {
     if (message === 'Back') return goto.buyLeadsSelectAreaCode()
-    if (!buyLeadsSelectCarrier.includes(message)) return send(chatId, `?`)
+    if (!buyLeadsSelectCarrier(info?.country).includes(message)) return send(chatId, `?`)
     saveInfo('carrier', message)
-    return goto.buyLeadsSelectCnam()
+    saveInfo('cameFrom', a.buyLeadsSelectCarrier)
+    if (['US', 'Canada'].includes(info?.country)) return goto.buyLeadsSelectCnam()
+    return goto.buyLeadsSelectAmount()
   }
   if (action === a.buyLeadsSelectCnam) {
     if (message === 'Back') return goto.buyLeadsSelectCarrier()
     if (!buyLeadsSelectCnam.includes(message)) return send(chatId, `?`)
     saveInfo('cnam', message === 'Yes')
+    saveInfo('cameFrom', a.buyLeadsSelectCnam)
     return goto.buyLeadsSelectAmount()
   }
   if (action === a.buyLeadsSelectAmount) {
-    if (message === 'Back') return goto.buyLeadsSelectCnam()
+    if (message === 'Back') return goto?.[info?.cameFrom]()
+
     if (isNaN(message) || message <= 0 || message > amounts[amounts.length - 1]) return send(chatId, `?`)
     const amount = Number(message)
     saveInfo('amount', amount)
@@ -1661,6 +1673,10 @@ app.get('/', (req, res) => {
 })
 app.get('/ok', (req, res) => {
   res.send(html())
+})
+app.get('/woo', (req, res) => {
+  log(req.hostname + req.originalUrl)
+  res.send(html('woo'))
 })
 app.get('/health', (req, res) => {
   res.send(html('health ok'))
