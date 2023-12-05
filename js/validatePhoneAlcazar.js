@@ -23,7 +23,7 @@ const validatePhoneAlcazar = async (carrier, phone) => {
   const lec = res?.data?.LEC
 
   const filter = carrier === 'Mixed Carriers' ? true : alcazar[carrier].some(c => lec.includes(c))
-  // res?.data?.LINETYPE === 'WIRELESS' && log(lec)
+  res?.data?.LINETYPE === 'WIRELESS' && log(phone, lec)
 
   // console.log(res.data)
   const result =
