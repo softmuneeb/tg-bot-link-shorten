@@ -134,13 +134,13 @@ const areasOfCountry = {
   },
 
   'New Zealand': {
-    'Mobile Area Codes': ['20', '21', '27'],
+    'Area Codes': ['20', '21', '27'],
   },
   Australia: {
-    'Mobile Area Codes': ['4'],
+    'Area Codes': ['4'],
   },
   UK: {
-    'Mobile Area Codes': ['71', '72', '73', '74', '75', '77', '78', '79'],
+    'Area Codes': ['71', '72', '73', '74', '75', '77', '78', '79'],
   },
 }
 
@@ -154,24 +154,40 @@ const countryCodeOf = {
 
 const carriersOf = {
   US: [
-    'T-mobile', // T-mobile, Omnipoint and Metro pcs
-    'Metro PCS', // T-mobile, Omnipoint and Metro pcs
-    'Sprint', // T-mobile, Omnipoint and Metro pcs
-    'Verizon Wireless', // CELLCO
-    'AT&T', // Cingular,
+    'T-mobile', //
+    'Metro PCS',
+    'Sprint',
+    'Verizon Wireless',
+    'AT&T',
     'Mixed Carriers',
   ],
   Canada: [
-    'T-mobile', // T-mobile, Omnipoint and Metro pcs
-    'Metro PCS', // T-mobile, Omnipoint and Metro pcs
-    'Sprint', // T-mobile, Omnipoint and Metro pcs
-    'Verizon Wireless', // CELLCO
-    'AT&T', // Cingular,
+    'Bell', //
+    'Telus',
+    'Roger',
     'Mixed Carriers',
   ],
-  'New Zealand': ['Spark', 'Vodafone', '2Degrees'],
-  Australia: ['Telstra', 'Optus', 'TPG', 'Vodafone'],
-  UK: ['EE', 'Three', 'Vodafone', 'O2'],
+
+  'New Zealand': [
+    'Spark', //
+    'Vodafone',
+    '2Degrees',
+    'Mixed Carriers',
+  ],
+  Australia: [
+    'Telstra', //
+    'Optus',
+    'TPG',
+    'Vodafone',
+    'Mixed Carriers',
+  ],
+  UK: [
+    'EE', //
+    'Three',
+    'Vodafone',
+    'O2',
+    'Mixed Carriers',
+  ],
 }
 
 module.exports = { areasOfCountry, countryCodeOf, carriersOf }

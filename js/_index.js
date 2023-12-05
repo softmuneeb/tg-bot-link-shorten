@@ -554,17 +554,11 @@ bot.on('message', async msg => {
       const priceNgn = await usdToNgn(price)
       if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
 
-      const cc = countryCodeOf[info?.country]
+      let cc = countryCodeOf[info?.country]
+      let cnam = cc === '1' ? info?.cnam : false
       // buy leads
-      const res = await validateBulkNumbers(
-        info?.carrier,
-        info?.amount,
-        cc,
-        [info?.areaCode],
-        cc === '1' ? info?.cnam : false,
-        bot,
-        chatId,
-      )
+      send(chatId, t.validateBulkNumbersStart, o)
+      const res = await validateBulkNumbers(info?.carrier, info?.amount, cc, [info?.areaCode], cnam, bot, chatId)
       if (!res) return send(chatId, t.buyLeadsError)
 
       send(chatId, t.buyLeadsSuccess(info?.amount)) // send success message
@@ -572,6 +566,7 @@ bot.on('message', async msg => {
       const format = info?.format
       const l = format === buyLeadsSelectFormat[0]
 
+      cc = '+' + cc
       const file1 = 'leads.txt'
       fs.writeFile(file1, res.map(a => (l ? a[0].replace(cc, '') : a[0])).join('\n'), () =>
         bot.sendDocument(chatId, file1),
@@ -1181,7 +1176,7 @@ bot.on('message', async msg => {
     if (!buyLeadsSelectCarrier(info?.country).includes(message)) return send(chatId, `?`)
     saveInfo('carrier', message)
     saveInfo('cameFrom', a.buyLeadsSelectCarrier)
-    if (['US', 'Canada'].includes(info?.country)) return goto.buyLeadsSelectCnam()
+    if (['US'].includes(info?.country)) return goto.buyLeadsSelectCnam()
     return goto.buyLeadsSelectAmount()
   }
   if (action === a.buyLeadsSelectCnam) {

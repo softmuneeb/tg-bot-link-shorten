@@ -51,6 +51,7 @@ const yesNo = ['Yes', 'No']
 const t = {
   phoneGenTimeout: 'Timeout',
   phoneGenNoGoodHits: 'This area code is giving no results',
+  validateBulkNumbersStart: 'Downloading leads is started, we will update you soon.',
 
   subscribeRCS: p =>
     `Subscribed! Unsubscribe anytime by clicking the <a href="${SELF_URL}/unsubscribe?a=b&Phone=${p}">link</a>`,

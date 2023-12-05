@@ -129,9 +129,9 @@ const validateBulkNumbers = async (carrier, phonesToGenerate, countryCode, areaC
 
 //
 // validateBulkNumbers('T-mobile', 1, '1', ['310'], false).then(log) // US
-// validateBulkNumbers(10, '1', ['416'], false).then(log) // Canada
-// validateBulkNumbers(1, '61', ['4']) //.then(log) // Australia
-// validateBulkNumbers(1, '44', ['77']) //.then(log) // UK
-// validateBulkNumbers(1, '64', ['27']) //.then(log) // New Zealand
+// validateBulkNumbers('Mixed Carriers', 10, '1', ['416'], false).then(log) // Canada
+// validateBulkNumbers('Mixed Carriers', 1, '61', ['4']) //.then(log) // Australia
+// validateBulkNumbers('Mixed Carriers', 20, '44', ['77']).then(log) // UK
+// validateBulkNumbers('Mixed Carriers', 1, '64', ['27']) //.then(log) // New Zealand
 
 module.exports = { validateBulkNumbers }
