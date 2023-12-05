@@ -16,6 +16,7 @@ const _part2 = customAlphabet('0123456789', 7)
 const parallelApiCalls = 3
 const waitAfterParallelApiCalls = 1 * 1000 // 1 second
 
+const showProgressEveryXTime = 4 // after every 5 apis calls
 const phoneGenTimeout = 60 * 60 * 1000 // 1 hour
 const phoneGenStopAtNoXHits = 50 // 50 Hits with 0 phone number found then break the loop
 
@@ -75,7 +76,7 @@ const validateNumbersParallel = async (length, countryCode, areaCode, cnam) => {
 }
 
 const validateBulkNumbers = async (phonesToGenerate, countryCode, areaCodes, cnam, bot, chatId) => {
-  log({ phonesToGenerate, countryCode, areaCodes }, '\n')
+  log({ phonesToGenerate, countryCode, areaCodes, cnam }, '\n')
 
   let i = 0
   const res = []
@@ -94,8 +95,11 @@ const validateBulkNumbers = async (phonesToGenerate, countryCode, areaCodes, cna
 
     // Publish Progress
     const progress = t.buyLeadsProgress(res.length > phonesToGenerate ? phonesToGenerate : res.length, phonesToGenerate)
-    bot && bot.sendMessage(chatId, progress)
-    log(progress)
+
+    if (i % showProgressEveryXTime === 0) {
+      bot && bot.sendMessage(chatId, progress)
+      log(progress)
+    }
 
     // Timeout Checks
     elapsedTime = new Date() - startTime
@@ -125,7 +129,7 @@ const validateBulkNumbers = async (phonesToGenerate, countryCode, areaCodes, cna
 
 //
 // validateBulkNumbers(1, '1', ['310'], true) //.then(log) // US
-// validateBulkNumbers(10, '1', ['416'], true).then(log) // Canada
+// validateBulkNumbers(10, '1', ['416'], false).then(log) // Canada
 // validateBulkNumbers(1, '61', ['4']) //.then(log) // Australia
 // validateBulkNumbers(1, '44', ['77']) //.then(log) // UK
 // validateBulkNumbers(1, '64', ['27']) //.then(log) // New Zealand

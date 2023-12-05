@@ -566,7 +566,7 @@ bot.on('message', async msg => {
       )
       if (!res) return send(chatId, t.buyLeadsError)
 
-      send(chatId, t.buyLeadsSuccess(res.length)) // send success message
+      send(chatId, t.buyLeadsSuccess(info?.amount)) // send success message
 
       const format = info?.format
       const l = format === buyLeadsSelectFormat[0]
