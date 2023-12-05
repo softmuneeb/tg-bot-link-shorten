@@ -13,10 +13,10 @@ const part2 = customAlphabet('0123456789', 6)
 const _part2 = customAlphabet('0123456789', 7)
 
 // config
-const parallelApiCalls = 3
+const parallelApiCalls = 5
 const waitAfterParallelApiCalls = 1 * 1000 // 1 second
 
-const showProgressEveryXTime = 4 // after every 5 apis calls
+const showProgressEveryXTime = 10 // after every 5 apis calls
 const phoneGenTimeout = 60 * 60 * 1000 // 1 hour
 const phoneGenStopAtNoXHits = 50 // 50 Hits with 0 phone number found then break the loop
 
@@ -25,7 +25,7 @@ const duplicate = {}
 const areaCodeCount = {}
 let first = 0
 
-const validateNumber = async (countryCode, areaCode, cnam) => {
+const validateNumber = async (carrier, countryCode, areaCode, cnam) => {
   const part = ['61', '44'].includes(countryCode) ? _part2 : part2
   // validatePhoneNpl can improved to multiple queries in one go, alcazar is already optimized
   const validatePhone = countryCode === '1' ? validatePhoneAlcazar : validatePhoneNpl
@@ -45,8 +45,7 @@ const validateNumber = async (countryCode, areaCode, cnam) => {
     if (!res0) return res0
   }
 
-  const res1 = await validatePhone(phone)
-
+  const res1 = await validatePhone(carrier, phone)
   // log(phone, res1)
   if (!res1) return res1
 
@@ -57,8 +56,8 @@ const validateNumber = async (countryCode, areaCode, cnam) => {
   return [res1, await validatePhoneSignalwire(phone)]
 }
 
-const validateNumbersParallel = async (length, countryCode, areaCode, cnam) => {
-  const promises = Array.from({ length }, () => validateNumber(countryCode, areaCode, cnam))
+const validateNumbersParallel = async (carrier, length, countryCode, areaCode, cnam) => {
+  const promises = Array.from({ length }, () => validateNumber(carrier, countryCode, areaCode, cnam))
   try {
     const results = (await Promise.all(promises)).filter(r => r)
 
@@ -75,7 +74,7 @@ const validateNumbersParallel = async (length, countryCode, areaCode, cnam) => {
   }
 }
 
-const validateBulkNumbers = async (phonesToGenerate, countryCode, areaCodes, cnam, bot, chatId) => {
+const validateBulkNumbers = async (carrier, phonesToGenerate, countryCode, areaCodes, cnam, bot, chatId) => {
   log({ phonesToGenerate, countryCode, areaCodes, cnam }, '\n')
 
   let i = 0
@@ -89,7 +88,7 @@ const validateBulkNumbers = async (phonesToGenerate, countryCode, areaCodes, cna
     const areaCode = areaCodes[getRandom(areaCodes.length)]
     const r = await Promise.all([
       sleep(waitAfterParallelApiCalls),
-      validateNumbersParallel(parallelApiCalls, countryCode, areaCode, cnam),
+      validateNumbersParallel(carrier, parallelApiCalls, countryCode, areaCode, cnam),
     ])
     r[1] && res.push(...r[1])
 
@@ -107,7 +106,8 @@ const validateBulkNumbers = async (phonesToGenerate, countryCode, areaCodes, cna
       bot && bot.sendMessage(chatId, t.phoneGenTimeout)
       return log(t.phoneGenTimeout, res)
     }
-    noHitCount = r[1].length === 0 ? noHitCount + parallelApiCalls : 0
+    noHitCount = !r[1] || r[1].length === 0 ? noHitCount + parallelApiCalls : 0
+    log({ noHitCount })
     if (noHitCount > phoneGenStopAtNoXHits) {
       bot && bot.sendMessage(chatId, t.phoneGenNoGoodHits)
       return log(t.phoneGenNoGoodHits, res)
@@ -128,7 +128,7 @@ const validateBulkNumbers = async (phonesToGenerate, countryCode, areaCodes, cna
 }
 
 //
-// validateBulkNumbers(1, '1', ['310'], true) //.then(log) // US
+// validateBulkNumbers('T-mobile', 1, '1', ['310'], false).then(log) // US
 // validateBulkNumbers(10, '1', ['416'], false).then(log) // Canada
 // validateBulkNumbers(1, '61', ['4']) //.then(log) // Australia
 // validateBulkNumbers(1, '44', ['77']) //.then(log) // UK

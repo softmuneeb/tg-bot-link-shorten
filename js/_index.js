@@ -557,6 +557,7 @@ bot.on('message', async msg => {
       const cc = countryCodeOf[info?.country]
       // buy leads
       const res = await validateBulkNumbers(
+        info?.carrier,
         info?.amount,
         cc,
         [info?.areaCode],
