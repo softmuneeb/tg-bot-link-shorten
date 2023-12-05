@@ -16,7 +16,7 @@ const _part2 = customAlphabet('0123456789', 7)
 const parallelApiCalls = 5
 const waitAfterParallelApiCalls = 1 * 1000 // 1 second
 
-const showProgressEveryXTime = 10 // after every 5 apis calls
+const showProgressEveryXTime = 30 // 30 iterations = 1 minute
 const phoneGenTimeout = 60 * 60 * 1000 // 1 hour
 const phoneGenStopAtNoXHits = 50 // 50 Hits with 0 phone number found then break the loop
 
