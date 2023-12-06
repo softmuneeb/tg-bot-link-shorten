@@ -24,7 +24,7 @@ const validatePhoneNpl = async (carrier, phone) => {
   const d1 = new Date()
   const res = await axios.get(request_url)
   const d2 = new Date()
-  console.log(res?.data)
+  // console.log(res?.data)
   // return res?.data?.[0]?.numbertype === 'MOBILE' ? `+${phone} // ${res?.data?.[0]?.carrier} // ` : null
   // landline reachable: 'not_sms_capable', 'true'
 
