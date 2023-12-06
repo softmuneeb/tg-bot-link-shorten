@@ -504,6 +504,8 @@ bot.on('message', async msg => {
       const wallet = await get(walletOf, chatId)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
 
+      if (![u.usd, u.ngn].includes(coin)) return send(chatId, 'Some Issue')
+
       if (coin === u.usd) {
         const priceUsd = price
         if (usdBal < priceUsd) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
@@ -528,6 +530,8 @@ bot.on('message', async msg => {
       const price = info?.couponApplied ? info?.newPrice : info?.price
       const wallet = await get(walletOf, chatId)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
+
+      if (![u.usd, u.ngn].includes(coin)) return send(chatId, 'Some Issue')
 
       // price validate
       const priceUsd = price
@@ -557,6 +561,8 @@ bot.on('message', async msg => {
       const price = info?.couponApplied ? info?.newPrice : info?.price
       const wallet = await get(walletOf, chatId)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
+
+      if (![u.usd, u.ngn].includes(coin)) return send(chatId, 'Some Issue')
 
       // price validate
       const priceUsd = price
@@ -1149,6 +1155,7 @@ bot.on('message', async msg => {
 
     const coin = message
     if (![u.usd, u.ngn].includes(coin)) return send(chatId, `?`)
+    saveInfo('coin', coin)
 
     return goto.walletSelectCurrencyConfirm()
   }
