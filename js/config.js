@@ -1,4 +1,6 @@
-const { areasOfCountry, carriersOf } = require('./areasOfCountry')
+const { areasOfCountry, carriersOf, countryCodeOf } = require('./areasOfCountry')
+
+const format = (cc, n) => `+${cc}(${n.toString().padStart(2, '0')})`
 
 /* global process */
 require('dotenv').config()
@@ -278,7 +280,8 @@ const phoneNumberLeads = ['🙎‍♂️ Buy Leads', '☎️ Phone Number Valida
 const buyLeadsSelectCountry = Object.keys(areasOfCountry)
 const buyLeadsSelectSmsVoice = ['SMS (Price 10$ for 1000)', 'Voice (Price 12$ for 1000)']
 const buyLeadsSelectArea = country => Object.keys(areasOfCountry?.[country])
-const buyLeadsSelectAreaCode = (country, area) => ['Mixed Area Codes'].concat(areasOfCountry?.[country]?.[area])
+const buyLeadsSelectAreaCode = (country, area) =>
+  ['Mixed Area Codes'].concat(areasOfCountry?.[country]?.[area].map(c => format(countryCodeOf[country], c)))
 const _buyLeadsSelectAreaCode = (country, area) => areasOfCountry?.[country]?.[area]
 const buyLeadsSelectCnam = yesNo
 const buyLeadsSelectCarrier = country => carriersOf[country]

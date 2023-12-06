@@ -134,7 +134,7 @@ const areasOfCountry = {
   },
 
   'New Zealand': {
-    'Area Codes': ['20', '21', '27'],
+    'Area Codes': ['20', '21', '26', '27'],
   },
   Australia: {
     'Area Codes': ['4'],

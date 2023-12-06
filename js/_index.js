@@ -53,6 +53,7 @@ const {
   subscribePlan,
   regularCheckDns,
   sendMessageToAllUsers,
+  parse,
 } = require('./utils.js')
 const fs = require('fs')
 require('dotenv').config()
@@ -123,7 +124,7 @@ let nameOf = {},
 
 // some info to use with bot
 let adminDomains = [],
-  connect_reseller_working = false
+  connect_reseller_working = true
 
 // restoreData(); // can be use when there is no db
 
@@ -156,8 +157,8 @@ const loadData = async () => {
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
   // 5590563715 chat id client
-  set(planEndingTime, 6687923716, 0)
-  set(freeShortLinksOf, 6687923716, FREE_LINKS)
+  // set(planEndingTime, 6687923716, 0)
+  // set(freeShortLinksOf, 6687923716, FREE_LINKS)
   adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
 }
 const client = new MongoClient(process.env.MONGO_URL)
@@ -1199,7 +1200,10 @@ bot.on('message', async msg => {
       ['US', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes',
     )
     if (!areaCodes.includes(message)) return send(chatId, `?`)
-    saveInfo('areaCode', message)
+
+    let cc = countryCodeOf[info?.country]
+    saveInfo('areaCode', message === 'Mixed Area Codes' ? message : parse(cc, message))
+
     return goto.buyLeadsSelectCarrier()
   }
   if (action === a.buyLeadsSelectCarrier) {

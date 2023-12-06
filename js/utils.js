@@ -173,7 +173,22 @@ const subscribePlan = async (planEndingTime, freeDomainNamesAvailableFor, planOf
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
+const parse = (cc, s) => parseInt(s.replace(`+${cc}`, ``).replace(/[^\d]/g, ''), 10).toString()
+
+// log(format('1', '4'))
+// log(format('1', '20'))
+// log(format('1', '200'))
+// log(format('1', '201'))
+// log(format('1', '213'))
+
+// log(parse('1', '+1(04)'))
+// log(parse('1', '+1(20)'))
+// log(parse('1', '+1(200)'))
+// log(parse('1', '+1(201)'))
+// log(parse('1', '+1(213)'))
+
 module.exports = {
+  parse,
   year,
   week,
   today,
