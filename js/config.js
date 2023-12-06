@@ -250,6 +250,8 @@ Select wallet option:`,
   walletSelectCurrency: (usd, ngn) => `Please select currency to pay from your Wallet Balance:
 $${view(usd)}
 ₦${view(ngn)}`,
+  
+  walletSelectCurrencyConfirm: `Confirm?`,
 
   walletBalanceLow: `Please top up your wallet to continue`,
 

@@ -217,11 +217,10 @@ bot.on('message', async msg => {
     showDepositCryptoInfo: 'showDepositCryptoInfo',
 
     walletSelectCurrency: 'walletSelectCurrency',
-    walletPayUsd: 'walletPayUsd',
-    walletPayUsdConfirm: 'walletPayUsdConfirm',
+    walletSelectCurrencyConfirm: 'walletSelectCurrencyConfirm',
 
+    walletPayUsd: 'walletPayUsd',
     walletPayNgn: 'walletPayNgn',
-    walletPayNgnConfirm: 'walletPayNgnConfirm',
 
     askCoupon: 'askCoupon',
 
@@ -446,6 +445,10 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', a.walletSelectCurrency)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
       send(chatId, t.walletSelectCurrency(usdBal, ngnBal), k.of([u.usd, u.ngn]))
+    },
+    walletSelectCurrencyConfirm: async () => {
+      send(chatId, t.walletSelectCurrencyConfirm, yes_no)
+      set(state, chatId, 'action', a.walletSelectCurrencyConfirm)
     },
     //
     phoneNumberLeads: () => {
@@ -1147,18 +1150,15 @@ bot.on('message', async msg => {
     const coin = message
     if (![u.usd, u.ngn].includes(coin)) return send(chatId, `?`)
 
-    return walletOk[info?.lastStep](coin)
+    return goto.walletSelectCurrencyConfirm()
   }
-  if (action === a.walletPayUsd) {
-    if (message === 'Back') return goto.walletSelectCurrency()
+  if (action === a.walletSelectCurrencyConfirm) {
+    if (message === 'Back' || message === 'No') return goto[a.walletSelectCurrency]()
 
-    return walletOk[info?.lastStep](u.usd)
+    if (message !== 'Yes') return send(chatId, `?`)
+    return walletOk[info?.lastStep](info?.coin)
   }
-  if (action === a.walletPayNgn) {
-    if (message === 'Back') return goto.walletSelectCurrency()
 
-    return walletOk[info?.lastStep](u.ngn)
-  }
   //
   //
   if (message === user.phoneNumberLeads) {
@@ -1227,7 +1227,9 @@ bot.on('message', async msg => {
     if (isNaN(message) || message <= 0 || message > amounts[amounts.length - 1]) return send(chatId, `?`)
     const amount = Number(message)
     saveInfo('amount', amount)
-    const price = amount * RATE_LEAD + (info?.cnam ? amount * RATE_CNAM : 0)
+    let cc = countryCodeOf[info?.country]
+    let cnam = cc === '1' ? info?.cnam : false
+    const price = amount * RATE_LEAD + (cnam ? amount * RATE_CNAM : 0)
     saveInfo('price', price)
     return goto.buyLeadsSelectFormat()
   }
