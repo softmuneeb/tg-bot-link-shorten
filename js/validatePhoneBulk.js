@@ -50,10 +50,10 @@ const validateNumber = async (carrier, countryCode, areaCode, cnam) => {
   if (!res1) return res1
 
   if (!cnam) {
-    return [res1]
+    return [...res1]
   }
 
-  return [res1, await validatePhoneSignalwire(phone)]
+  return [...res1, await validatePhoneSignalwire(phone)]
 }
 
 const validateNumbersParallel = async (carrier, length, countryCode, areaCode, cnam) => {

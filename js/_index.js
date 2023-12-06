@@ -564,7 +564,8 @@ bot.on('message', async msg => {
       let cnam = cc === '1' ? info?.cnam : false
 
       let area = ['US', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes'
-      let areaCodes = info?.areaCode === 'Mixed Area Codes' ? _buyLeadsSelectAreaCode(info?.country, area) : [info?.areaCode]
+      let areaCodes =
+        info?.areaCode === 'Mixed Area Codes' ? _buyLeadsSelectAreaCode(info?.country, area) : [info?.areaCode]
       // buy leads
       send(chatId, t.validateBulkNumbersStart, o)
       const res = await validateBulkNumbers(info?.carrier, info?.amount, cc, areaCodes, cnam, bot, chatId)
@@ -581,11 +582,26 @@ bot.on('message', async msg => {
         bot.sendDocument(chatId, file1),
       )
 
-      if (info?.cnam) {
+      if (cnam) {
         const file2 = 'leads_with_cnam.txt'
+        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[3]).join('\n'), () =>
+          bot.sendDocument(chatId, file2),
+        )
+      } else {
+        const file2 = 'leads_with_carriers.txt'
         fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[1]).join('\n'), () =>
           bot.sendDocument(chatId, file2),
         )
+
+        {
+          const file2 = 'leads_with_carriers_and_time.txt'
+          chatId === 6687923716 &&
+            fs.writeFile(
+              file2,
+              res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[1] + ' ' + a[2]).join('\n'),
+              () => bot.sendDocument(chatId, file2),
+            )
+        }
       }
 
       // wallet update

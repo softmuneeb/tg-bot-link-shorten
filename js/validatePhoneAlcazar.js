@@ -20,14 +20,15 @@ const validatePhoneAlcazar = async (carrier, phone) => {
   const d1 = new Date()
   const res = await axios.get(url)
   const d2 = new Date()
-  const lec = res?.data?.LEC
-
-  const filter = carrier === 'Mixed Carriers' ? true : alcazar[carrier].some(c => lec.includes(c))
-  res?.data?.LINETYPE === 'WIRELESS' && log(phone, lec)
 
   // console.log(res.data)
-  const result =
-    res?.data?.LINETYPE === 'WIRELESS' && filter ? `+${phone} // ${lec} // Sec: ${(d2 - d1) / 1000} // ` : null
+  const lec = res?.data?.LEC
+  const isMobile = res?.data?.LINETYPE === 'WIRELESS'
+
+  const filter = carrier === 'Mixed Carriers' ? true : alcazar[carrier].some(c => lec.includes(c))
+  isMobile && log(phone, lec)
+
+  const result = isMobile && filter ? [`+${phone}`, lec, `Sec: ${(d2 - d1) / 1000}`] : null
   return result
 }
 
