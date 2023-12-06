@@ -50,7 +50,7 @@ const view = num => Number(num).toFixed(2)
 const yesNo = ['Yes', 'No']
 const t = {
   phoneGenTimeout: 'Timeout',
-  phoneGenNoGoodHits: 'This area code is giving no results',
+  phoneGenNoGoodHits: 'There is problem in getting results',
   validateBulkNumbersStart: 'Downloading leads is started, we will update you soon.',
 
   subscribeRCS: p =>
@@ -278,7 +278,8 @@ const phoneNumberLeads = ['🙎‍♂️ Buy Leads', '☎️ Phone Number Valida
 const buyLeadsSelectCountry = Object.keys(areasOfCountry)
 const buyLeadsSelectSmsVoice = ['SMS (Price 10$ for 1000)', 'Voice (Price 12$ for 1000)']
 const buyLeadsSelectArea = country => Object.keys(areasOfCountry?.[country])
-const buyLeadsSelectAreaCode = (country, area) => areasOfCountry?.[country]?.[area]
+const buyLeadsSelectAreaCode = (country, area) => ['Mixed Area Codes'].concat(areasOfCountry?.[country]?.[area])
+const _buyLeadsSelectAreaCode = (country, area) => areasOfCountry?.[country]?.[area]
 const buyLeadsSelectCnam = yesNo
 const buyLeadsSelectCarrier = country => carriersOf[country]
 const buyLeadsSelectAmount = ['1000', '2000', '3000', '4000', '5000']
@@ -499,4 +500,5 @@ module.exports = {
   buyLeadsSelectCarrier,
   buyLeadsSelectSmsVoice,
   buyLeadsSelectAreaCode,
+  _buyLeadsSelectAreaCode,
 }

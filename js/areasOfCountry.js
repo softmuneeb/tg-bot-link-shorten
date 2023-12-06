@@ -154,39 +154,41 @@ const countryCodeOf = {
 
 const carriersOf = {
   US: [
+    'Mixed Carriers',
     'T-mobile', //
     'Metro PCS',
     'Sprint',
     'Verizon Wireless',
     'AT&T',
-    'Mixed Carriers',
   ],
   Canada: [
+    'Mixed Carriers',
     'Bell', //
     'Telus',
     'Roger',
-    'Mixed Carriers',
+    'Fido',
   ],
 
   'New Zealand': [
+    'Mixed Carriers',
     'Spark', //
     'Vodafone',
-    '2Degrees',
-    'Mixed Carriers',
+    'Vocus',
+    '2Degrees/Voyager',
+    'Skinny Mobile',
   ],
   Australia: [
+    'Mixed Carriers',
     'Telstra', //
     'Optus',
-    'TPG',
     'Vodafone',
-    'Mixed Carriers',
   ],
   UK: [
+    'Mixed Carriers',
     'EE', //
     'Three',
     'Vodafone',
-    'O2',
-    'Mixed Carriers',
+    'Virgin/O2',
   ],
 }
 

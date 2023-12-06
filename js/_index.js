@@ -34,6 +34,7 @@ const {
   buyLeadsSelectFormat,
   buyLeadsSelectAmount: amounts,
   phoneNumberLeads,
+  _buyLeadsSelectAreaCode,
 } = require('./config.js')
 const {
   week,
@@ -154,6 +155,7 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
+  // 5590563715 chat id client
   set(planEndingTime, 6687923716, 0)
   set(freeShortLinksOf, 6687923716, FREE_LINKS)
   adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
@@ -465,7 +467,11 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', a.buyLeadsSelectArea)
     },
     buyLeadsSelectAreaCode: () => {
-      send(chatId, t.buyLeadsSelectAreaCode, k.buyLeadsSelectAreaCode(info?.country, info?.area))
+      send(
+        chatId,
+        t.buyLeadsSelectAreaCode,
+        k.buyLeadsSelectAreaCode(info?.country, ['US', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes'),
+      )
       set(state, chatId, 'action', a.buyLeadsSelectAreaCode)
     },
     buyLeadsSelectCarrier: () => {
@@ -556,9 +562,12 @@ bot.on('message', async msg => {
 
       let cc = countryCodeOf[info?.country]
       let cnam = cc === '1' ? info?.cnam : false
+
+      let area = ['US', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes'
+      let areaCodes = info?.areaCode === 'Mixed Area Codes' ? _buyLeadsSelectAreaCode(info?.country, area) : [info?.areaCode]
       // buy leads
       send(chatId, t.validateBulkNumbersStart, o)
-      const res = await validateBulkNumbers(info?.carrier, info?.amount, cc, [info?.areaCode], cnam, bot, chatId)
+      const res = await validateBulkNumbers(info?.carrier, info?.amount, cc, areaCodes, cnam, bot, chatId)
       if (!res) return send(chatId, t.buyLeadsError)
 
       send(chatId, t.buyLeadsSuccess(info?.amount)) // send success message
@@ -1156,17 +1165,23 @@ bot.on('message', async msg => {
     if (buyLeadsSelectSmsVoice[1] === message) return send(chatId, `Coming Soon`)
     if (!buyLeadsSelectSmsVoice.includes(message)) return send(chatId, `?`)
     saveInfo('smsVoice', message)
-    return goto.buyLeadsSelectArea()
+    saveInfo('cameFrom', a.buyLeadsSelectSmsVoice)
+    if (['US', 'Canada'].includes(info?.country)) return goto.buyLeadsSelectArea()
+    return goto.buyLeadsSelectAreaCode()
   }
   if (action === a.buyLeadsSelectArea) {
     if (message === 'Back') return goto.buyLeadsSelectSmsVoice()
     if (!buyLeadsSelectArea(info?.country).includes(message)) return send(chatId, `?`)
     await saveInfo('area', message)
+    saveInfo('cameFrom', a.buyLeadsSelectArea)
     return goto.buyLeadsSelectAreaCode()
   }
   if (action === a.buyLeadsSelectAreaCode) {
-    if (message === 'Back') return goto.buyLeadsSelectArea()
-    const areaCodes = buyLeadsSelectAreaCode(info?.country, info?.area)
+    if (message === 'Back') return goto?.[info?.cameFrom]()
+    const areaCodes = buyLeadsSelectAreaCode(
+      info?.country,
+      ['US', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes',
+    )
     if (!areaCodes.includes(message)) return send(chatId, `?`)
     saveInfo('areaCode', message)
     return goto.buyLeadsSelectCarrier()
@@ -1732,7 +1747,7 @@ app.get('/:id', async (req, res) => {
 })
 const startServer = () => {
   const port = process.env.PORT || 3000
-  app.listen(port, () => log(`Server ran away!\nhttp://localhost:${port}`))
+  app.listen(port, () => log(`Server ran away!\nhttp://localhost:${port}\nWaiting for db to connect...`))
 }
 startServer()
 
