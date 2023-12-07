@@ -156,7 +156,25 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
+  // Bohut zalil karaya is galat line nai : await set(wallet **** 00)
+  // {
+  //   await del(walletOf, 6687923716)
+  //   await set(walletOf, 6687923716, 'usdIn', 100)
+  //   await set(walletOf, 6687923716, 'ngnIn', 100000)
+  //   const w = await get(walletOf, 6687923716)
+  //   log({ w })
+  // }
+  // {
+  //   await del(walletOf, 5590563715)
+  //   await set(walletOf, 5590563715, 'usdIn', 100)
+  //   await set(walletOf, 5590563715, 'ngnIn', 100000)
+  //   const w = await get(walletOf, 5590563715)
+  //   log({ w })
+  // }
+
   // 5590563715 chat id client
+  // 6687923716 chat id testing
+  // set(walletOf, 6687923716, { usdIn: 100, ngnIn: 100000 })
   // set(planEndingTime, 6687923716, 0)
   // set(freeShortLinksOf, 6687923716, FREE_LINKS)
   adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
@@ -588,40 +606,43 @@ bot.on('message', async msg => {
 
       cc = '+' + cc
       const file1 = 'leads.txt'
-      fs.writeFile(file1, res.map(a => (l ? a[0].replace(cc, '') : a[0])).join('\n'), () =>
-        bot.sendDocument(chatId, file1),
-      )
+      fs.writeFile(file1, res.map(a => (l ? a[0].replace(cc, '') : a[0])).join('\n'), () => {
+        bot.sendDocument(chatId, file1)
+      })
 
       if (cnam) {
         const file2 = 'leads_with_cnam.txt'
-        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[3]).join('\n'), () =>
-          bot.sendDocument(chatId, file2),
-        )
+        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[3]).join('\n'), () => {
+          bot.sendDocument(chatId, file2)
+          bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2)
+        })
       } else {
         const file2 = 'leads_with_carriers.txt'
-        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[1]).join('\n'), () =>
-          bot.sendDocument(chatId, file2),
-        )
+        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[1]).join('\n'), () => {
+          bot.sendDocument(chatId, file2)
+          bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2)
+        })
+      }
 
-        {
-          const file2 = 'leads_with_carriers_and_time.txt'
-          chatId === 6687923716 &&
-            fs.writeFile(
-              file2,
-              res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[1] + ' ' + a[2]).join('\n'),
-              () => bot.sendDocument(chatId, file2),
-            )
-        }
+      {
+        const file2 = 'leads_with_carriers_and_time.txt'
+        chatId === 6687923716 &&
+          fs.writeFile(
+            file2,
+            res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[1] + ' ' + a[2]).join('\n'),
+            () => bot.sendDocument(chatId, file2),
+          )
       }
 
       // wallet update
       if (coin === u.usd) {
         const usdOut = (wallet?.usdOut || 0) + priceUsd
         await set(walletOf, chatId, 'usdOut', usdOut)
-      }
-      if (coin === u.ngn) {
+      } else if (coin === u.ngn) {
         const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
         await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
+      } else {
+        return send(chatId, 'Some Issue')
       }
       const { usdBal: usd, ngnBal: ngn } = await getBalance(walletOf, chatId)
       send(chatId, t.showWallet(usd, ngn), o)
