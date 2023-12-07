@@ -52,7 +52,7 @@ const view = num => Number(num).toFixed(2)
 const yesNo = ['Yes', 'No']
 const t = {
   phoneGenTimeout: 'Timeout',
-  phoneGenNoGoodHits: 'There is problem in getting results',
+  phoneGenNoGoodHits: 'Please contact support @nomadlysupport or select another area code',
   validateBulkNumbersStart: 'Downloading leads is started, we will update you soon.',
 
   subscribeRCS: p =>
@@ -260,7 +260,7 @@ $${view(usd)}
   sentMoreMoney: (expected, got) =>
     `You sent more money than expected so we credited the extra amount into your wallet. We expected ${expected} but received ${got}`,
 
-  buyLeadsError: 'Error downloading leads, your wallet has not been charged',
+  buyLeadsError: 'Unfortunately the selected area code is unavailable and your wallet has not been charged',
   buyLeadsProgress: (i, total) => `${((i * 100) / total).toFixed()}% leads downloaded. Please wait.`,
 
   phoneNumberLeads: 'Please select an option',
@@ -270,7 +270,7 @@ $${view(usd)}
   buyLeadsSelectArea: 'Please select area',
   buyLeadsSelectAreaCode: 'Please select area code',
   buyLeadsSelectCarrier: 'Please select carrier',
-  buyLeadsSelectCnam: 'You want to search the owner name? CNAME costs extra 10$ per 1000 leads',
+  buyLeadsSelectCnam: 'You want to search the owner's name? CNAME costs extra 10$ per 1000 leads',
   buyLeadsSelectAmount: 'How much from the numbers you want to validate? Select or type a number.',
   buyLeadsSelectFormat: 'Choose format i.e Local or International',
   buyLeadsSuccess: n => `Congrats your ${n} leads are downloaded.`,
