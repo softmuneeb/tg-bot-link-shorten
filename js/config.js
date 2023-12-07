@@ -277,7 +277,7 @@ $${view(usd)}
 
   buyLeadsNewPrice: (leads, price, newPrice) => `Price of ${leads} leads is now $${view(newPrice)} <s>($${price})</s>`,
 }
-const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Phone Number Validator']
+const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
 
 const buyLeadsSelectCountry = Object.keys(areasOfCountry)
 const buyLeadsSelectSmsVoice = ['SMS (Price 15$ for 1000)', 'Voice (Price 0$ for 1000)']
