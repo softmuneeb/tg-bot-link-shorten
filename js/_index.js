@@ -35,6 +35,7 @@ const {
   buyLeadsSelectAmount: amounts,
   phoneNumberLeads,
   _buyLeadsSelectAreaCode,
+  buyLeadsSelectAmount,
 } = require('./config.js')
 const {
   week,
@@ -158,11 +159,11 @@ const loadData = async () => {
 
   // Bohut zalil karaya is galat line nai : await set(wallet **** 00)
   // {
-  //   await del(walletOf, 6687923716)
-  //   await set(walletOf, 6687923716, 'usdIn', 100)
-  //   await set(walletOf, 6687923716, 'ngnIn', 100000)
-  //   const w = await get(walletOf, 6687923716)
-  //   log({ w })
+  // await del(walletOf, 6687923716)
+  // await set(walletOf, 5168006768, 'usdIn', 100)
+  // await set(walletOf, 5168006768, 'ngnIn', 100000)
+  // const w = await get(walletOf, 5168006768)
+  // log({ w })
   // }
   // {
   //   await del(walletOf, 5590563715)
@@ -172,7 +173,7 @@ const loadData = async () => {
   //   log({ w })
   // }
 
-  // 5590563715 chat id client
+  // 5590563715, 5168006768 chat id client
   // 6687923716 chat id testing
   // set(walletOf, 6687923716, { usdIn: 100, ngnIn: 100000 })
   // set(planEndingTime, 6687923716, 0)
@@ -1154,8 +1155,13 @@ bot.on('message', async msg => {
   if (action === a.depositUSD) {
     if (message === 'Back') return goto[a.selectCurrencyToDeposit]()
 
-    const amount = message
-    if (isNaN(amount)) return send(chatId, `?`)
+    const amount = Number(message)
+    if (
+      isNaN(amount) ||
+      amount < Number(buyLeadsSelectAmount[0]) ||
+      amount > Number(buyLeadsSelectAmount[buyLeadsSelectAmount.length - 1])
+    )
+      return send(chatId, `?`)
     await saveInfo('amount', amount)
 
     return goto[a.selectCryptoToDeposit]()

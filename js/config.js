@@ -261,7 +261,7 @@ $${view(usd)}
     `You sent more money than expected so we credited the extra amount into your wallet. We expected ${expected} but received ${got}`,
 
   buyLeadsError: 'Error downloading leads, your wallet has not been charged',
-  buyLeadsProgress: (i, total) => `${i}/${total} leads downloaded. Please wait.`,
+  buyLeadsProgress: (i, total) => `${((i * 100) / total).toFixed()}% leads downloaded. Please wait.`,
 
   phoneNumberLeads: 'Please select an option',
 

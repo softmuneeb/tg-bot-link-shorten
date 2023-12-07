@@ -32,7 +32,7 @@ const validatePhoneAlcazar = async (carrier, phone) => {
   return result
 }
 
-// validatePhoneAlcazar('18622039173') // US / Canada
+// validatePhoneAlcazar('Mixed Carriers','18622039173') // US / Canada
 // validatePhoneAlcazar('61385479556') // does not work for Australia, New Zealand, UK
 
 module.exports = validatePhoneAlcazar
