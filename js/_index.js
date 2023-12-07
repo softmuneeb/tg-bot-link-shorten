@@ -590,7 +590,7 @@ bot.on('message', async msg => {
       if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
 
       let cc = countryCodeOf[info?.country]
-      let cnam = cc === '1' ? info?.cnam : false
+      let cnam = info?.country === 'US' ? info?.cnam : false
 
       let area = ['US', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes'
       let areaCodes =
@@ -1261,8 +1261,7 @@ bot.on('message', async msg => {
     if (isNaN(message) || message <= 0 || message > amounts[amounts.length - 1]) return send(chatId, `?`)
     const amount = Number(message)
     saveInfo('amount', amount)
-    let cc = countryCodeOf[info?.country]
-    let cnam = cc === '1' ? info?.cnam : false
+    let cnam = info?.country === 'US' ? info?.cnam : false
     const price = amount * RATE_LEAD + (cnam ? amount * RATE_CNAM : 0)
     saveInfo('price', price)
     return goto.buyLeadsSelectFormat()
