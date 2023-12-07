@@ -270,7 +270,7 @@ $${view(usd)}
   buyLeadsSelectArea: 'Please select area',
   buyLeadsSelectAreaCode: 'Please select area code',
   buyLeadsSelectCarrier: 'Please select carrier',
-  buyLeadsSelectCnam: 'You want to search the owner's name? CNAME costs extra 10$ per 1000 leads',
+  buyLeadsSelectCnam: 'You want to search the owners name? CNAME costs extra 10$ per 1000 leads',
   buyLeadsSelectAmount: 'How much from the numbers you want to validate? Select or type a number.',
   buyLeadsSelectFormat: 'Choose format i.e Local or International',
   buyLeadsSuccess: n => `Congrats your ${n} leads are downloaded.`,
