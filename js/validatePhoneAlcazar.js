@@ -7,9 +7,9 @@ const API_ALCAZAR = process.env.API_ALCAZAR
 const apiUrl = 'http://api.east.alcazarnetworks.com/api/2.2/lrn'
 
 const alcazar = {
-  'T-mobile': ['T-MOBILE', 'OMNIPOINT', 'METROPCS'],
-  'Metro PCS': ['T-MOBILE', 'OMNIPOINT', 'METROPCS'],
-  Sprint: ['T-MOBILE', 'OMNIPOINT', 'METROPCS'],
+  'T-mobile': ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT'],
+  'Metro PCS': ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT'],
+  Sprint: ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT'],
   'Verizon Wireless': ['CELLCO'],
   'AT&T': ['CINGULAR'],
 }

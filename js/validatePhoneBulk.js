@@ -7,7 +7,7 @@ const validatePhoneSignalwire = require('./validatePhoneSignalwire')
 const validatePhoneNpl = require('./validatePhoneNpl')
 const validatePhoneNeutrino = require('./validatePhoneNeutrino')
 // const { validatePhoneTwilioV2 } = require('./validatePhoneTwilio')
-
+const TELEGRAM_ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID
 const part1 = customAlphabet('23456789', 1)
 const part2 = customAlphabet('0123456789', 6)
 const _part2 = customAlphabet('0123456789', 7)
@@ -17,7 +17,7 @@ const parallelApiCalls = 5
 const waitAfterParallelApiCalls = 1 * 1000 // 1 second
 
 const showProgressEveryXTime = 60 // 30 iterations = 1 minute
-const phoneGenTimeout = 60 * 60 * 1000 // 1 hour
+const phoneGenTimeout = 2 * 60 * 60 * 1000 // 2 hour
 const phoneGenStopAtNoXHits = 50 // 50 Hits with 0 phone number found then break the loop
 
 // core
@@ -105,15 +105,24 @@ const validateBulkNumbers = async (carrier, phonesToGenerate, countryCode, areaC
     elapsedTime = new Date() - startTime
     if (elapsedTime > phoneGenTimeout) {
       bot && bot.sendMessage(chatId, t.phoneGenTimeout)
-      return log(t.phoneGenTimeout, res)
+      log(t.phoneGenTimeout, res)
+      break
     }
     noHitCount = !r[1] || r[1].length === 0 ? noHitCount + parallelApiCalls : 0
     log({ noHitCount })
     if (noHitCount > phoneGenStopAtNoXHits) {
       bot && bot.sendMessage(chatId, t.phoneGenNoGoodHits)
-      return log(t.phoneGenNoGoodHits, res)
+      log(t.phoneGenNoGoodHits, res)
+      break
     }
   }
+
+  bot &&
+    bot.sendMessage(
+      TELEGRAM_ADMIN_CHAT_ID,
+      `ElapsedTime ${elapsedTime / 1000} sec, ${JSON.stringify(areaCodeCount, 0, 2)}`,
+    )
+
   log(
     'elapsedTime',
     elapsedTime / 1000,
@@ -124,7 +133,7 @@ const validateBulkNumbers = async (carrier, phonesToGenerate, countryCode, areaC
     'mobile numbers',
     '\nareaCodeCount',
     areaCodeCount,
-  ) // send to admin and dev
+  )
   return res
 }
 
