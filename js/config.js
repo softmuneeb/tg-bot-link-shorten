@@ -272,7 +272,7 @@ $${view(usd)}
   buyLeadsSelectCarrier: 'Please select carrier',
   buyLeadsSelectCnam: 'You want to search the owners name? CNAME costs extra 10$ per 1000 leads',
   buyLeadsSelectAmount: 'How much from the numbers you want to validate? Select or type a number.',
-  buyLeadsSelectFormat: 'Choose format i.e Local or International',
+  buyLeadsSelectFormat: 'Choose format i.e Local (212) or International (+1212)',
   buyLeadsSuccess: n => `Congrats your ${n} leads are downloaded.`,
 
   buyLeadsNewPrice: (leads, price, newPrice) => `Price of ${leads} leads is now $${view(newPrice)} <s>($${price})</s>`,
