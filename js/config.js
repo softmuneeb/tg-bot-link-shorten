@@ -280,7 +280,7 @@ $${view(usd)}
 const phoneNumberLeads = ['🙎‍♂️ Buy Leads', '☎️ Phone Number Validator']
 
 const buyLeadsSelectCountry = Object.keys(areasOfCountry)
-const buyLeadsSelectSmsVoice = ['SMS (Price 10$ for 1000)', 'Voice (Price 12$ for 1000)']
+const buyLeadsSelectSmsVoice = ['SMS (Price 15$ for 1000)', 'Voice (Price 0$ for 1000)']
 const buyLeadsSelectArea = country => Object.keys(areasOfCountry?.[country])
 const buyLeadsSelectAreaCode = (country, area) =>
   ['Mixed Area Codes'].concat(areasOfCountry?.[country]?.[area].map(c => format(countryCodeOf[country], c)))
