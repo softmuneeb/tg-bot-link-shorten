@@ -506,7 +506,11 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', a.buyLeadsSelectCnam)
     },
     buyLeadsSelectAmount: () => {
-      send(chatId, t.buyLeadsSelectAmount, k.buyLeadsSelectAmount)
+      send(
+        chatId,
+        t.buyLeadsSelectAmount(buyLeadsSelectAmount[0], buyLeadsSelectAmount[buyLeadsSelectAmount.length - 1]),
+        k.buyLeadsSelectAmount,
+      )
       set(state, chatId, 'action', a.buyLeadsSelectAmount)
     },
     buyLeadsSelectFormat: () => {
@@ -593,8 +597,15 @@ bot.on('message', async msg => {
       let cnam = info?.country === 'US' ? info?.cnam : false
 
       let area = ['US', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes'
-      let areaCodes =
-        info?.areaCode === 'Mixed Area Codes' ? _buyLeadsSelectAreaCode(info?.country, area) : [info?.areaCode]
+      let areaCodes
+
+      if (['Australia'].includes(info?.country)) {
+        areaCodes = ['4']
+      } else {
+        areaCodes =
+          info?.areaCode === 'Mixed Area Codes' ? _buyLeadsSelectAreaCode(info?.country, area) : [info?.areaCode]
+      }
+
       // buy leads
       send(chatId, t.validateBulkNumbersStart, o)
       const res = await validateBulkNumbers(info?.carrier, info?.amount, cc, areaCodes, cnam, bot, chatId)
@@ -606,20 +617,21 @@ bot.on('message', async msg => {
       const l = format === buyLeadsSelectFormat[0]
 
       cc = '+' + cc
+      const re = cc === '+1' ? '' : '0'
       const file1 = 'leads.txt'
-      fs.writeFile(file1, res.map(a => (l ? a[0].replace(cc, '') : a[0])).join('\n'), () => {
+      fs.writeFile(file1, res.map(a => (l ? a[0].replace(cc, re) : a[0])).join('\n'), () => {
         bot.sendDocument(chatId, file1)
       })
 
       if (cnam) {
         const file2 = 'leads_with_cnam.txt'
-        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[3]).join('\n'), () => {
+        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[3]).join('\n'), () => {
           bot.sendDocument(chatId, file2)
           bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2)
         })
       } else {
         const file2 = 'leads_with_carriers.txt'
-        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[1]).join('\n'), () => {
+        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[1]).join('\n'), () => {
           bot.sendDocument(chatId, file2)
           bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2)
         })
@@ -1156,12 +1168,7 @@ bot.on('message', async msg => {
     if (message === 'Back') return goto[a.selectCurrencyToDeposit]()
 
     const amount = Number(message)
-    if (
-      isNaN(amount) ||
-      amount < Number(buyLeadsSelectAmount[0]) ||
-      amount > Number(buyLeadsSelectAmount[buyLeadsSelectAmount.length - 1])
-    )
-      return send(chatId, `?`)
+    if (isNaN(amount)) return send(chatId, `?`)
     await saveInfo('amount', amount)
 
     return goto[a.selectCryptoToDeposit]()
@@ -1217,6 +1224,7 @@ bot.on('message', async msg => {
     if (!buyLeadsSelectSmsVoice.includes(message)) return send(chatId, `?`)
     saveInfo('smsVoice', message)
     saveInfo('cameFrom', a.buyLeadsSelectSmsVoice)
+    if (['Australia'].includes(info?.country)) return goto.buyLeadsSelectCarrier()
     if (['US', 'Canada'].includes(info?.country)) return goto.buyLeadsSelectArea()
     return goto.buyLeadsSelectAreaCode()
   }
@@ -1241,7 +1249,7 @@ bot.on('message', async msg => {
     return goto.buyLeadsSelectCarrier()
   }
   if (action === a.buyLeadsSelectCarrier) {
-    if (message === 'Back') return goto.buyLeadsSelectAreaCode()
+    if (message === 'Back') return goto?.[info?.cameFrom]()
     if (!buyLeadsSelectCarrier(info?.country).includes(message)) return send(chatId, `?`)
     saveInfo('carrier', message)
     saveInfo('cameFrom', a.buyLeadsSelectCarrier)
@@ -1258,8 +1266,14 @@ bot.on('message', async msg => {
   if (action === a.buyLeadsSelectAmount) {
     if (message === 'Back') return goto?.[info?.cameFrom]()
 
-    if (isNaN(message) || message <= 0 || message > amounts[amounts.length - 1]) return send(chatId, `?`)
     const amount = Number(message)
+    if (
+      isNaN(amount) ||
+      amount < Number(buyLeadsSelectAmount[0]) ||
+      amount > Number(buyLeadsSelectAmount[buyLeadsSelectAmount.length - 1])
+    )
+      return send(chatId, `?`)
+
     saveInfo('amount', amount)
     let cnam = info?.country === 'US' ? info?.cnam : false
     const price = amount * RATE_LEAD + (cnam ? amount * RATE_CNAM : 0)

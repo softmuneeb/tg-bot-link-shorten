@@ -250,7 +250,7 @@ Select wallet option:`,
   walletSelectCurrency: (usd, ngn) => `Please select currency to pay from your Wallet Balance:
 $${view(usd)}
 ₦${view(ngn)}`,
-  
+
   walletSelectCurrencyConfirm: `Confirm?`,
 
   walletBalanceLow: `Please top up your wallet to continue`,
@@ -271,7 +271,8 @@ $${view(usd)}
   buyLeadsSelectAreaCode: 'Please select area code',
   buyLeadsSelectCarrier: 'Please select carrier',
   buyLeadsSelectCnam: 'You want to search the owners name? CNAME costs extra 10$ per 1000 leads',
-  buyLeadsSelectAmount: 'How much from the numbers you want to validate? Select or type a number.',
+  buyLeadsSelectAmount: (min, max) =>
+    `How much from the numbers you want to validate? Select or type a number. Minimum is ${min} and Maximum is ${max}`,
   buyLeadsSelectFormat: 'Choose format i.e Local or International',
   buyLeadsSuccess: n => `Congrats your ${n} leads are downloaded.`,
 
@@ -282,8 +283,10 @@ const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate Phone
 const buyLeadsSelectCountry = Object.keys(areasOfCountry)
 const buyLeadsSelectSmsVoice = ['SMS (Price 15$ for 1000)', 'Voice (Price 0$ for 1000)']
 const buyLeadsSelectArea = country => Object.keys(areasOfCountry?.[country])
-const buyLeadsSelectAreaCode = (country, area) =>
-  ['Mixed Area Codes'].concat(areasOfCountry?.[country]?.[area].map(c => format(countryCodeOf[country], c)))
+const buyLeadsSelectAreaCode = (country, area) => {
+  const codes = areasOfCountry?.[country]?.[area].map(c => format(countryCodeOf[country], c))
+  return codes.length > 1 ? ['Mixed Area Codes'].concat(codes) : codes
+}
 const _buyLeadsSelectAreaCode = (country, area) => areasOfCountry?.[country]?.[area]
 const buyLeadsSelectCnam = yesNo
 const buyLeadsSelectCarrier = country => carriersOf[country]
