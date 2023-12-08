@@ -19,7 +19,7 @@ const waitAfterParallelApiCalls = 1 * 1000 // 1 second
 
 const showProgressEveryXTime = 60 // 30 iterations = 1 minute
 const phoneGenTimeout = 10 * 60 * 60 * 1000 // 2 hour // 1 hr = 2000 hits almost
-const phoneGenStopAtNoXHits = 50 // 50 Hits with 0 phone number found then break the loop
+const phoneGenStopAtNoXHits = 250 // 50 Hits with 0 phone number found then break the loop
 
 // core
 const duplicate = {}
