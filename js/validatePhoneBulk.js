@@ -106,23 +106,25 @@ const validateBulkNumbers = async (carrier, phonesToGenerate, countryCode, areaC
     elapsedTime = new Date() - startTime
     if (elapsedTime > phoneGenTimeout) {
       bot && bot.sendMessage(chatId, t.phoneGenTimeout)
-      log(t.phoneGenTimeout, res)
-      break
+      bot &&
+        bot.sendMessage(
+          TELEGRAM_ADMIN_CHAT_ID,
+          `${t.phoneGenTimeout} ElapsedTime ${elapsedTime / 1000} sec, ${JSON.stringify(areaCodeCount, 0, 2)}`,
+        )
+      return log({ phonesToGenerate, countryCode, areaCodes, cnam }, t.phoneGenTimeout, res)
     }
     noHitCount = !r[1] || r[1].length === 0 ? noHitCount + parallelApiCalls : 0
     log({ noHitCount })
     if (noHitCount > phoneGenStopAtNoXHits) {
       bot && bot.sendMessage(chatId, t.phoneGenNoGoodHits)
-      log(t.phoneGenNoGoodHits, res)
-      break
+      bot &&
+        bot.sendMessage(
+          TELEGRAM_ADMIN_CHAT_ID,
+          `${t.phoneGenNoGoodHits} ElapsedTime ${elapsedTime / 1000} sec, ${JSON.stringify(areaCodeCount, 0, 2)}`,
+        )
+      return log({ phonesToGenerate, countryCode, areaCodes, cnam }, t.phoneGenNoGoodHits, res)
     }
   }
-
-  bot &&
-    bot.sendMessage(
-      TELEGRAM_ADMIN_CHAT_ID,
-      `ElapsedTime ${elapsedTime / 1000} sec, ${JSON.stringify(areaCodeCount, 0, 2)}`,
-    )
 
   log(
     'elapsedTime',
