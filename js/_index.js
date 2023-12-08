@@ -642,7 +642,7 @@ bot.on('message', async msg => {
         chatId === 6687923716 &&
           fs.writeFile(
             file2,
-            res.map(a => (l ? a[0].replace(cc, '') : a[0]) + ' ' + a[1] + ' ' + a[2]).join('\n'),
+            res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[1] + ' ' + a[2]).join('\n'),
             () => bot.sendDocument(chatId, file2),
           )
       }
