@@ -264,7 +264,7 @@ bot.on('message', async msg => {
     'choose-domain-to-manage',
     admin.messageUsers,
     user.wallet,
-    a.buyLeadsSelectCountry,
+    a.phoneNumberLeads,
   ]
   const goto = {
     askCoupon: action => {
