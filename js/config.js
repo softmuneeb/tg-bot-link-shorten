@@ -16,7 +16,7 @@ const FREE_LINKS_HOURS = Number(process.env.FREE_LINKS_TIME_SECONDS) / 60 / 60
 const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS)
 
 const discountOn = {}
-discountOn[''] = 1 // Percent
+discountOn['START5'] = 5 // Percent
 
 // Note: these button labels must not mix with each other, other wise it may mess up bot
 const admin = {
@@ -281,7 +281,7 @@ $${view(usd)}
 const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
 
 const buyLeadsSelectCountry = Object.keys(areasOfCountry)
-const buyLeadsSelectSmsVoice = ['SMS (Price 15$ for 1000)', 'Voice (Price 0$ for 1000)']
+const buyLeadsSelectSmsVoice = ['SMS (Price 20$ for 1000)', 'Voice (Price 0$ for 1000)']
 const buyLeadsSelectArea = country => Object.keys(areasOfCountry?.[country])
 const buyLeadsSelectAreaCode = (country, area) => {
   const codes = areasOfCountry?.[country]?.[area].map(c => format(countryCodeOf[country], c))
