@@ -62,7 +62,7 @@ const validateNumbersParallel = async (carrier, length, countryCode, areaCode, c
   try {
     const results = (await Promise.all(promises)).filter(r => r)
 
-    const fullAc = '+' + countryCode + areaCode
+    const fullAc = '+' + countryCode + areaCode + ' ' + carrier
     const a = areaCodeCount[fullAc]
     const totalHits = (a?.totalHits || 0) + length
     const goodHits = (a?.goodHits || 0) + results.length
@@ -142,9 +142,10 @@ const validateBulkNumbers = async (carrier, phonesToGenerate, countryCode, areaC
 
 //
 // validateBulkNumbers('T-mobile', 1, '1', ['310'], false).then(log) // US
+// validateBulkNumbers('Mixed Carriers', 1, '1', ['310'], false).then(log) // US
 // validateBulkNumbers('Mixed Carriers', 10, '1', ['416'], false).then(log) // Canada
 // validateBulkNumbers('Mixed Carriers', 1, '61', ['4']).then(log) // Australia
-// validateBulkNumbers('Mixed Carriers', 20, '44', ['77']).then(log) // UK
+// validateBulkNumbers('Mixed Carriers', 20, '44', ['71', '72', '73', '74', '75', '77', '78', '79']).then(log) // UK
 // validateBulkNumbers('Mixed Carriers', 1, '64', ['23', '24', '25', '26']).then(log) // New Zealand
 
 module.exports = { validateBulkNumbers }

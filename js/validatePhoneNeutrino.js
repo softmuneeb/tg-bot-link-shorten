@@ -1,6 +1,7 @@
 /* global process */
 require('dotenv').config()
 const axios = require('axios')
+const { log } = require('console')
 const neutrino_headers = {
   'User-ID': process.env.NEUTRINO_ID,
   'API-Key': process.env.NEUTRINO_KEY,
@@ -10,7 +11,9 @@ const validatePhoneNeutrino = async number => {
   const res = await axios.post(neutrinoApiUrl, { number }, { headers: neutrino_headers })
   // console.log(res.data)
   // return res.data.valid
-  return res?.data?.['is-mobile'] === true ? true : null
+  const ret = res?.data?.['is-mobile'] === true ? true : null
+  ret && log('Neutrino is mobile', number)
+  return ret
 }
 // const init = async () => {
 // await validatePhoneNeutrino(' +17134800000') // US

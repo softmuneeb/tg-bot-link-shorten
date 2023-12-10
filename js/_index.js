@@ -493,7 +493,7 @@ bot.on('message', async msg => {
       send(
         chatId,
         t.buyLeadsSelectAreaCode,
-        k.buyLeadsSelectAreaCode(info?.country, ['US', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes'),
+        k.buyLeadsSelectAreaCode(info?.country, ['USA', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes'),
       )
       set(state, chatId, 'action', a.buyLeadsSelectAreaCode)
     },
@@ -594,9 +594,10 @@ bot.on('message', async msg => {
       if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
 
       let cc = countryCodeOf[info?.country]
-      let cnam = info?.country === 'US' ? info?.cnam : false
+      let country = info?.country
+      let cnam = info?.country === 'USA' ? info?.cnam : false
 
-      let area = ['US', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes'
+      let area = ['USA', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes'
       let areaCodes
 
       if (['Australia'].includes(info?.country)) {
@@ -606,15 +607,15 @@ bot.on('message', async msg => {
           info?.areaCode === 'Mixed Area Codes' ? _buyLeadsSelectAreaCode(info?.country, area) : [info?.areaCode]
       }
 
+      const format = info?.format
+      const l = format === buyLeadsSelectFormat[0]
+
       // buy leads
       send(chatId, t.validateBulkNumbersStart, o)
       const res = await validateBulkNumbers(info?.carrier, info?.amount, cc, areaCodes, cnam, bot, chatId)
       if (!res) return send(chatId, t.buyLeadsError)
 
       send(chatId, t.buyLeadsSuccess(info?.amount)) // send success message
-
-      const format = info?.format
-      const l = format === buyLeadsSelectFormat[0]
 
       cc = '+' + cc
       const re = cc === '+1' ? '' : '0'
@@ -630,11 +631,13 @@ bot.on('message', async msg => {
           bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2)
         })
       } else {
-        const file2 = 'leads_with_carriers.txt'
-        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[1]).join('\n'), () => {
-          bot.sendDocument(chatId, file2)
-          bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2)
-        })
+        if (country !== 'USA') {
+          const file2 = 'leads_with_carriers.txt'
+          fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[1]).join('\n'), () => {
+            bot.sendDocument(chatId, file2)
+            bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2)
+          })
+        }
       }
 
       {
@@ -1225,7 +1228,7 @@ bot.on('message', async msg => {
     saveInfo('smsVoice', message)
     saveInfo('cameFrom', a.buyLeadsSelectSmsVoice)
     if (['Australia'].includes(info?.country)) return goto.buyLeadsSelectCarrier()
-    if (['US', 'Canada'].includes(info?.country)) return goto.buyLeadsSelectArea()
+    if (['USA', 'Canada'].includes(info?.country)) return goto.buyLeadsSelectArea()
     return goto.buyLeadsSelectAreaCode()
   }
   if (action === a.buyLeadsSelectArea) {
@@ -1239,7 +1242,7 @@ bot.on('message', async msg => {
     if (message === 'Back') return goto?.[info?.cameFrom]()
     const areaCodes = buyLeadsSelectAreaCode(
       info?.country,
-      ['US', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes',
+      ['USA', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes',
     )
     if (!areaCodes.includes(message)) return send(chatId, `?`)
 
@@ -1253,7 +1256,7 @@ bot.on('message', async msg => {
     if (!buyLeadsSelectCarrier(info?.country).includes(message)) return send(chatId, `?`)
     saveInfo('carrier', message)
     saveInfo('cameFrom', a.buyLeadsSelectCarrier)
-    if (['US'].includes(info?.country)) return goto.buyLeadsSelectCnam()
+    if (['USA'].includes(info?.country)) return goto.buyLeadsSelectCnam()
     return goto.buyLeadsSelectAmount()
   }
   if (action === a.buyLeadsSelectCnam) {
@@ -1275,7 +1278,7 @@ bot.on('message', async msg => {
       return send(chatId, `?`)
 
     saveInfo('amount', amount)
-    let cnam = info?.country === 'US' ? info?.cnam : false
+    let cnam = info?.country === 'USA' ? info?.cnam : false
     const price = amount * RATE_LEAD + (cnam ? amount * RATE_CNAM : 0)
     saveInfo('price', price)
     return goto.buyLeadsSelectFormat()

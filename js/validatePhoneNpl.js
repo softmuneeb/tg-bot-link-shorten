@@ -37,7 +37,7 @@ const validatePhoneNpl = async (carrier, phone) => {
   if (!isMobile) return null
 
   const filter = carrier === 'Mixed Carriers' ? true : npl[carrier].some(c => lec?.includes(c))
-  isMobile && log(phone, lec)
+  isMobile && log('Npl', phone, lec)
 
   // return res?.data numbertype
 

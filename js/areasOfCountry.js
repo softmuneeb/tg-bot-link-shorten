@@ -1,5 +1,5 @@
 const areasOfCountry = {
-  US: {
+  USA: {
     Alabama: ['205', '334', '256', '251'],
     Alaska: ['907'],
     Arizona: ['602', '480', '520', '928'],
@@ -145,7 +145,7 @@ const areasOfCountry = {
 }
 
 const countryCodeOf = {
-  US: '1',
+  USA: '1',
   Canada: '1',
   'New Zealand': '64',
   Australia: '61',
@@ -153,7 +153,7 @@ const countryCodeOf = {
 }
 
 const carriersOf = {
-  US: [
+  USA: [
     'Mixed Carriers',
     'T-mobile', //
     'Metro PCS',

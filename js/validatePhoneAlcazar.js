@@ -7,10 +7,10 @@ const API_ALCAZAR = process.env.API_ALCAZAR
 const apiUrl = 'http://api.east.alcazarnetworks.com/api/2.2/lrn'
 
 const alcazar = {
-  'T-mobile': ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT'],
-  'Metro PCS': ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT'],
-  Sprint: ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT'],
-  'Verizon Wireless': ['CELLCO'],
+  'T-mobile': ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT', 'AERIAL'],
+  'Metro PCS': ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT', 'AERIAL'],
+  Sprint: ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT', 'AERIAL'],
+  'Verizon Wireless': ['CELLCO', 'ONVOY'],
   'AT&T': ['CINGULAR'],
 }
 
@@ -26,7 +26,7 @@ const validatePhoneAlcazar = async (carrier, phone) => {
   const isMobile = res?.data?.LINETYPE === 'WIRELESS'
 
   const filter = carrier === 'Mixed Carriers' ? true : alcazar[carrier].some(c => lec.includes(c))
-  isMobile && log(phone, lec)
+  isMobile && log('Alcazar', phone, lec)
 
   const result = isMobile && filter ? [`+${phone}`, lec, `Sec: ${(d2 - d1) / 1000}`] : null
   return result
