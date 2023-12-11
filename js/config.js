@@ -17,6 +17,31 @@ const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS)
 
 const discountOn = {}
 discountOn['START5'] = 5 // Percent
+discountOn['START5'] = 5 // Percent
+
+const npl = {
+  // New Zealand
+  Spark: ['Spark'],
+  Vocus: ['Vocus'],
+  '2Degrees/Voyager': ['Voyager'],
+  'Skinny Mobile': ['Skinny Mobile'],
+  // Australia
+  Telstra: ['Telstra'],
+  Optus: ['Optus'],
+  Vodafone: ['VODAFONE', 'Vodafone'],
+  // UK
+  EE: ['EE'],
+  Three: ['Three'],
+  'Virgin/O2': ['Virgin'],
+}
+
+const alcazar = {
+  'T-mobile': ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT', 'AERIAL'],
+  'Metro PCS': ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT', 'AERIAL'],
+  Sprint: ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT', 'AERIAL'],
+  'Verizon Wireless': ['CELLCO', 'ONVOY'],
+  'AT&T': ['CINGULAR'],
+}
 
 // Note: these button labels must not mix with each other, other wise it may mess up bot
 const admin = {
@@ -476,6 +501,7 @@ module.exports = {
   u,
   dO,
   bc,
+  npl,
   dns,
   rem,
   user,
@@ -486,6 +512,7 @@ module.exports = {
   yes_no,
   timeOf,
   payBank,
+  alcazar,
   priceOf,
   tickerOf,
   linkType,

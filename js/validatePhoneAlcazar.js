@@ -2,17 +2,10 @@
 require('dotenv').config()
 const axios = require('axios')
 const { log } = require('console')
+const { alcazar } = require('./config')
 
 const API_ALCAZAR = process.env.API_ALCAZAR
 const apiUrl = 'http://api.east.alcazarnetworks.com/api/2.2/lrn'
-
-const alcazar = {
-  'T-mobile': ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT', 'AERIAL'],
-  'Metro PCS': ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT', 'AERIAL'],
-  Sprint: ['T-MOBILE', 'OMNIPOINT', 'METROPCS', 'SPRINT', 'AERIAL'],
-  'Verizon Wireless': ['CELLCO', 'ONVOY'],
-  'AT&T': ['CINGULAR'],
-}
 
 const validatePhoneAlcazar = async (carrier, phone) => {
   const url = `${apiUrl}?tn=${phone}&extended=true&output=json&&key=${API_ALCAZAR}`
@@ -25,7 +18,7 @@ const validatePhoneAlcazar = async (carrier, phone) => {
   const lec = res?.data?.LEC
   const isMobile = res?.data?.LINETYPE === 'WIRELESS'
 
-  const filter = carrier === 'Mixed Carriers' ? true : alcazar[carrier].some(c => lec.includes(c))
+  const filter = carrier === 'Mixed Carriers' ? true : alcazar[carrier].some(c => lec?.includes(c))
   isMobile && log('Alcazar', phone, lec)
 
   const result = isMobile && filter ? [`+${phone}`, lec, `Sec: ${(d2 - d1) / 1000}`] : null

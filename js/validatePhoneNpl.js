@@ -2,22 +2,7 @@
 require('dotenv').config()
 const axios = require('axios')
 const { log } = require('console')
-
-const npl = {
-  // New Zealand
-  Spark: ['Spark'],
-  Vocus: ['Vocus'],
-  '2Degrees/Voyager': ['Voyager'],
-  'Skinny Mobile': ['Skinny Mobile'],
-  // Australia
-  Telstra: ['Telstra'],
-  Optus: ['Optus'],
-  Vodafone: ['VODAFONE', 'Vodafone'],
-  // UK
-  EE: ['EE'],
-  Three: ['Three'],
-  'Virgin/O2': ['Virgin'],
-}
+const { npl } = require('./config')
 
 const validatePhoneNpl = async (carrier, phone) => {
   const request_url = `https://api.numberportabilitylookup.com/npl?user=${process.env.NUMBER_PROBABLITY_API_ID}&pass=${process.env.NUMBER_PROBABLITY_API_PASS}&msisdn=${phone}&format=json`
