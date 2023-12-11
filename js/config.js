@@ -18,6 +18,9 @@ const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS)
 const discountOn = {}
 discountOn['START5'] = 5 // Percent
 discountOn['START5'] = 5 // Percent
+discountOn['START5'] = 5 // Percent
+discountOn['START5'] = 5 // Percent
+discountOn['START5'] = 5 // Percent
 
 const npl = {
   // New Zealand
