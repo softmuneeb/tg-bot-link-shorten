@@ -1270,7 +1270,9 @@ bot.on('message', async msg => {
     if (message === 'Back') return goto?.[info?.cameFrom]()
 
     const amount = Number(message)
-    if (
+    if (chatId === 6687923716) {
+      if (isNaN(amount)) return send(chatId, `?`)
+    } else if (
       isNaN(amount) ||
       amount < Number(buyLeadsSelectAmount[0]) ||
       amount > Number(buyLeadsSelectAmount[buyLeadsSelectAmount.length - 1])
