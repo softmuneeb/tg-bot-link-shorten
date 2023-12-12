@@ -279,8 +279,6 @@ Select wallet option:`,
 $${view(usd)}
 ₦${view(ngn)}`,
 
-  walletSelectCurrencyConfirm: `Confirm?`,
-
   walletBalanceLow: `Please top up your wallet to continue`,
 
   sentLessMoney: (expected, got) =>
@@ -305,6 +303,10 @@ $${view(usd)}
   buyLeadsSuccess: n => `Congrats your ${n} leads are downloaded.`,
 
   buyLeadsNewPrice: (leads, price, newPrice) => `Price of ${leads} leads is now $${view(newPrice)} <s>($${price})</s>`,
+  buyLeadsPrice: (leads, price) => `Price of ${leads} leads is $${price}.`,
+
+  confirmNgn: (usd, ngn) => `${usd} USD ≈ ${ngn} NGN `,
+  walletSelectCurrencyConfirm: `Confirm?`,
 }
 const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
 
@@ -347,6 +349,7 @@ const kOf = list => ({
   reply_markup: {
     keyboard: [...list.map(a => [a]), _bc],
   },
+  parse_mode: 'HTML',
 })
 const yes_no = {
   parse_mode: 'HTML',

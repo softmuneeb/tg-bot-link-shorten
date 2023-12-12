@@ -461,12 +461,25 @@ bot.on('message', async msg => {
     //
     //
     walletSelectCurrency: async () => {
+      if (action.includes(a.buyLeadsSelectFormat)) {
+        const { amount, price, couponApplied, newPrice } = info
+        couponApplied
+          ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice), k.pay)
+          : send(chatId, t.buyLeadsPrice(amount, price), k.pay)
+      }
+
       set(state, chatId, 'action', a.walletSelectCurrency)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
       send(chatId, t.walletSelectCurrency(usdBal, ngnBal), k.of([u.usd, u.ngn]))
     },
     walletSelectCurrencyConfirm: async () => {
-      send(chatId, t.walletSelectCurrencyConfirm, yes_no)
+      const { price, couponApplied, newPrice, coin } = info
+      const p = couponApplied ? newPrice : price
+
+      let text = ''
+      if (coin === u.ngn) text = t.confirmNgn(p, await usdToNgn(p))
+
+      send(chatId, text + t.walletSelectCurrencyConfirm, yes_no)
       set(state, chatId, 'action', a.walletSelectCurrencyConfirm)
     },
     //
@@ -1192,7 +1205,7 @@ bot.on('message', async msg => {
 
     const coin = message
     if (![u.usd, u.ngn].includes(coin)) return send(chatId, `?`)
-    saveInfo('coin', coin)
+    await saveInfo('coin', coin)
 
     return goto.walletSelectCurrencyConfirm()
   }
