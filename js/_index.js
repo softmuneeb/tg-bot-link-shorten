@@ -918,6 +918,7 @@ bot.on('message', async msg => {
     if (message === 'Back' || message === 'No') return goto['choose-domain-to-buy']()
     if (message !== 'Yes') return send(chatId, `?`)
 
+    
     const domain = info?.domain
     const error = await buyDomainFullProcess(chatId, domain)
     if (!error) decrement(freeDomainNamesAvailableFor, chatId)
