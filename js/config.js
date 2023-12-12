@@ -17,8 +17,8 @@ const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS)
 
 const discountOn = {}
 discountOn['START5'] = 5 // Percent
-discountOn['START5'] = 5 // Percent
-discountOn['START5'] = 5 // Percent
+discountOn['START10'] = 10 // Percent
+discountOn['ADMIN15'] = 15 // Percent
 discountOn['START5'] = 5 // Percent
 discountOn['START5'] = 5 // Percent
 
