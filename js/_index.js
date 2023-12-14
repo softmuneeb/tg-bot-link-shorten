@@ -32,7 +32,6 @@ const {
   buyLeadsSelectCarrier,
   buyLeadsSelectCnam,
   buyLeadsSelectFormat,
-  buyLeadsSelectAmount: amounts,
   phoneNumberLeads,
   _buyLeadsSelectAreaCode,
   buyLeadsSelectAmount,
