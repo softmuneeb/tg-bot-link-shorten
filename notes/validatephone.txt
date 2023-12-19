@@ -1,0 +1,8 @@
+#1. Created text,key and export phoneNumberSelectCountry,
+#2. Created text,key and export inputPhoneNumber,
+
+
+//note the following line 
+
+        areaCodes =
+          info?.areaCode === 'Mixed Area Codes' ? _buyLeadsSelectAreaCode(info?.country, area) : [info?.areaCode]

@@ -290,7 +290,6 @@ $${view(usd)}
   buyLeadsProgress: (i, total) => `${((i * 100) / total).toFixed()}% leads downloaded. Please wait.`,
 
   phoneNumberLeads: 'Please select an option',
-
   buyLeadsSelectCountry: 'Please select country',
   buyLeadsSelectSmsVoice: 'Please select SMS / Voice',
   buyLeadsSelectArea: 'Please select area',
@@ -307,11 +306,48 @@ $${view(usd)}
 
   confirmNgn: (usd, ngn) => `${usd} USD ≈ ${ngn} NGN `,
   walletSelectCurrencyConfirm: `Confirm?`,
+
+
+  // Phone Number validator 
+  validatorSelectCountry:"Please Select your country dear",
+  validatorPhoneNumber:"Paste some Phone Number or upload a file",
+  validatorSelectSmsVoice:"Please select SMS / Voice",
+  validatorSelectCarrier:'Please select carrier',
+  validatorSelectAmount: (min, max) =>
+  `How much from the numbers you want to validate? Select or type a number. Minimum is ${min} and Maximum is ${max}`,
+  validatorSelectFormat:'Choose format i.e Local (212) or International (+1212)',
+  
+
+
 }
-const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
+
+
+
+const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️Phone Number Validate']
 
 const buyLeadsSelectCountry = Object.keys(areasOfCountry)
-const buyLeadsSelectSmsVoice = ['SMS (Price 20$ for 1000)', 'Voice (Price 0$ for 1000)']
+
+const validatorSelectCountry = Object.keys(areasOfCountry)
+
+const validatorPhoneNumber = ['']
+
+const validatorSelectSmsVoice = ['SMS (Price 20$ for 1000)', 'Voice (Price 10$ for 1000)']
+
+
+
+
+const validatorSelectCarrier = country => carriersOf[country]
+
+const validatorSelectAmount = ['1000', '2000', '3000', '4000', '5000']
+
+const validatorSelectFormat =  ['Local Format', 'International Format']
+
+
+
+
+
+
+const buyLeadsSelectSmsVoice = ['SMS (Price 20$ for 1000)', 'Voice (Price 10$ for 1000)']
 const buyLeadsSelectArea = country => Object.keys(areasOfCountry?.[country])
 const buyLeadsSelectAreaCode = (country, area) => {
   const codes = areasOfCountry?.[country]?.[area].map(c => format(countryCodeOf[country], c))
@@ -375,7 +411,6 @@ const k = {
   },
 
   phoneNumberLeads: kOf(phoneNumberLeads),
-
   buyLeadsSelectCountry: kOf(buyLeadsSelectCountry),
   buyLeadsSelectSmsVoice: kOf(buyLeadsSelectSmsVoice),
   buyLeadsSelectArea: country => kOf(buyLeadsSelectArea(country)),
@@ -384,6 +419,14 @@ const k = {
   buyLeadsSelectCnam: kOf(yesNo),
   buyLeadsSelectAmount: kOf(buyLeadsSelectAmount),
   buyLeadsSelectFormat: kOf(buyLeadsSelectFormat),
+  // changing here for validatorSelectCountry
+  validatorSelectCountry:kOf(validatorSelectCountry),
+  validatorPhoneNumber:kOf(validatorPhoneNumber),
+  validatorSelectSmsVoice:kOf(validatorSelectSmsVoice),
+  validatorSelectCarrier:country=>kOf(validatorSelectCarrier(country)),
+  validatorSelectAmount:kOf(validatorSelectAmount),
+  validatorSelectFormat:kOf(validatorSelectFormat),
+
 }
 
 const adminKeyboard = {
@@ -542,4 +585,10 @@ module.exports = {
   buyLeadsSelectSmsVoice,
   buyLeadsSelectAreaCode,
   _buyLeadsSelectAreaCode,
+  validatorSelectCountry,
+  validatorPhoneNumber,
+  validatorSelectSmsVoice,
+  validatorSelectCarrier,
+  validatorSelectAmount,
+  validatorSelectFormat,
 }
