@@ -175,6 +175,28 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 const parse = (cc, s) => parseInt(s.replace(`+${cc}`, ``).replace(/[^\d]/g, ''), 10).toString()
 
+// const phoneLen = {
+//   1: 11,
+//   64: 11,
+//   61: 11,
+//   44: 12,
+// }
+
+// const areaCodeLength = {
+//   1: 3,
+//   44: 2,
+//   64: 2,
+//   61: 1,
+// }
+
+function extractPhoneNumbers(text) {
+  const phoneRegex = /\b(?:\+?\d{1,4}[ -]?)?(?:\(\d{1,}\)[ -]?)?\d{1,}[- ]?\d{1,}[- ]?\d{1,}\b/g
+  let matches = text.match(phoneRegex) || []
+  matches = matches.map(phoneNumber => phoneNumber.replace(/[\s()-+]/g, ''))
+  // matches = matches.filter(phoneNumber => phoneNumber.length === phoneLen[cc])
+  return matches
+}
+
 // log(format('1', '4'))
 // log(format('1', '20'))
 // log(format('1', '200'))
@@ -193,6 +215,7 @@ module.exports = {
   week,
   today,
   month,
+  date,
   sleep,
   isAdmin,
   usdToNgn,
@@ -207,6 +230,6 @@ module.exports = {
   isNormalUser,
   subscribePlan,
   regularCheckDns,
-  date,
+  extractPhoneNumbers,
   sendMessageToAllUsers,
 }

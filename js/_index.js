@@ -35,6 +35,12 @@ const {
   phoneNumberLeads,
   _buyLeadsSelectAreaCode,
   buyLeadsSelectAmount,
+  validatorSelectCountry,
+  validatorSelectSmsVoice,
+  validatorSelectCarrier,
+  validatorSelectAmount,
+  validatorSelectFormat,
+  validatorSelectCnam,
 } = require('./config.js')
 const {
   week,
@@ -54,6 +60,7 @@ const {
   regularCheckDns,
   sendMessageToAllUsers,
   parse,
+  extractPhoneNumbers,
 } = require('./utils.js')
 const fs = require('fs')
 require('dotenv').config()
@@ -77,12 +84,16 @@ const { getRegisteredDomainNames } = require('./cr-domain-purchased-get.js')
 const { getCryptoDepositAddress, convert } = require('./pay-blockbee.js')
 const { validateBulkNumbers } = require('./validatePhoneBulk.js')
 const { countryCodeOf, areasOfCountry } = require('./areasOfCountry.js')
+const { validatePhoneBulkFile } = require('./validatePhoneBulkFile.js')
 
 process.env['NTBA_FIX_350'] = 1
 const DB_NAME = process.env.DB_NAME
 const SELF_URL = process.env.SELF_URL
+const NOT_TRY_CR = process.env.NOT_TRY_CR
 const RATE_LEAD = Number(process.env.RATE_LEAD)
 const RATE_CNAM = Number(process.env.RATE_CNAM)
+const RATE_LEAD_VALIDATOR = Number(process.env.RATE_LEAD_VALIDATOR)
+const RATE_CNAM_VALIDATOR = Number(process.env.RATE_CNAM_VALIDATOR)
 const FREE_LINKS = Number(process.env.FREE_LINKS)
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
@@ -91,6 +102,10 @@ const TELEGRAM_ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID
 const FREE_LINKS_TIME_SECONDS = Number(process.env.FREE_LINKS_TIME_SECONDS) * 1000 // to milliseconds
 const TELEGRAM_DOMAINS_SHOW_CHAT_ID = Number(process.env.TELEGRAM_DOMAINS_SHOW_CHAT_ID)
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5)
+
+if (!DB_NAME || !RATE_LEAD_VALIDATOR) {
+  return log('something missing from env file')
+}
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 log('Bot ran!')
@@ -189,7 +204,7 @@ bot.on('message', async msg => {
   const chatId = msg?.chat?.id
   const message = msg?.text || ''
   log('message: ' + message + '\tfrom: ' + chatId + ' ' + msg?.from?.username)
-  tryConnectReseller() // our ip may change on railway hosting so make sure its correct
+  NOT_TRY_CR === undefined && tryConnectReseller() // our ip may change on railway hosting so make sure its correct
 
   if (!db) return send(chatId, 'Bot is starting, please wait')
   if (!connect_reseller_working) {
@@ -253,6 +268,14 @@ bot.on('message', async msg => {
     buyLeadsSelectCnam: 'buyLeadsSelectCnam',
     buyLeadsSelectAmount: 'buyLeadsSelectAmount',
     buyLeadsSelectFormat: 'buyLeadsSelectFormat',
+    //validatePhoneNumbers
+    validatorSelectCountry: 'validatorSelectCountry',
+    validatorPhoneNumber: 'validatorPhoneNumber',
+    validatorSelectSmsVoice: ' validatorSelectSmsVoice',
+    validatorSelectCarrier: 'validatorSelectCarrier',
+    validatorSelectCnam: 'validatorSelectCnam',
+    validatorSelectAmount: 'validatorSelectAmount',
+    validatorSelectFormat: 'validatorSelectFormat',
   }
   const firstSteps = [
     'block-user',
@@ -460,7 +483,7 @@ bot.on('message', async msg => {
     //
     //
     walletSelectCurrency: async () => {
-      if (action.includes(a.buyLeadsSelectFormat)) {
+      if (action.includes(a.buyLeadsSelectFormat) || action.includes(a.validatorSelectFormat)) {
         const { amount, price, couponApplied, newPrice } = info
         couponApplied
           ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice), k.pay)
@@ -528,6 +551,46 @@ bot.on('message', async msg => {
     buyLeadsSelectFormat: () => {
       send(chatId, t.buyLeadsSelectFormat, k.buyLeadsSelectFormat)
       set(state, chatId, 'action', a.buyLeadsSelectFormat)
+    },
+
+    // validator
+    validatorSelectCountry: () => {
+      send(chatId, t.validatorSelectCountry, k.validatorSelectCountry)
+      set(state, chatId, 'action', a.validatorSelectCountry)
+    },
+
+    validatorPhoneNumber: () => {
+      send(chatId, t.validatorPhoneNumber, k.validatorPhoneNumber)
+      set(state, chatId, 'action', a.validatorPhoneNumber)
+    },
+
+    validatorSelectSmsVoice: () => {
+      send(chatId, t.validatorSelectSmsVoice(info?.phones?.length), k.validatorSelectSmsVoice)
+      set(state, chatId, 'action', a.validatorSelectSmsVoice)
+    },
+
+    validatorSelectCarrier: () => {
+      send(chatId, t.validatorSelectCarrier, k.validatorSelectCarrier(info?.country))
+      set(state, chatId, 'action', a.validatorSelectCarrier)
+    },
+
+    validatorSelectCnam: () => {
+      send(chatId, t.validatorSelectCnam, k.validatorSelectCnam)
+      set(state, chatId, 'action', a.validatorSelectCnam)
+    },
+
+    validatorSelectAmount: () => {
+      send(
+        chatId,
+        t.validatorSelectAmount(validatorSelectAmount[0], validatorSelectAmount[validatorSelectAmount.length - 1]),
+        k.validatorSelectAmount,
+      )
+      set(state, chatId, 'action', a.validatorSelectAmount)
+    },
+
+    validatorSelectFormat: () => {
+      send(chatId, t.validatorSelectFormat, k.validatorSelectFormat)
+      set(state, chatId, 'action', a.validatorSelectFormat)
     },
   }
   const walletOk = {
@@ -675,7 +738,82 @@ bot.on('message', async msg => {
       const { usdBal: usd, ngnBal: ngn } = await getBalance(walletOf, chatId)
       send(chatId, t.showWallet(usd, ngn), o)
     },
-    'leads-validate-pay': async () => {},
+
+    [a.validatorSelectFormat]: async coin => {
+      set(state, chatId, 'action', 'none')
+      const price = info?.couponApplied ? info?.newPrice : info?.price
+      const wallet = await get(walletOf, chatId)
+      const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
+
+      if (![u.usd, u.ngn].includes(coin)) return send(chatId, 'Some Issue')
+
+      // price validate
+      const priceUsd = price
+      if (coin === u.usd && usdBal < priceUsd) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
+      const priceNgn = await usdToNgn(price)
+      if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
+
+      let cc = countryCodeOf[info?.country]
+      let country = info?.country
+      let cnam = info?.country === 'USA' ? info?.cnam : false
+
+      const format = info?.format
+      const l = format === validatorSelectFormat[0]
+
+      // buy leads
+      // send(chatId, t.validateBulkNumbersStart, o)
+      const phones = info?.phones?.slice(0, info?.amount)
+      const res = await validatePhoneBulkFile(info?.carrier, phones, cc, cnam, bot, chatId)
+      if (!res) return send(chatId, t.validatorError)
+
+      send(chatId, t.validatorSuccess(info?.amount, res.length)) // send success message
+
+      cc = '+' + cc
+      const re = cc === '+1' ? '' : '0'
+      const file1 = 'leads.txt'
+      fs.writeFile(file1, res.map(a => (l ? a[0].replace(cc, re) : a[0])).join('\n'), () => {
+        bot.sendDocument(chatId, file1).catch()
+      })
+
+      if (cnam) {
+        const file2 = 'leads_with_cnam.txt'
+        fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[3]).join('\n'), () => {
+          bot.sendDocument(chatId, file2).catch()
+          bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2).catch()
+        })
+      } else {
+        if (country !== 'USA') {
+          const file2 = 'leads_with_carriers.txt'
+          fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[1]).join('\n'), () => {
+            bot.sendDocument(chatId, file2).catch()
+            bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2).catch()
+          })
+        }
+      }
+
+      {
+        const file2 = 'leads_with_carriers_and_time.txt'
+        chatId === 6687923716 &&
+          fs.writeFile(
+            file2,
+            res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[1] + ' ' + a[2]).join('\n'),
+            () => bot.sendDocument(chatId, file2).catch(),
+          )
+      }
+
+      // wallet update
+      if (coin === u.usd) {
+        const usdOut = (wallet?.usdOut || 0) + priceUsd
+        await set(walletOf, chatId, 'usdOut', usdOut)
+      } else if (coin === u.ngn) {
+        const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
+        await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
+      } else {
+        return send(chatId, 'Some Issue')
+      }
+      const { usdBal: usd, ngnBal: ngn } = await getBalance(walletOf, chatId)
+      send(chatId, t.showWallet(usd, ngn), o)
+    },
   }
 
   if (message === '/start') {
@@ -917,7 +1055,6 @@ bot.on('message', async msg => {
     if (message === 'Back' || message === 'No') return goto['choose-domain-to-buy']()
     if (message !== 'Yes') return send(chatId, `?`)
 
-    
     const domain = info?.domain
     const error = await buyDomainFullProcess(chatId, domain)
     if (!error) decrement(freeDomainNamesAvailableFor, chatId)
@@ -1222,7 +1359,7 @@ bot.on('message', async msg => {
     return goto.phoneNumberLeads()
   }
   if (action === a.phoneNumberLeads) {
-    if (phoneNumberLeads[1] === message) return send(chatId, `Coming Soon`)
+    if (phoneNumberLeads[1] === message) return goto.validatorSelectCountry()
     if (phoneNumberLeads[0] === message) return goto.buyLeadsSelectCountry()
 
     return send(chatId, `?`)
@@ -1326,7 +1463,111 @@ bot.on('message', async msg => {
     return goto.walletSelectCurrency()
   }
 
-  //
+  //phone number validator
+  if (action === a.validatorSelectCountry) {
+    if (message === 'Back') return goto.phoneNumberLeads()
+    if (!validatorSelectCountry.includes(message)) return send(chatId, `?`)
+    saveInfo('country', message)
+    return goto.validatorPhoneNumber()
+  }
+
+  // get phone on file
+  if (action === a.validatorPhoneNumber) {
+    if (message === 'Back') return goto.validatorSelectCountry()
+
+    let content
+
+    if (msg.document) {
+      try {
+        const fileLink = await bot.getFileLink(msg.document.file_id)
+        content = (await axios.get(fileLink, { responseType: 'text' }))?.data
+      } catch (error) {
+        console.error('Error:', error.message)
+        return send(chatId, 'Error occurred while processing the file.')
+      }
+    } else {
+      content = message
+    }
+
+    const phones = extractPhoneNumbers(content)
+    console.log({ phones })
+    if (phones.length === 0) return send(chatId, `No phone numbers found`)
+    await saveInfo('phones', phones)
+
+    return goto.validatorSelectSmsVoice()
+  }
+
+  if (action === a.validatorSelectSmsVoice) {
+    if (message === 'Back') return goto.validatorPhoneNumber()
+    if (validatorSelectSmsVoice[1] === message) return send(chatId, `Coming Soon`)
+    if (!validatorSelectSmsVoice.includes(message)) return send(chatId, `?`)
+    saveInfo('smsVoice', message)
+    return goto.validatorSelectCarrier() //////
+  }
+
+  if (action === a.validatorSelectCarrier) {
+    if (message === 'Back') return goto.validatorSelectSmsVoice()
+    if (!validatorSelectCarrier(info?.country).includes(message)) return send(chatId, `?`)
+    saveInfo('carrier', message)
+    saveInfo('cameFrom', a.validatorSelectCarrier)
+    if (['USA'].includes(info?.country)) return goto.validatorSelectCnam()
+    return goto.validatorSelectAmount()
+  }
+  if (action === a.validatorSelectCnam) {
+    if (message === 'Back') return goto.validatorSelectCarrier()
+    if (!validatorSelectCnam.includes(message)) return send(chatId, `?`)
+    saveInfo('cnam', message === 'Yes')
+    saveInfo('cameFrom', a.validatorSelectCnam)
+    return goto.validatorSelectAmount()
+  }
+
+  if (action === a.validatorSelectAmount) {
+    if (message === 'Back') return goto?.[info?.cameFrom]()
+
+    const amount = Number(message)
+    if (chatId === 6687923716) {
+      if (isNaN(amount)) return send(chatId, `?`)
+    } else if (
+      isNaN(amount) ||
+      amount < Number(validatorSelectAmount[0]) ||
+      amount > Number(validatorSelectAmount[validatorSelectAmount.length - 1])
+    )
+      return send(chatId, `?`)
+
+    saveInfo('amount', amount)
+    let cnam = info?.country === 'USA' ? info?.cnam : false
+    const price = amount * RATE_LEAD_VALIDATOR + (cnam ? amount * RATE_CNAM_VALIDATOR : 0)
+    saveInfo('price', price)
+    return goto.validatorSelectFormat()
+  }
+  if (action === a.validatorSelectFormat) {
+    if (message === 'Back') return goto.validatorSelectAmount()
+    if (!validatorSelectFormat.includes(message)) return send(chatId, `?`)
+    saveInfo('format', message)
+    return goto.askCoupon(a.validatorSelectFormat)
+  }
+  if (action === a.askCoupon + a.validatorSelectFormat) {
+    if (message === 'Back') return goto.validatorSelectFormat()
+    if (message === 'Skip') {
+      saveInfo('lastStep', a.validatorSelectFormat)
+      return (await saveInfo('couponApplied', false)) || goto.walletSelectCurrency()
+    }
+
+    const { price } = info
+
+    const coupon = message.toUpperCase()
+    const discount = discountOn[coupon]
+    if (isNaN(discount)) return send(chatId, t.couponInvalid)
+
+    const newPrice = price - (price * discount) / 100
+    await saveInfo('newPrice', newPrice)
+    await saveInfo('couponApplied', true)
+
+    await saveInfo('lastStep', a.validatorSelectFormat)
+
+    return goto.walletSelectCurrency()
+  }
+
   //
   if (message === user.viewPlan) {
     const subscribedPlan = await get(planOf, chatId)
@@ -1770,7 +2011,7 @@ app.get('/', (req, res) => {
   res.send(html(t.greet))
 })
 app.get('/ok', (req, res) => {
-  res.send(html())
+  res.send(html('ok'))
 })
 app.get('/woo', (req, res) => {
   log(req.hostname + req.originalUrl)
