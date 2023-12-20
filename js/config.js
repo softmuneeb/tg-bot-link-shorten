@@ -309,7 +309,7 @@ $${view(usd)}
 
   // Phone Number validator
   validatorSelectCountry: 'Please select country',
-  validatorPhoneNumber: 'Paste some Phone Number or upload a file',
+  validatorPhoneNumber: 'Please paste your numbers or upload a file including the country code.',
   validatorSelectSmsVoice: n => `${n} phone numbers found. Please select SMS / Voice`,
   validatorSelectCarrier: 'Please select carrier',
   validatorSelectCnam: 'You want to search the owners name? CNAME costs extra 10$ per 1000 leads',
@@ -321,6 +321,7 @@ $${view(usd)}
   validatorProgress: (i, total) => `${((i * 100) / total).toFixed()}% leads validate. Please wait.`,
   validatorProgressFull: (i, total) => `${((i * 100) / total).toFixed()}% leads validate.`,
   validatorError: `Unfortunately the selected phone numbers are unavailable and your wallet has not been charged`,
+  validatorErrorFileData: `Invalid country phone # found. Please upload phone number for selected country`,
   validatorBulkNumbersStart: 'Leads validation has started and will complete soon.',
 }
 

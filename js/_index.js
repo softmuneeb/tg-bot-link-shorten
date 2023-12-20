@@ -761,7 +761,7 @@ bot.on('message', async msg => {
       const l = format === validatorSelectFormat[0]
 
       // buy leads
-      send(chatId, t.validatorBulkNumbersStart, o) // main keyboard view 
+      send(chatId, t.validatorBulkNumbersStart, o) // main keyboard view
       const phones = info?.phones?.slice(0, info?.amount)
       const res = await validatePhoneBulkFile(info?.carrier, phones, cc, cnam, bot, chatId)
       if (!res) return send(chatId, t.validatorError)
@@ -1490,8 +1490,8 @@ bot.on('message', async msg => {
     }
 
     let cc = countryCodeOf[info?.country]
-    const phones = extractPhoneNumbers(content, cc)
-    console.log({ phones })
+    const { phones, diff } = extractPhoneNumbers(content, cc)
+    if (phones < diff) return send(chatId, t.validatorErrorFileData) // good phones are less than bad ones
     if (phones.length === 0) return send(chatId, `No phone numbers found`)
     await saveInfo('phones', phones)
 
