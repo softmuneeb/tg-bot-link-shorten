@@ -1492,7 +1492,7 @@ bot.on('message', async msg => {
     let cc = countryCodeOf[info?.country]
     const { phones, diff } = extractPhoneNumbers(content, cc)
     if (phones < diff) return send(chatId, t.validatorErrorFileData) // good phones are less than bad ones
-    if (phones.length === 0) return send(chatId, `No phone numbers found`)
+    if (phones.length === 0) return send(chatId, t.validatorErrorNoPhonesFound)
     await saveInfo('phones', phones)
 
     return goto.validatorSelectSmsVoice()

@@ -193,10 +193,12 @@ function extractPhoneNumbers(text, cc) {
   const phoneRegex = /\b(?:\+?\d{1,4}[ -]?)?(?:\(\d{1,}\)[ -]?)?\d{1,}[- ]?\d{1,}[- ]?\d{1,}\b/g
   let phones = text.match(phoneRegex) || []
   phones = phones.map(phoneNumber => phoneNumber.replace(/[\s()-+]/g, ''))
-  // matches = matches.filter(phoneNumber => phoneNumber.length === phoneLen[cc])
+  // phones = phones.filter(phoneNumber => phoneNumber.length === phoneLen[cc])
+
   const lenBefore = phones.length
   phones = phones.filter(phoneNumber => phoneNumber.startsWith(cc))
   const lenAfter = phones.length
+
   return { phones, diff: lenBefore - lenAfter }
 }
 

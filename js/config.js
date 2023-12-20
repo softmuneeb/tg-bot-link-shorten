@@ -320,8 +320,11 @@ $${view(usd)}
   validatorSuccess: (n, m) => `${n} leads are validated. ${m} valid phone numbers found.`,
   validatorProgress: (i, total) => `${((i * 100) / total).toFixed()}% leads validate. Please wait.`,
   validatorProgressFull: (i, total) => `${((i * 100) / total).toFixed()}% leads validate.`,
+
   validatorError: `Unfortunately the selected phone numbers are unavailable and your wallet has not been charged`,
   validatorErrorFileData: `Invalid country phone # found. Please upload phone number for selected country`,
+  validatorErrorNoPhonesFound: `No phone numbers found. Try again.`,
+
   validatorBulkNumbersStart: 'Leads validation has started and will complete soon.',
 }
 
