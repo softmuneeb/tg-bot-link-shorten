@@ -761,7 +761,7 @@ bot.on('message', async msg => {
       const l = format === validatorSelectFormat[0]
 
       // buy leads
-      // send(chatId, t.validateBulkNumbersStart, o)
+      send(chatId, t.validateBulkNumbersStart, o) // main keyboard view 
       const phones = info?.phones?.slice(0, info?.amount)
       const res = await validatePhoneBulkFile(info?.carrier, phones, cc, cnam, bot, chatId)
       if (!res) return send(chatId, t.validatorError)
