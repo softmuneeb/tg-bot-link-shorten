@@ -85,7 +85,10 @@ const validatePhoneBulkFile = async (carrier, phones, countryCode, cnam, bot, ch
     }
 
     // Publish Progress
-    if (i % showProgressEveryXTime === 0 || i === phones.length - 1) {
+    if (i === phones.length - 1) {
+      const progress = t.validatorProgressFull(i, phones.length)
+      bot && bot.sendMessage(chatId, progress)
+    } else if (i % showProgressEveryXTime === 0) {
       const progress = t.validatorProgress(i, phones.length)
       bot && bot.sendMessage(chatId, progress)
       log(progress)

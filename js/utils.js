@@ -189,11 +189,12 @@ const parse = (cc, s) => parseInt(s.replace(`+${cc}`, ``).replace(/[^\d]/g, ''),
 //   61: 1,
 // }
 
-function extractPhoneNumbers(text) {
+function extractPhoneNumbers(text, cc) {
   const phoneRegex = /\b(?:\+?\d{1,4}[ -]?)?(?:\(\d{1,}\)[ -]?)?\d{1,}[- ]?\d{1,}[- ]?\d{1,}\b/g
   let matches = text.match(phoneRegex) || []
   matches = matches.map(phoneNumber => phoneNumber.replace(/[\s()-+]/g, ''))
   // matches = matches.filter(phoneNumber => phoneNumber.length === phoneLen[cc])
+  matches = matches.filter(phoneNumber => phoneNumber.startsWith(cc))
   return matches
 }
 

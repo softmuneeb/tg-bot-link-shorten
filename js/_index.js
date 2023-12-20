@@ -560,7 +560,7 @@ bot.on('message', async msg => {
     },
 
     validatorPhoneNumber: () => {
-      send(chatId, t.validatorPhoneNumber, k.validatorPhoneNumber)
+      send(chatId, t.validatorPhoneNumber, bc)
       set(state, chatId, 'action', a.validatorPhoneNumber)
     },
 
@@ -761,7 +761,7 @@ bot.on('message', async msg => {
       const l = format === validatorSelectFormat[0]
 
       // buy leads
-      send(chatId, t.validateBulkNumbersStart, o) // main keyboard view 
+      send(chatId, t.validatorBulkNumbersStart, o) // main keyboard view 
       const phones = info?.phones?.slice(0, info?.amount)
       const res = await validatePhoneBulkFile(info?.carrier, phones, cc, cnam, bot, chatId)
       if (!res) return send(chatId, t.validatorError)
@@ -1489,7 +1489,8 @@ bot.on('message', async msg => {
       content = message
     }
 
-    const phones = extractPhoneNumbers(content)
+    let cc = countryCodeOf[info?.country]
+    const phones = extractPhoneNumbers(content, cc)
     console.log({ phones })
     if (phones.length === 0) return send(chatId, `No phone numbers found`)
     await saveInfo('phones', phones)

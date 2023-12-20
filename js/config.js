@@ -81,7 +81,6 @@ const yesNo = ['Yes', 'No']
 const t = {
   phoneGenTimeout: 'Timeout',
   phoneGenNoGoodHits: 'Please contact support @nomadlysupport or select another area code',
-  validateBulkNumbersStart: 'Downloading leads is started, we will update you soon.',
 
   subscribeRCS: p =>
     `Subscribed! Unsubscribe anytime by clicking the <a href="${SELF_URL}/unsubscribe?a=b&Phone=${p}">link</a>`,
@@ -320,7 +319,9 @@ $${view(usd)}
 
   validatorSuccess: (n, m) => `${n} leads are validated. ${m} valid phone numbers found.`,
   validatorProgress: (i, total) => `${((i * 100) / total).toFixed()}% leads validate. Please wait.`,
+  validatorProgressFull: (i, total) => `${((i * 100) / total).toFixed()}% leads validate.`,
   validatorError: `Unfortunately the selected phone numbers are unavailable and your wallet has not been charged`,
+  validatorBulkNumbersStart: 'Leads validation has started and will complete soon.',
 }
 
 const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
