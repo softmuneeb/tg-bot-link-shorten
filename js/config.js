@@ -345,7 +345,7 @@ const buyLeadsSelectAmount = ['1000', '2000', '3000', '4000', '5000']
 const buyLeadsSelectFormat = ['Local Format', 'International Format']
 
 const validatorSelectCountry = Object.keys(areasOfCountry)
-const validatorSelectSmsVoice = ['SMS (Price 20$ for 1000)', 'Voice (Price 0$ for 1000)']
+const validatorSelectSmsVoice = ['SMS (Price 10$ for 1000)', 'Voice (Price 0$ for 1000)']
 const validatorSelectCarrier = country => carriersOf[country]
 const validatorSelectCnam = yesNo
 const validatorSelectAmount = ['ALL', '1000', '2000', '3000', '4000', '5000']
