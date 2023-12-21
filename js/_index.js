@@ -816,6 +816,12 @@ bot.on('message', async msg => {
     },
   }
 
+  const goBack = () => {
+    const lastStep = info?.history[info?.history?.length - 1]
+    saveInfo('history', info?.history.slice(0, -1)) // rem last elem
+    goto[lastStep]()
+  }
+
   if (message === '/start') {
     set(state, chatId, 'action', 'none')
 
@@ -1510,39 +1516,44 @@ bot.on('message', async msg => {
     if (message === 'Back') return goto.validatorSelectSmsVoice()
     if (!validatorSelectCarrier(info?.country).includes(message)) return send(chatId, `?`)
     saveInfo('carrier', message)
-    saveInfo('cameFrom', a.validatorSelectCarrier)
-    if (['USA'].includes(info?.country)) return goto.validatorSelectCnam()
-    return goto.validatorSelectAmount()
+    saveInfo('history', [...(info?.history || []), a.validatorSelectCarrier])
+    if (!['USA'].includes(info?.country) && info?.phones.length < 2000) {
+      saveInfo('amount', info?.phones.length)
+      return goto.validatorSelectFormat()
+    }
+    if (!['USA'].includes(info?.country)) return goto.validatorSelectAmount()
+    return goto.validatorSelectCnam()
   }
   if (action === a.validatorSelectCnam) {
-    if (message === 'Back') return goto.validatorSelectCarrier()
+    if (message === 'Back') return goBack()
     if (!validatorSelectCnam.includes(message)) return send(chatId, `?`)
     saveInfo('cnam', message === 'Yes')
-    saveInfo('cameFrom', a.validatorSelectCnam)
+    saveInfo('history', [...(info?.history || []), a.validatorSelectCnam])
+
+    if (info?.phones.length < 2000) {
+      saveInfo('amount', info?.phones.length)
+      return goto.validatorSelectFormat()
+    }
+
     return goto.validatorSelectAmount()
   }
 
   if (action === a.validatorSelectAmount) {
-    if (message === 'Back') return goto?.[info?.cameFrom]()
-
-    const amount = Number(message)
-    if (chatId === 6687923716) {
-      if (isNaN(amount)) return send(chatId, `?`)
-    } else if (
-      isNaN(amount) ||
-      amount < Number(validatorSelectAmount[0]) ||
-      amount > Number(validatorSelectAmount[validatorSelectAmount.length - 1])
-    )
-      return send(chatId, `?`)
-
-    saveInfo('amount', amount)
+    if (message === 'Back') return goBack()
+    let amount = message
+    if (message.toLowerCase() === 'all') {
+      amount = info?.phones.length
+    }
+    if (isNaN(amount)) return send(chatId, `Amount incorrect`)
+    saveInfo('amount', Number(amount))
+    saveInfo('history', [...(info?.history || []), a.validatorSelectAmount])
     let cnam = info?.country === 'USA' ? info?.cnam : false
     const price = amount * RATE_LEAD_VALIDATOR + (cnam ? amount * RATE_CNAM_VALIDATOR : 0)
     saveInfo('price', price)
     return goto.validatorSelectFormat()
   }
   if (action === a.validatorSelectFormat) {
-    if (message === 'Back') return goto.validatorSelectAmount()
+    if (message === 'Back') return goBack()
     if (!validatorSelectFormat.includes(message)) return send(chatId, `?`)
     saveInfo('format', message)
     return goto.askCoupon(a.validatorSelectFormat)

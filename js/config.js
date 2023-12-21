@@ -310,7 +310,8 @@ $${view(usd)}
   // Phone Number validator
   validatorSelectCountry: 'Please select country',
   validatorPhoneNumber: 'Please paste your numbers or upload a file including the country code.',
-  validatorSelectSmsVoice: n => `${n} phone numbers found. Please select SMS / Voice`,
+  validatorSelectSmsVoice: n =>
+    `${n} phone numbers found. Please choose the option for SMS or voice call leads validation.`,
   validatorSelectCarrier: 'Please select carrier',
   validatorSelectCnam: 'You want to search the owners name? CNAME costs extra 10$ per 1000 leads',
   validatorSelectAmount: (min, max) =>
@@ -347,7 +348,7 @@ const validatorSelectCountry = Object.keys(areasOfCountry)
 const validatorSelectSmsVoice = ['SMS (Price 20$ for 1000)', 'Voice (Price 0$ for 1000)']
 const validatorSelectCarrier = country => carriersOf[country]
 const validatorSelectCnam = yesNo
-const validatorSelectAmount = ['1000', '2000', '3000', '4000', '5000']
+const validatorSelectAmount = ['ALL', '1000', '2000', '3000', '4000', '5000']
 const validatorSelectFormat = ['Local Format', 'International Format']
 
 const tickerOf = {
