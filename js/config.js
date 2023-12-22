@@ -59,6 +59,7 @@ const user = {
   phoneNumberLeads: '☎️ Phone Number Leads',
   wallet: '💰 My Wallet',
   urlShortener: '🔗 URL Shortener',
+  shortUrl:'🔗 Short URL',
   viewShortLinks: '🔍 View Analytics',
   buyDomainName: '🌐 Buy Domain Names',
   viewDomainNames: '👀 My Domain Names',
@@ -327,6 +328,11 @@ $${view(usd)}
   validatorErrorNoPhonesFound: `No phone numbers found. Try again.`,
 
   validatorBulkNumbersStart: 'Leads validation has started and will complete soon.',
+
+  // shortUrlType code
+
+  shortUrlType:'Please Select Your Choice',
+  customShortLink:'Enter Custom Backhalf'
 }
 
 const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
@@ -350,6 +356,10 @@ const validatorSelectCarrier = country => carriersOf[country]
 const validatorSelectCnam = yesNo
 const validatorSelectAmount = ['ALL', '1000', '2000', '3000', '4000', '5000']
 const validatorSelectFormat = ['Local Format', 'International Format']
+
+//shortUrlType
+
+const shortUrlType = ['Random Short Link','Custom Short Link']
 
 const tickerOf = {
   BTC: 'btc',
@@ -418,6 +428,9 @@ const k = {
   validatorSelectCnam: kOf(validatorSelectCnam),
   validatorSelectAmount: kOf(validatorSelectAmount),
   validatorSelectFormat: kOf(validatorSelectFormat),
+
+  //url shortening
+  shortUrlType:kOf(shortUrlType)
 }
 
 const adminKeyboard = {
@@ -582,4 +595,5 @@ module.exports = {
   validatorSelectCnam,
   validatorSelectAmount,
   validatorSelectFormat,
+  shortUrlType,
 }

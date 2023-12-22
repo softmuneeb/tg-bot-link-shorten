@@ -41,6 +41,7 @@ const {
   validatorSelectAmount,
   validatorSelectFormat,
   validatorSelectCnam,
+  shortUrlType,
 } = require('./config.js')
 const {
   week,
@@ -103,9 +104,9 @@ const FREE_LINKS_TIME_SECONDS = Number(process.env.FREE_LINKS_TIME_SECONDS) * 10
 const TELEGRAM_DOMAINS_SHOW_CHAT_ID = Number(process.env.TELEGRAM_DOMAINS_SHOW_CHAT_ID)
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5)
 
-if (!DB_NAME || !RATE_LEAD_VALIDATOR) {
-  return log('something missing from env file')
-}
+// if (!DB_NAME || !RATE_LEAD_VALIDATOR) {
+//   return log('something missing from env file')
+// }
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 log('Bot ran!')
@@ -276,6 +277,9 @@ bot.on('message', async msg => {
     validatorSelectCnam: 'validatorSelectCnam',
     validatorSelectAmount: 'validatorSelectAmount',
     validatorSelectFormat: 'validatorSelectFormat',
+    //short link
+    shortUrlType: 'shortUrlType',
+    customShortLink: 'customShortLink',
   }
   const firstSteps = [
     'block-user',
@@ -284,6 +288,7 @@ bot.on('message', async msg => {
     'choose-domain-to-buy',
     'choose-url-to-shorten',
     'choose-domain-to-manage',
+    'choose-url-to-short',
     admin.messageUsers,
     user.wallet,
     a.phoneNumberLeads,
@@ -325,6 +330,14 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', 'choose-subscription')
       send(chatId, t.chooseSubscription, chooseSubscription)
     },
+    //TODO code for shortUrl
+
+    'choose-url-to-short': async () => {
+      set(state, chatId, 'action', 'choose-url-to-short')
+      const f = 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com testing... '
+      send(chatId, f, bc)
+    },
+
     'choose-url-to-shorten': async () => {
       set(state, chatId, 'action', 'choose-url-to-shorten')
       const m = 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com'
@@ -591,6 +604,16 @@ bot.on('message', async msg => {
     validatorSelectFormat: () => {
       send(chatId, t.validatorSelectFormat, k.validatorSelectFormat)
       set(state, chatId, 'action', a.validatorSelectFormat)
+    },
+
+    //short link
+    shortUrlType: () => {
+      send(chatId, t.shortUrlType, k.shortUrlType)
+      set(state, chatId, 'action', a.shortUrlType)
+    },
+    customShortLink: () => {
+      send(chatId, t.customShortLink, bc)
+      set(state, chatId, 'action', a.customShortLink)
     },
   }
   const walletOk = {
@@ -886,7 +909,33 @@ bot.on('message', async msg => {
     sendMessageToAllUsers(bot, info?.messageContent, info?.messageMethod, nameOf, chatId)
     return send(chatId, 'Sent to all users', aO)
   }
-  //
+  //todo code for shortURL
+
+  if (message === user.shortUrl) {
+    return goto['choose-url-to-short']()
+  }
+
+  if (action === 'choose-url-to-short') {
+    const f = 'Please provide a valid URL. e.g https://google.com'
+    if (!isValidUrl(message)) return send(chatId, f, bc)
+    set(state, chatId, 'url', message)
+    return goto.shortUrlType()
+  }
+
+  if (action === shortUrlType) {
+    if (shortUrlType[0] === message) return goto.randomShortLink()
+    if (shortUrlType[1] === message) return goto.customShortLink()
+
+    return send(chatId, `?`)
+  }
+
+  //code for customShorLink()
+  if (action === a.customShortLink) {
+    if(message === 'Back') return goto.shortUrlType()
+    return send(chatId,"coming soon customeShortLink")
+  }
+  
+
   //
   if (message === user.urlShortener) {
     if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId)))) return send(chatId, '📋 Subscribe first')
