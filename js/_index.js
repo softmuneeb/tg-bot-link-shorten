@@ -1509,7 +1509,23 @@ bot.on('message', async msg => {
     if (validatorSelectSmsVoice[1] === message) return send(chatId, `Coming Soon`)
     if (!validatorSelectSmsVoice.includes(message)) return send(chatId, `?`)
     saveInfo('smsVoice', message)
-    return goto.validatorSelectCarrier() //////
+    return goto.validatorSelectAmount() //////
+  }
+
+  if (action === a.validatorSelectAmount) {
+    if (message === 'Back') return goBack()
+    let amount = message
+    if (message.toLowerCase() === 'all') {
+      amount = info?.phones.length
+    }
+    if (isNaN(amount)) return send(chatId, `Amount incorrect`)
+    saveInfo('amount', Number(amount))
+    saveInfo('history', [...(info?.history || []), a.validatorSelectAmount])
+    let cnam = info?.country === 'USA' ? info?.cnam : false
+    const price = amount * RATE_LEAD_VALIDATOR + (cnam ? amount * RATE_CNAM_VALIDATOR : 0)
+    saveInfo('price', price)
+    return goto.validatorSelectCarrier
+  
   }
 
   if (action === a.validatorSelectCarrier) {
@@ -1535,23 +1551,9 @@ bot.on('message', async msg => {
       return goto.validatorSelectFormat()
     }
 
-    return goto.validatorSelectAmount()
-  }
-
-  if (action === a.validatorSelectAmount) {
-    if (message === 'Back') return goBack()
-    let amount = message
-    if (message.toLowerCase() === 'all') {
-      amount = info?.phones.length
-    }
-    if (isNaN(amount)) return send(chatId, `Amount incorrect`)
-    saveInfo('amount', Number(amount))
-    saveInfo('history', [...(info?.history || []), a.validatorSelectAmount])
-    let cnam = info?.country === 'USA' ? info?.cnam : false
-    const price = amount * RATE_LEAD_VALIDATOR + (cnam ? amount * RATE_CNAM_VALIDATOR : 0)
-    saveInfo('price', price)
     return goto.validatorSelectFormat()
   }
+
   if (action === a.validatorSelectFormat) {
     if (message === 'Back') return goBack()
     if (!validatorSelectFormat.includes(message)) return send(chatId, `?`)
