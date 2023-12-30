@@ -41,8 +41,13 @@ const {
   validatorSelectAmount,
   validatorSelectFormat,
   validatorSelectCnam,
-  shortUrlType,
+  redSelectRandomCustomForBitly,
+  redSelectRandomCustomForCuttly,
+  redSelectProvider,
 } = require('./config.js')
+const createShortBitly = require('./bitly.js')
+
+const createShortUrlCuttly = require("./cuttly.js");
 const {
   week,
   year,
@@ -68,7 +73,7 @@ require('dotenv').config()
 const cors = require('cors')
 const axios = require('axios')
 const express = require('express')
-const { log } = require('console')
+const { log, error } = require('console')
 const { MongoClient } = require('mongodb')
 const { customAlphabet } = require('nanoid')
 const TelegramBot = require('node-telegram-bot-api')
@@ -104,9 +109,9 @@ const FREE_LINKS_TIME_SECONDS = Number(process.env.FREE_LINKS_TIME_SECONDS) * 10
 const TELEGRAM_DOMAINS_SHOW_CHAT_ID = Number(process.env.TELEGRAM_DOMAINS_SHOW_CHAT_ID)
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5)
 
-// if (!DB_NAME || !RATE_LEAD_VALIDATOR) {
-//   return log('something missing from env file')
-// }
+if (!DB_NAME || !RATE_LEAD_VALIDATOR) {
+  return log('something missing from env file')
+}
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 log('Bot ran!')
@@ -278,8 +283,12 @@ bot.on('message', async msg => {
     validatorSelectAmount: 'validatorSelectAmount',
     validatorSelectFormat: 'validatorSelectFormat',
     //short link
-    shortUrlType: 'shortUrlType',
-    customShortLink: 'customShortLink',
+    redSelectUrl :'redSelectUrl',
+    redSelectRandomCustomForBitly: 'redSelectRandomCustomForBitly',
+    redSelectRandomCustomForCuttly: 'redSelectRandomCustomForCuttly',
+    redSelectProvider: 'redSelectProvider',
+    redSelectCustomExt: 'redSelectCustomExt',
+
   }
   const firstSteps = [
     'block-user',
@@ -288,7 +297,7 @@ bot.on('message', async msg => {
     'choose-domain-to-buy',
     'choose-url-to-shorten',
     'choose-domain-to-manage',
-    'choose-url-to-short',
+    a.redSelectUrl,
     admin.messageUsers,
     user.wallet,
     a.phoneNumberLeads,
@@ -331,12 +340,6 @@ bot.on('message', async msg => {
       send(chatId, t.chooseSubscription, chooseSubscription)
     },
     //TODO code for shortUrl
-
-    'choose-url-to-short': async () => {
-      set(state, chatId, 'action', 'choose-url-to-short')
-      const f = 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com testing... '
-      send(chatId, f, bc)
-    },
 
     'choose-url-to-shorten': async () => {
       set(state, chatId, 'action', 'choose-url-to-shorten')
@@ -607,13 +610,31 @@ bot.on('message', async msg => {
     },
 
     //short link
-    shortUrlType: () => {
-      send(chatId, t.shortUrlType, k.shortUrlType)
-      set(state, chatId, 'action', a.shortUrlType)
+
+    redSelectUrl: async () => {
+      set(state, chatId, 'action', a.redSelectUrl)
+       const f = 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com testing... '
+      send(chatId, f, bc)
     },
-    customShortLink: () => {
-      send(chatId, t.customShortLink, bc)
-      set(state, chatId, 'action', a.customShortLink)
+
+    redSelectRandomCustomForBitly: () => {
+      send(chatId, t.redSelectRandomCustomForBitly, k.redSelectRandomCustomForBitly)
+      set(state, chatId, 'action', a.redSelectRandomCustomForBitly)
+    },
+
+    redSelectRandomCustomForCuttly: () => {
+      send(chatId, t.redSelectRandomCustomForCuttly, k.redSelectRandomCustomForCuttly)
+      set(state, chatId, 'action', a.redSelectRandomCustomForCuttly)
+    },
+
+    redSelectProvider: () => {
+      send(chatId, t.redSelectProvider, k.redSelectProvider)
+      set(state, chatId, 'action', a.redSelectProvider)
+    },
+
+    redSelectCustomExt: () => {
+      send(chatId, t.redSelectCustomExt, bc)
+      set(state, chatId, 'action', a.redSelectCustomExt)
     },
   }
   const walletOk = {
@@ -911,30 +932,61 @@ bot.on('message', async msg => {
   }
   //todo code for shortURL
 
-  if (message === user.shortUrl) {
-    return goto['choose-url-to-short']()
+  if (message === user.redSelectUrl) {
+    return goto.redSelectUrl()
   }
 
-  if (action === 'choose-url-to-short') {
-    const f = 'Please provide a valid URL. e.g https://google.com'
-    if (!isValidUrl(message)) return send(chatId, f, bc)
-    set(state, chatId, 'url', message)
-    return goto.shortUrlType()
-  }
+   // Declare f in a broader scope
 
-  if (action === shortUrlType) {
-    if (shortUrlType[0] === message) return goto.randomShortLink()
-    if (shortUrlType[1] === message) return goto.customShortLink()
-
-    return send(chatId, `?`)
-  }
-
-  //code for customShorLink()
-  if (action === a.customShortLink) {
-    if(message === 'Back') return goto.shortUrlType()
-    return send(chatId,"coming soon customeShortLink")
+  if (action === a.redSelectUrl) {
+    if (!isValidUrl(message)) return send(chatId, t.redSelectUrl, bc);
+    saveInfo('url', message)
+  
+    return goto.redSelectProvider();
   }
   
+  if (action === a.redSelectProvider) {
+    if (redSelectProvider[0] === message) return goto.redSelectRandomCustomForBitly();
+    if (redSelectProvider[1] === message) {
+      if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId)))) return send(chatId, '📋 Subscribe first')
+      return goto.redSelectRandomCustomForCuttly()
+    }
+    return send(chatId, `?`);
+  }
+  
+  if (action === a.redSelectRandomCustomForBitly) {
+    if (redSelectRandomCustomForBitly[0] === message)  return send(chatId, await createShortBitly(info?.url)); //for random
+    if (redSelectRandomCustomForBitly[1] === message) return goto.redSelectCustomExt(); // for custom
+  
+    return send(chatId, `?`);
+  }
+  
+  // Code for redSelectCustomExt()
+  if (action === a.redSelectCustomExt) {
+    try {
+      const shortUrl = await createShortBitly(info?.url);
+      return send(chatId, shortUrl);
+    } catch (error) {
+      console.log("Error:", error);
+    }
+    
+  }
+
+  if(action === a.redSelectRandomCustomForCuttly)
+  {
+    if (redSelectRandomCustomForCuttly[0] === message) return send(chatId, await createShortUrlCuttly(info?.url));
+    if (redSelectRandomCustomForCuttly[1] === message) return goto.redSelectCustomExt();
+    return send(chatId, `?`);
+  }
+
+
+  // //code for redSelectRandomCustom
+  // const url = info?.url
+  // const shortUrl = '/' + nanoid()
+  // if (await get(fullUrlOf, shortUrl)) {
+  //   send(chatId, `Link already exists. Please type 'ok' to try another.`)
+  //   return
+  // }
 
   //
   if (message === user.urlShortener) {

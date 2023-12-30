@@ -59,7 +59,7 @@ const user = {
   phoneNumberLeads: '☎️ Phone Number Leads',
   wallet: '💰 My Wallet',
   urlShortener: '🔗 URL Shortener',
-  shortUrl:'🔗 Short URL',
+  redSelectUrl:'🔗 Short URL',
   viewShortLinks: '🔍 View Analytics',
   buyDomainName: '🌐 Buy Domain Names',
   viewDomainNames: '👀 My Domain Names',
@@ -329,10 +329,12 @@ $${view(usd)}
 
   validatorBulkNumbersStart: 'Leads validation has started and will complete soon.',
 
-  // shortUrlType code
-
-  shortUrlType:'Please Select Your Choice',
-  customShortLink:'Enter Custom Backhalf'
+  // redSelectRandomCustom code
+  redSelectUrl:'Please provide a valid URL. e.g https://google.com',
+  redSelectRandomCustomForBitly:'Please Select Your Choice For Bitly',
+  redSelectRandomCustomForCuttly:'Please Select Your Choice For Cuttly',
+  redSelectProvider:'Choose Link Provider',
+  redSelectCustomExt:'Enter Custom Backhalf'
 }
 
 const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
@@ -357,9 +359,11 @@ const validatorSelectCnam = yesNo
 const validatorSelectAmount = ['ALL', '1000', '2000', '3000', '4000', '5000']
 const validatorSelectFormat = ['Local Format', 'International Format']
 
-//shortUrlType
+//redSelectRandomCustom
 
-const shortUrlType = ['Random Short Link','Custom Short Link']
+const redSelectRandomCustomForBitly = ['Random Short Link','Custom Short Link']
+const redSelectRandomCustomForCuttly = ['Random Short Link','Custom Short Link']
+const redSelectProvider = ['bit.ly','cutt.ly']
 
 const tickerOf = {
   BTC: 'btc',
@@ -430,7 +434,9 @@ const k = {
   validatorSelectFormat: kOf(validatorSelectFormat),
 
   //url shortening
-  shortUrlType:kOf(shortUrlType)
+  redSelectRandomCustomForBitly:kOf(redSelectRandomCustomForBitly),
+  redSelectRandomCustomForCuttly:kOf(redSelectRandomCustomForCuttly),
+  redSelectProvider:kOf(redSelectProvider),
 }
 
 const adminKeyboard = {
@@ -595,5 +601,7 @@ module.exports = {
   validatorSelectCnam,
   validatorSelectAmount,
   validatorSelectFormat,
-  shortUrlType,
+  redSelectRandomCustomForBitly,
+  redSelectRandomCustomForCuttly,
+  redSelectProvider,
 }
