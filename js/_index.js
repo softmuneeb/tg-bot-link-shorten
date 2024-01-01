@@ -486,8 +486,8 @@ bot.on('message', async msg => {
       if (action.includes(a.buyLeadsSelectFormat) || action.includes(a.validatorSelectFormat)) {
         const { amount, price, couponApplied, newPrice } = info
         couponApplied
-          ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice), k.pay)
-          : send(chatId, t.buyLeadsPrice(amount, price), k.pay)
+          ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice))
+          : send(chatId, t.buyLeadsPrice(amount, price))
       }
 
       set(state, chatId, 'action', a.walletSelectCurrency)
