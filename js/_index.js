@@ -41,13 +41,12 @@ const {
   validatorSelectAmount,
   validatorSelectFormat,
   validatorSelectCnam,
-  redSelectRandomCustomForBitly,
-  redSelectRandomCustomForCuttly,
+  redSelectRandomCustom,
   redSelectProvider,
 } = require('./config.js')
 const createShortBitly = require('./bitly.js')
 
-const createShortUrlCuttly = require("./cuttly.js");
+const createShortUrlCuttly = require('./cuttly.js')
 const {
   week,
   year,
@@ -283,12 +282,10 @@ bot.on('message', async msg => {
     validatorSelectAmount: 'validatorSelectAmount',
     validatorSelectFormat: 'validatorSelectFormat',
     //short link
-    redSelectUrl :'redSelectUrl',
-    redSelectRandomCustomForBitly: 'redSelectRandomCustomForBitly',
-    redSelectRandomCustomForCuttly: 'redSelectRandomCustomForCuttly',
+    redSelectUrl: 'redSelectUrl',
+    redSelectRandomCustom: 'redSelectRandomCustom',
     redSelectProvider: 'redSelectProvider',
     redSelectCustomExt: 'redSelectCustomExt',
-
   }
   const firstSteps = [
     'block-user',
@@ -499,7 +496,7 @@ bot.on('message', async msg => {
     //
     //
     walletSelectCurrency: async () => {
-      if (action.includes(a.buyLeadsSelectFormat) || action.includes(a.validatorSelectFormat)) {
+      if (action.includes(a.buyLeadsSelectFormat) || action.includes(a.validatorSelectFormat) || action.includes(a.redSelectRandomCustom))  {
         const { amount, price, couponApplied, newPrice } = info
         couponApplied
           ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice), k.pay)
@@ -613,18 +610,14 @@ bot.on('message', async msg => {
 
     redSelectUrl: async () => {
       set(state, chatId, 'action', a.redSelectUrl)
-       const f = 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com testing... '
+      const f = 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com testing... '
       send(chatId, f, bc)
     },
 
-    redSelectRandomCustomForBitly: () => {
-      send(chatId, t.redSelectRandomCustomForBitly, k.redSelectRandomCustomForBitly)
-      set(state, chatId, 'action', a.redSelectRandomCustomForBitly)
-    },
 
-    redSelectRandomCustomForCuttly: () => {
-      send(chatId, t.redSelectRandomCustomForCuttly, k.redSelectRandomCustomForCuttly)
-      set(state, chatId, 'action', a.redSelectRandomCustomForCuttly)
+    redSelectRandomCustom: () => {
+      send(chatId, t.redSelectRandomCustom, k.redSelectRandomCustom)
+      set(state, chatId, 'action', a.redSelectRandomCustom)
     },
 
     redSelectProvider: () => {
@@ -698,6 +691,7 @@ bot.on('message', async msg => {
       const { usdBal: usd, ngnBal: ngn } = await getBalance(walletOf, chatId)
       send(chatId, t.showWallet(usd, ngn), o)
     },
+
     [a.buyLeadsSelectFormat]: async coin => {
       set(state, chatId, 'action', 'none')
       const price = info?.couponApplied ? info?.newPrice : info?.price
@@ -781,6 +775,7 @@ bot.on('message', async msg => {
       }
       const { usdBal: usd, ngnBal: ngn } = await getBalance(walletOf, chatId)
       send(chatId, t.showWallet(usd, ngn), o)
+    
     },
 
     [a.validatorSelectFormat]: async coin => {
@@ -845,6 +840,35 @@ bot.on('message', async msg => {
           )
       }
 
+      // wallet update
+      if (coin === u.usd) {
+        const usdOut = (wallet?.usdOut || 0) + priceUsd
+        await set(walletOf, chatId, 'usdOut', usdOut)
+      } else if (coin === u.ngn) {
+        const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
+        await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
+      } else {
+        return send(chatId, 'Some Issue')
+      }
+      const { usdBal: usd, ngnBal: ngn } = await getBalance(walletOf, chatId)
+      send(chatId, t.showWallet(usd, ngn), o)
+    },
+
+    [a.redSelectRandomCustom]: async coin => {
+      set(state, chatId, 'action', 'none')
+      const price = info?.couponApplied ? info?.newPrice : info?.price
+      const wallet = await get(walletOf, chatId)
+      const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
+
+      if (![u.usd, u.ngn].includes(coin)) return send(chatId, 'Some Issue')
+
+      // price validate
+      const priceUsd = price
+      if (coin === u.usd && usdBal < priceUsd) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
+      const priceNgn = await usdToNgn(price)
+      if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
+
+      send(chatId, await createShortBitly(info?.url))
       // wallet update
       if (coin === u.usd) {
         const usdOut = (wallet?.usdOut || 0) + priceUsd
@@ -936,48 +960,70 @@ bot.on('message', async msg => {
     return goto.redSelectUrl()
   }
 
-   // Declare f in a broader scope
+  // Declare f in a broader scope
 
   if (action === a.redSelectUrl) {
-    if (!isValidUrl(message)) return send(chatId, t.redSelectUrl, bc);
+    if (!isValidUrl(message)) return send(chatId, t.redSelectUrl, bc)
     saveInfo('url', message)
-  
-    return goto.redSelectProvider();
+
+    return goto.redSelectProvider()
   }
-  
+
   if (action === a.redSelectProvider) {
-    if (redSelectProvider[0] === message) return goto.redSelectRandomCustomForBitly();
-    if (redSelectProvider[1] === message) {
+
+    if(!redSelectProvider.includes(message)) return send(chatId, `?`)
+    saveInfo('provider',message)
+    if (redSelectProvider[1] === message) { //for cuttly
       if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId)))) return send(chatId, '📋 Subscribe first')
-      return goto.redSelectRandomCustomForCuttly()
+        // return send(chatId, await createShortBitly(info?.url)) 
+        return goto.redSelectRandomCustom()
     }
-    return send(chatId, `?`);
+   // this will work if user select bitly
   }
-  
-  if (action === a.redSelectRandomCustomForBitly) {
-    if (redSelectRandomCustomForBitly[0] === message)  return send(chatId, await createShortBitly(info?.url)); //for random
-    if (redSelectRandomCustomForBitly[1] === message) return goto.redSelectCustomExt(); // for custom
-  
-    return send(chatId, `?`);
+  if (action === a.redSelectRandomCustom) {
+    if (redSelectRandomCustom === message) {
+      saveInfo('format', message)
+      await goto.askCoupon(a.redSelectRandomCustom)
+      // return send(chatId, await createShortBitly(info?.url)); // Moved this line here
+    }
+    if (redSelectRandomCustom === message) return goto.redSelectCustomExt()
+    if (message === 'Back') return goBack()
+    if (!redSelectRandomCustom.includes(message)) return send(chatId, `?`)
+    saveInfo('format', message)
+    return goto.askCoupon(a.redSelectRandomCustom)
   }
-  
+
+  if (action === a.askCoupon + a.redSelectRandomCustom) {
+    if (message === 'Back') return goto.redSelectRandomCustom()
+    if (message === 'Skip') {
+      saveInfo('lastStep', a.redSelectRandomCustom)
+      return (await saveInfo('couponApplied', false)) || goto.walletSelectCurrency()
+    }
+
+    const { price } = info
+    const coupon = message.toUpperCase()
+    const discount = discountOn[coupon]
+
+    if (isNaN(discount)) return send(chatId, t.couponInvalid)
+
+    const newPrice = price - (price * discount) / 100
+    await saveInfo('newPrice', newPrice)
+    await saveInfo('couponApplied', true)
+    await saveInfo('lastStep', a.redSelectRandomCustom)
+
+    return goto.walletSelectCurrency()
+
+  }
   // Code for redSelectCustomExt()
   if (action === a.redSelectCustomExt) {
     try {
-      const shortUrl = await createShortBitly(info?.url);
-      return send(chatId, shortUrl);
+      const shortUrl = await createShortBitly(info?.url)
+      return send(chatId, shortUrl)
     } catch (error) {
-      console.log("Error:", error);
+      console.log('Error:', error)
     }
-    
   }
 
-  if(action === a.redSelectRandomCustomForCuttly)
-  {
-    if (redSelectRandomCustomForCuttly[0] === message) return send(chatId, await createShortUrlCuttly(info?.url));
-    if (redSelectRandomCustomForCuttly[1] === message) return goto.redSelectCustomExt();
-    return send(chatId, `?`);
-  }
 
 
   // //code for redSelectRandomCustom
@@ -1653,6 +1699,7 @@ bot.on('message', async msg => {
     saveInfo('price', price)
     return goto.validatorSelectFormat()
   }
+
   if (action === a.validatorSelectFormat) {
     if (message === 'Back') return goBack()
     if (!validatorSelectFormat.includes(message)) return send(chatId, `?`)

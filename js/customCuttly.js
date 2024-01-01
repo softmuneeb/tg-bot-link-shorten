@@ -1,11 +1,11 @@
 const axios = require('axios');
 const apiKey = 'd2c0af3912c8cbba377c0785182fbb8d';
+const names ="laeoan";
 
-const createShortUrlCuttly = async (longUrl) => {
-  const cuttlyApiUrl = `https://cutt.ly/api/api.php?key=${apiKey}&short=${encodeURIComponent(longUrl)}`;
+const createCustomShortUrlCuttly = async (longUrl) => {
+  const cuttlyApiUrl = `https://cutt.ly/api/api.php?key=${apiKey}&short=${encodeURIComponent(longUrl)}&name=${names}`;
 
-  try {
-    const response = await axios.get(cuttlyApiUrl);
+  try {    const response = await axios.get(cuttlyApiUrl);
     const { status, shortLink } = response.data.url;
 
     if (status === 7) {
@@ -21,5 +21,5 @@ const createShortUrlCuttly = async (longUrl) => {
 
 // Usage
 
-module.exports = createShortUrlCuttly;
+ module.exports = createCustomShortUrlCuttly;
 

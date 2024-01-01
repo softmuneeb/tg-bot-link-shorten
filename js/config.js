@@ -331,8 +331,8 @@ $${view(usd)}
 
   // redSelectRandomCustom code
   redSelectUrl:'Please provide a valid URL. e.g https://google.com',
-  redSelectRandomCustomForBitly:'Please Select Your Choice For Bitly',
-  redSelectRandomCustomForCuttly:'Please Select Your Choice For Cuttly',
+
+  redSelectRandomCustom:'Please Select Your Choice For Cuttly Or Bitly',
   redSelectProvider:'Choose Link Provider',
   redSelectCustomExt:'Enter Custom Backhalf'
 }
@@ -361,8 +361,8 @@ const validatorSelectFormat = ['Local Format', 'International Format']
 
 //redSelectRandomCustom
 
-const redSelectRandomCustomForBitly = ['Random Short Link','Custom Short Link']
-const redSelectRandomCustomForCuttly = ['Random Short Link','Custom Short Link']
+const redSelectRandomCustom = ['Random Short Link','Custom Short Link']
+
 const redSelectProvider = ['bit.ly','cutt.ly']
 
 const tickerOf = {
@@ -434,8 +434,8 @@ const k = {
   validatorSelectFormat: kOf(validatorSelectFormat),
 
   //url shortening
-  redSelectRandomCustomForBitly:kOf(redSelectRandomCustomForBitly),
-  redSelectRandomCustomForCuttly:kOf(redSelectRandomCustomForCuttly),
+  redSelectRandomCustom:kOf(redSelectRandomCustom),
+
   redSelectProvider:kOf(redSelectProvider),
 }
 
@@ -601,7 +601,6 @@ module.exports = {
   validatorSelectCnam,
   validatorSelectAmount,
   validatorSelectFormat,
-  redSelectRandomCustomForBitly,
-  redSelectRandomCustomForCuttly,
+  redSelectRandomCustom,
   redSelectProvider,
 }
