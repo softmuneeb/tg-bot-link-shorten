@@ -41,7 +41,11 @@ const {
   validatorSelectAmount,
   validatorSelectFormat,
   validatorSelectCnam,
+  redSelectRandomCustom,
+  redSelectProvider,
 } = require('./config.js')
+const createShortBitly = require('./bitly.js')
+const createShortUrlCuttly = require('./cuttly.js')
 const {
   week,
   year,
@@ -85,6 +89,7 @@ const { getCryptoDepositAddress, convert } = require('./pay-blockbee.js')
 const { validateBulkNumbers } = require('./validatePhoneBulk.js')
 const { countryCodeOf, areasOfCountry } = require('./areasOfCountry.js')
 const { validatePhoneBulkFile } = require('./validatePhoneBulkFile.js')
+const createCustomShortUrlCuttly = require('./customCuttly.js')
 
 process.env['NTBA_FIX_350'] = 1
 const DB_NAME = process.env.DB_NAME
@@ -92,6 +97,7 @@ const SELF_URL = process.env.SELF_URL
 const NOT_TRY_CR = process.env.NOT_TRY_CR
 const RATE_LEAD = Number(process.env.RATE_LEAD)
 const RATE_CNAM = Number(process.env.RATE_CNAM)
+const PRICE_BITLY_LINK = Number(process.env.PRICE_BITLY_LINK)
 const RATE_LEAD_VALIDATOR = Number(process.env.RATE_LEAD_VALIDATOR)
 const RATE_CNAM_VALIDATOR = Number(process.env.RATE_CNAM_VALIDATOR)
 const FREE_LINKS = Number(process.env.FREE_LINKS)
@@ -171,6 +177,7 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
+  // set(freeShortLinksOf, 6687923716, 20)
   // Bohut zalil karaya is galat line nai : await set(wallet **** 00)
   // {
   // await del(walletOf, 6687923716)
@@ -276,6 +283,12 @@ bot.on('message', async msg => {
     validatorSelectCnam: 'validatorSelectCnam',
     validatorSelectAmount: 'validatorSelectAmount',
     validatorSelectFormat: 'validatorSelectFormat',
+
+    // Short link
+    redSelectUrl: 'redSelectUrl',
+    redSelectRandomCustom: 'redSelectRandomCustom',
+    redSelectProvider: 'redSelectProvider',
+    redSelectCustomExt: 'redSelectCustomExt',
   }
   const firstSteps = [
     'block-user',
@@ -284,6 +297,7 @@ bot.on('message', async msg => {
     'choose-domain-to-buy',
     'choose-url-to-shorten',
     'choose-domain-to-manage',
+    a.redSelectUrl,
     admin.messageUsers,
     user.wallet,
     a.phoneNumberLeads,
@@ -383,7 +397,7 @@ bot.on('message', async msg => {
       set(state, chatId, 'dnsRecords', toSave)
       set(state, chatId, 'domainNameId', domainNameId)
       set(state, chatId, 'action', 'choose-dns-action')
-      send(chatId, `${t.viewDnsRecords.replace('{{domain}}', domain)}\n${viewDnsRecords}`, dns)
+      send(chatId, `${t.viewDnsRecords.replaceAll('{{domain}}', domain)}\n${viewDnsRecords}`, dns)
     },
 
     'type-dns-record-data-to-add': recordType => {
@@ -483,7 +497,11 @@ bot.on('message', async msg => {
     //
     //
     walletSelectCurrency: async () => {
-      if (action.includes(a.buyLeadsSelectFormat) || action.includes(a.validatorSelectFormat)) {
+      if (
+        action.includes(a.buyLeadsSelectFormat) ||
+        action.includes(a.validatorSelectFormat) ||
+        action.includes(a.redSelectRandomCustom)
+      ) {
         const { amount, price, couponApplied, newPrice } = info
         couponApplied
           ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice), k.pay)
@@ -591,6 +609,27 @@ bot.on('message', async msg => {
     validatorSelectFormat: () => {
       send(chatId, t.validatorSelectFormat, k.validatorSelectFormat)
       set(state, chatId, 'action', a.validatorSelectFormat)
+    },
+
+    // short link
+    redSelectUrl: async () => {
+      set(state, chatId, 'action', a.redSelectUrl)
+      send(chatId, t.redSelectUrl, bc)
+    },
+
+    redSelectRandomCustom: () => {
+      send(chatId, t.redSelectRandomCustom, k.redSelectRandomCustom)
+      set(state, chatId, 'action', a.redSelectRandomCustom)
+    },
+
+    redSelectProvider: () => {
+      send(chatId, t.redSelectProvider, k.redSelectProvider)
+      set(state, chatId, 'action', a.redSelectProvider)
+    },
+
+    redSelectCustomExt: () => {
+      send(chatId, t.redSelectCustomExt, bc)
+      set(state, chatId, 'action', a.redSelectCustomExt)
     },
   }
   const walletOk = {
@@ -814,6 +853,43 @@ bot.on('message', async msg => {
       const { usdBal: usd, ngnBal: ngn } = await getBalance(walletOf, chatId)
       send(chatId, t.showWallet(usd, ngn), o)
     },
+    [a.redSelectProvider]: async coin => {
+      set(state, chatId, 'action', 'none')
+      const price = info?.couponApplied ? info?.newPrice : info?.price
+      const wallet = await get(walletOf, chatId)
+      const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
+
+      if (![u.usd, u.ngn].includes(coin)) return send(chatId, 'Some Issue')
+
+      // price validate
+      const priceUsd = price
+      if (coin === u.usd && usdBal < priceUsd) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
+      const priceNgn = await usdToNgn(price)
+      if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
+
+      const { url } = info
+      const slug = nanoid()
+      const __shortUrl = `${SELF_URL}/${slug}`
+      const _shortUrl = await createShortBitly(__shortUrl)
+      const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
+      increment(totalShortLinks)
+      set(fullUrlOf, shortUrl, url)
+      set(linksOf, chatId, shortUrl, url)
+      send(chatId, _shortUrl, o)
+
+      // wallet update
+      if (coin === u.usd) {
+        const usdOut = (wallet?.usdOut || 0) + priceUsd
+        await set(walletOf, chatId, 'usdOut', usdOut)
+      } else if (coin === u.ngn) {
+        const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
+        await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
+      } else {
+        return send(chatId, 'Some Issue')
+      }
+      const { usdBal: usd, ngnBal: ngn } = await getBalance(walletOf, chatId)
+      send(chatId, t.showWallet(usd, ngn), o)
+    },
   }
 
   const goBack = () => {
@@ -886,8 +962,99 @@ bot.on('message', async msg => {
     sendMessageToAllUsers(bot, info?.messageContent, info?.messageMethod, nameOf, chatId)
     return send(chatId, 'Sent to all users', aO)
   }
-  //
-  //
+
+  // shortURL
+  if (message === user.redSelectUrl) {
+    return goto.redSelectUrl()
+  }
+
+  if (action === a.redSelectUrl) {
+    if (!isValidUrl(message)) return send(chatId, t.redValidUrl, bc)
+    saveInfo('url', message)
+    return goto.redSelectProvider()
+  }
+
+  if (action === a.redSelectProvider) {
+    if (!redSelectProvider.includes(message)) return send(chatId, `?`)
+    saveInfo('provider', message)
+    // bitly
+    if (message === redSelectProvider[0]) {
+      await saveInfo('price', PRICE_BITLY_LINK)
+      return goto.askCoupon(a.redSelectProvider)
+    }
+    // cuttly
+    if (redSelectProvider[1] === message) {
+      if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId))))
+        return send(chatId, '📋 Subscribe first')
+      return goto.redSelectRandomCustom()
+    }
+  }
+  if (action === a.redSelectRandomCustom) {
+    if (!redSelectRandomCustom.includes(message)) return send(chatId, `?`)
+    saveInfo('format', message)
+
+    // random
+    if (redSelectRandomCustom[0] === message) {
+      const { url } = info
+      const slug = nanoid()
+      const __shortUrl = `${SELF_URL}/${slug}`
+      const _shortUrl = await createShortUrlCuttly(__shortUrl)
+      const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
+      increment(totalShortLinks)
+      set(fullUrlOf, shortUrl, url)
+      set(linksOf, chatId, shortUrl, url)
+      if (!(await isSubscribed(chatId))) {
+        decrement(freeShortLinksOf, chatId)
+        set(expiryOf, shortUrl, Date.now() + FREE_LINKS_TIME_SECONDS)
+      }
+      return send(chatId, _shortUrl, o)
+    }
+
+    // custom
+    if (redSelectRandomCustom[1] === message) return goto.redSelectCustomExt()
+  }
+  if (action === a.redSelectCustomExt) {
+    if (!isValidUrl(`https://abc.com/${message}`)) return send(chatId, `Enter a valid back half`)
+    try {
+      const { url } = info
+      const slug = nanoid()
+      const __shortUrl = `${SELF_URL}/${slug}`
+      const _shortUrl = await createCustomShortUrlCuttly(__shortUrl, message)
+      const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
+      increment(totalShortLinks)
+      set(fullUrlOf, shortUrl, url)
+      set(linksOf, chatId, shortUrl, url)
+      if (!(await isSubscribed(chatId))) {
+        decrement(freeShortLinksOf, chatId)
+        set(expiryOf, shortUrl, Date.now() + FREE_LINKS_TIME_SECONDS)
+      }
+      return send(chatId, _shortUrl, o)
+    } catch (error) {
+      return send(chatId, error?.response?.data)
+    }
+  }
+
+  if (action === a.askCoupon + a.redSelectProvider) {
+    if (message === 'Back') return goto.redSelectProvider()
+    if (message === 'Skip') {
+      saveInfo('lastStep', a.redSelectProvider)
+      return (await saveInfo('couponApplied', false)) || goto.walletSelectCurrency()
+    }
+
+    const { price } = info
+    const coupon = message.toUpperCase()
+    const discount = discountOn[coupon]
+
+    if (isNaN(discount)) return send(chatId, t.couponInvalid)
+
+    const newPrice = price - (price * discount) / 100
+    await saveInfo('newPrice', newPrice)
+    await saveInfo('couponApplied', true)
+    await saveInfo('lastStep', a.redSelectProvider)
+
+    return goto.walletSelectCurrency()
+  }
+
   if (message === user.urlShortener) {
     if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId)))) return send(chatId, '📋 Subscribe first')
 
@@ -931,7 +1098,7 @@ bot.on('message', async msg => {
       return
     }
 
-    const shortUrlSanitized = shortUrl.replace('.', '@')
+    const shortUrlSanitized = shortUrl.replaceAll('.', '@')
     increment(totalShortLinks)
     set(state, chatId, 'action', 'none')
     set(fullUrlOf, shortUrlSanitized, url)
@@ -953,7 +1120,7 @@ bot.on('message', async msg => {
     if (!isValidUrl('https://' + shortUrl)) return send(chatId, t.provideLink)
     if (await get(fullUrlOf, shortUrl)) return send(chatId, `Link already exists. Please try another.`)
 
-    const shortUrlSanitized = shortUrl.replace('.', '@')
+    const shortUrlSanitized = shortUrl.replaceAll('.', '@')
     increment(totalShortLinks)
     set(state, chatId, 'action', 'none')
     set(fullUrlOf, shortUrlSanitized, url)
@@ -1661,7 +1828,7 @@ async function getPurchasedDomains(chatId) {
   let ans = await get(domainsOf, chatId)
   if (!ans) return []
 
-  ans = Object.keys(ans).map(d => d.replace('@', '.')) // de sanitize due to mongo db
+  ans = Object.keys(ans).map(d => d.replaceAll('@', '.')) // de sanitize due to mongo db
   return ans.filter(d => d !== '_id')
 }
 
@@ -1690,7 +1857,7 @@ async function getShortLinks(chatId) {
     const link = ans[i]
     let clicks = (await get(clicksOn, link.shorter)) || 0
 
-    ret.push({ clicks, shorter: link.shorter.replace('@', '.'), url: link.url })
+    ret.push({ clicks, shorter: link.shorter.replaceAll('@', '.'), url: link.url })
   }
 
   return ret
@@ -1775,7 +1942,7 @@ async function backupPayments() {
 
 async function buyDomain(chatId, domain) {
   // ref https://www.mongodb.com/docs/manual/core/dot-dollar-considerations
-  const domainSanitizedForDb = domain.replace('.', '@')
+  const domainSanitizedForDb = domain.replaceAll('.', '@')
 
   // set(domainsOf, chatId, domainSanitizedForDb, true);
   // return { success: true };
@@ -1824,7 +1991,7 @@ Nomadly Bot`,
     send(chatId, m)
     return m
   }
-  send(chatId, t.domainBought.replace('{{domain}}', domain))
+  send(chatId, t.domainBought.replaceAll('{{domain}}', domain))
   regularCheckDns(bot, chatId, domain)
   return false // error = false
 }
