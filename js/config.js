@@ -59,6 +59,7 @@ const user = {
   phoneNumberLeads: '☎️ Phone Number Leads',
   wallet: '💰 My Wallet',
   urlShortener: '🔗 URL Shortener',
+  redSelectUrl: '🔗 Short URL',
   viewShortLinks: '🔍 View Analytics',
   buyDomainName: '🌐 Buy Domain Names',
   viewDomainNames: '👀 My Domain Names',
@@ -327,6 +328,15 @@ $${view(usd)}
   validatorErrorNoPhonesFound: `No phone numbers found. Try again.`,
 
   validatorBulkNumbersStart: 'Leads validation has started and will complete soon.',
+
+  // url re-director
+  redSelectUrl: 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com',
+  redSelectRandomCustom: 'Please select your choice for random or custom link',
+  redSelectProvider: 'Choose link provider',
+  redSelectCustomExt: 'Enter custom back half',
+
+  redValidUrl: 'Please provide a valid URL. e.g https://google.com',
+  redTakeUrl: url => `Your shortened URL is: ${url}`,
 }
 
 const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
@@ -350,6 +360,12 @@ const validatorSelectCarrier = country => carriersOf[country]
 const validatorSelectCnam = yesNo
 const validatorSelectAmount = ['ALL', '1000', '2000', '3000', '4000', '5000']
 const validatorSelectFormat = ['Local Format', 'International Format']
+
+//redSelectRandomCustom
+
+const redSelectRandomCustom = ['Random Short Link', 'Custom Short Link']
+
+const redSelectProvider = ['bit.ly', 'cutt.ly']
 
 const tickerOf = {
   BTC: 'btc',
@@ -418,6 +434,11 @@ const k = {
   validatorSelectCnam: kOf(validatorSelectCnam),
   validatorSelectAmount: kOf(validatorSelectAmount),
   validatorSelectFormat: kOf(validatorSelectFormat),
+
+  //url shortening
+  redSelectRandomCustom: kOf(redSelectRandomCustom),
+
+  redSelectProvider: kOf(redSelectProvider),
 }
 
 const adminKeyboard = {
@@ -582,4 +603,6 @@ module.exports = {
   validatorSelectCnam,
   validatorSelectAmount,
   validatorSelectFormat,
+  redSelectRandomCustom,
+  redSelectProvider,
 }
