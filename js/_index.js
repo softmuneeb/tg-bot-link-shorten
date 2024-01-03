@@ -2239,7 +2239,7 @@ app.get('/:id', async (req, res) => {
   if (id === '') return res.json({ message: 'Salam', from: req.hostname })
 
   const shortUrl = `${req.hostname}/${id}`
-  const shortUrlSanitized = shortUrl.replace('.', '@')
+  const shortUrlSanitized = shortUrl.replaceAll('.', '@')
   const url = await get(fullUrlOf, shortUrlSanitized)
   if (!url) return res.status(404).send(html('Link not found'))
   if (!(await isValid(shortUrlSanitized))) return res.status(404).send(html(t.linkExpired))
