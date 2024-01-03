@@ -127,6 +127,7 @@ let state = {},
   linksOf = {},
   expiryOf = {},
   fullUrlOf = {},
+  maskOf = {},
   domainsOf = {},
   chatIdBlocked = {},
   planEndingTime = {},
@@ -158,6 +159,7 @@ const loadData = async () => {
   linksOf = db.collection('linksOf')
   walletOf = db.collection('walletOf')
   expiryOf = db.collection('expiryOf')
+  maskOf = db.collection('maskOf')
   fullUrlOf = db.collection('fullUrlOf')
   domainsOf = db.collection('domainsOf')
   chatIdBlocked = db.collection('chatIdBlocked')
@@ -873,9 +875,11 @@ bot.on('message', async msg => {
       const _shortUrl = await createShortBitly(__shortUrl)
       const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
       increment(totalShortLinks)
+      set(maskOf, shortUrl, _shortUrl)
       set(fullUrlOf, shortUrl, url)
       set(linksOf, chatId, shortUrl, url)
       send(chatId, _shortUrl, o)
+      set(state, chatId, 'action', 'none')
 
       // wallet update
       if (coin === u.usd) {
@@ -1005,12 +1009,14 @@ bot.on('message', async msg => {
       const _shortUrl = await createShortUrlCuttly(__shortUrl)
       const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
       increment(totalShortLinks)
+      set(maskOf, shortUrl, _shortUrl)
       set(fullUrlOf, shortUrl, url)
       set(linksOf, chatId, shortUrl, url)
       if (!(await isSubscribed(chatId))) {
         decrement(freeShortLinksOf, chatId)
         set(expiryOf, shortUrl, Date.now() + FREE_LINKS_TIME_SECONDS)
       }
+      set(state, chatId, 'action', 'none')
       return send(chatId, _shortUrl, o)
     }
 
@@ -1028,12 +1034,14 @@ bot.on('message', async msg => {
       const _shortUrl = await createCustomShortUrlCuttly(__shortUrl, message)
       const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
       increment(totalShortLinks)
+      set(maskOf, shortUrl, _shortUrl)
       set(fullUrlOf, shortUrl, url)
       set(linksOf, chatId, shortUrl, url)
       if (!(await isSubscribed(chatId))) {
         decrement(freeShortLinksOf, chatId)
         set(expiryOf, shortUrl, Date.now() + FREE_LINKS_TIME_SECONDS)
       }
+      set(state, chatId, 'action', 'none')
       return send(chatId, _shortUrl, o)
     } catch (error) {
       return send(chatId, error?.response?.data)
@@ -1863,7 +1871,8 @@ async function getShortLinks(chatId) {
     const link = ans[i]
     let clicks = (await get(clicksOn, link.shorter)) || 0
 
-    ret.push({ clicks, shorter: link.shorter.replaceAll('@', '.'), url: link.url })
+    const shorter = (await get(maskOf, link.shorter)) || link.shorter.replaceAll('@', '.')
+    ret.push({ clicks, shorter, url: link.url })
   }
 
   return ret
