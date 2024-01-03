@@ -58,8 +58,8 @@ const user = {
   // main keyboard
   phoneNumberLeads: '☎️ Phone Number Leads',
   wallet: '💰 My Wallet',
-  urlShortener: '🔗 URL Shortener',
-  redSelectUrl: '🔗 Short URL',
+  urlShortener: '🔗 Custom Domain Shortener',
+  redSelectUrl: '🔗 Redirect & Shorten',
   viewShortLinks: '🔍 View Analytics',
   buyDomainName: '🌐 Buy Domain Names',
   viewDomainNames: '👀 My Domain Names',
@@ -338,6 +338,7 @@ $${view(usd)}
   redValidUrl: 'Please provide a valid URL. e.g https://google.com',
   redTakeUrl: url => `Your shortened URL is: ${url}`,
 }
+
 
 const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
 

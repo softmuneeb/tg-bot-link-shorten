@@ -20,7 +20,6 @@ const createShortBitly = async longUrl => {
     )
 
     const shortUrl = response.data.id
-    console.log('Short URL:', shortUrl)
     return shortUrl
   } catch (error) {
     console.error('Error creating short URL:', error.response.data)

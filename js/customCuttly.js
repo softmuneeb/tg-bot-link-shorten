@@ -8,9 +8,6 @@ const createCustomShortUrlCuttly = async (longUrl, name) => {
 
   const response = await axios.get(cuttlyApiUrl)
   const { status, shortLink } = response.data.url
-
-  console.log('createCustomShortUrlCuttly', response.data)
-
   if (status === 7) {
     return shortLink
   } else {
