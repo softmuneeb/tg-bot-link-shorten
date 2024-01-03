@@ -60,7 +60,7 @@ const user = {
   wallet: '💰 My Wallet',
   urlShortener: '🔗 Custom Domain Shortener',
   redSelectUrl: '🔗 Redirect & Shorten',
-  viewShortLinks: '🔍 View Analytics',
+  viewShortLinks: '🔍 View Shortlink Analytics',
   buyDomainName: '🌐 Buy Domain Names',
   viewDomainNames: '👀 My Domain Names',
   dnsManagement: '😎 DNS Management',
@@ -366,7 +366,7 @@ const validatorSelectFormat = ['Local Format', 'International Format']
 
 const redSelectRandomCustom = ['Random Short Link', 'Custom Short Link']
 
-const redSelectProvider = ['bit.ly', 'cutt.ly']
+const redSelectProvider = ['Bit.ly $10 (No trial)', 'Cutt.ly (Sub Required After Trial)']
 
 const tickerOf = {
   BTC: 'btc',
