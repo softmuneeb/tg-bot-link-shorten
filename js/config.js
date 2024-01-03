@@ -58,13 +58,13 @@ const user = {
   // main keyboard
   phoneNumberLeads: '☎️ Phone Number Leads',
   wallet: '💰 My Wallet',
-  urlShortener: '🔗 Custom Domain Shortener',
   redSelectUrl: '🔗 Redirect & Shorten',
+  urlShortener: '🔗 Custom Domain Shortener',
+  buyPlan: '📋 Subscribe Here',
   viewShortLinks: '🔍 View Shortlink Analytics',
   buyDomainName: '🌐 Buy Domain Names',
   viewDomainNames: '👀 My Domain Names',
   dnsManagement: '😎 DNS Management',
-  buyPlan: '📋 Subscribe Here',
   viewPlan: '🔍 My Plan',
   getSupport: '🛠️ Get Support',
 }
