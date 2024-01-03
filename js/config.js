@@ -337,8 +337,9 @@ $${view(usd)}
 
   redValidUrl: 'Please provide a valid URL. e.g https://google.com',
   redTakeUrl: url => `Your shortened URL is: ${url}`,
+  redIssueUrlBitly: `Some issue, your wallet is not charged.`,
+  redIssueUrlCuttly: `Some issue`,
 }
-
 
 const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
 

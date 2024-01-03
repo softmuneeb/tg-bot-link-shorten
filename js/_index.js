@@ -869,17 +869,23 @@ bot.on('message', async msg => {
       const priceNgn = await usdToNgn(price)
       if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
 
-      const { url } = info
-      const slug = nanoid()
-      const __shortUrl = `${SELF_URL}/${slug}`
-      const _shortUrl = await createShortBitly(__shortUrl)
-      const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
-      increment(totalShortLinks)
-      set(maskOf, shortUrl, _shortUrl)
-      set(fullUrlOf, shortUrl, url)
-      set(linksOf, chatId, shortUrl, url)
-      send(chatId, _shortUrl, o)
-      set(state, chatId, 'action', 'none')
+      try {
+        const { url } = info
+        const slug = nanoid()
+        const __shortUrl = `${SELF_URL}/${slug}`
+        const _shortUrl = await createShortBitly(__shortUrl)
+        const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
+        increment(totalShortLinks)
+        set(maskOf, shortUrl, _shortUrl)
+        set(fullUrlOf, shortUrl, url)
+        set(linksOf, chatId, shortUrl, url)
+        send(chatId, _shortUrl, o)
+        set(state, chatId, 'action', 'none')
+      } catch (error) {
+        send(TELEGRAM_DEV_CHAT_ID, error.message)
+        set(state, chatId, 'action', 'none')
+        return send(chatId, t.redIssueUrlBitly, o)
+      }
 
       // wallet update
       if (coin === u.usd) {
@@ -1003,21 +1009,27 @@ bot.on('message', async msg => {
 
     // random
     if (redSelectRandomCustom[0] === message) {
-      const { url } = info
-      const slug = nanoid()
-      const __shortUrl = `${SELF_URL}/${slug}`
-      const _shortUrl = await createShortUrlCuttly(__shortUrl)
-      const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
-      increment(totalShortLinks)
-      set(maskOf, shortUrl, _shortUrl)
-      set(fullUrlOf, shortUrl, url)
-      set(linksOf, chatId, shortUrl, url)
-      if (!(await isSubscribed(chatId))) {
-        decrement(freeShortLinksOf, chatId)
-        set(expiryOf, shortUrl, Date.now() + FREE_LINKS_TIME_SECONDS)
+      try {
+        const { url } = info
+        const slug = nanoid()
+        const __shortUrl = `${SELF_URL}/${slug}`
+        const _shortUrl = await createShortUrlCuttly(__shortUrl)
+        const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
+        increment(totalShortLinks)
+        set(maskOf, shortUrl, _shortUrl)
+        set(fullUrlOf, shortUrl, url)
+        set(linksOf, chatId, shortUrl, url)
+        if (!(await isSubscribed(chatId))) {
+          decrement(freeShortLinksOf, chatId)
+          set(expiryOf, shortUrl, Date.now() + FREE_LINKS_TIME_SECONDS)
+        }
+        set(state, chatId, 'action', 'none')
+        return send(chatId, _shortUrl, o)
+      } catch (error) {
+        send(TELEGRAM_ADMIN_CHAT_ID, error?.response?.data)
+        set(state, chatId, 'action', 'none')
+        return send(chatId, t.redIssueUrlCuttly, o)
       }
-      set(state, chatId, 'action', 'none')
-      return send(chatId, _shortUrl, o)
     }
 
     // custom
@@ -1044,7 +1056,9 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', 'none')
       return send(chatId, _shortUrl, o)
     } catch (error) {
-      return send(chatId, error?.response?.data)
+      send(TELEGRAM_ADMIN_CHAT_ID, error?.response?.data)
+      set(state, chatId, 'action', 'none')
+      return send(chatId, t.redIssueUrlCuttly, o)
     }
   }
 
