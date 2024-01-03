@@ -975,6 +975,8 @@ bot.on('message', async msg => {
   }
 
   if (action === a.redSelectProvider) {
+    if (message === 'Back') return goto.redSelectUrl()
+
     if (!redSelectProvider.includes(message)) return send(chatId, `?`)
     saveInfo('provider', message)
     // bitly
@@ -990,6 +992,8 @@ bot.on('message', async msg => {
     }
   }
   if (action === a.redSelectRandomCustom) {
+    if (message === 'Back') return goto.redSelectProvider()
+
     if (!redSelectRandomCustom.includes(message)) return send(chatId, `?`)
     saveInfo('format', message)
 
@@ -1014,6 +1018,8 @@ bot.on('message', async msg => {
     if (redSelectRandomCustom[1] === message) return goto.redSelectCustomExt()
   }
   if (action === a.redSelectCustomExt) {
+    if (message === 'Back') return goto.redSelectRandomCustom()
+
     if (!isValidUrl(`https://abc.com/${message}`)) return send(chatId, `Enter a valid back half`)
     try {
       const { url } = info
