@@ -1056,7 +1056,14 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', 'none')
       return send(chatId, _shortUrl, o)
     } catch (error) {
-      send(TELEGRAM_ADMIN_CHAT_ID, error?.response?.data)
+      if (error?.response?.data?.url?.status === 3) {
+        return send(chatId, t.redIssueSlugCuttly)
+      }
+
+      send(
+        TELEGRAM_ADMIN_CHAT_ID,
+        'cuttly issue: status:' + error?.response?.data?.url?.status + ' ' + error?.response?.data,
+      )
       set(state, chatId, 'action', 'none')
       return send(chatId, t.redIssueUrlCuttly, o)
     }

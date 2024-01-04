@@ -338,6 +338,7 @@ $${view(usd)}
   redValidUrl: 'Please provide a valid URL. e.g https://google.com',
   redTakeUrl: url => `Your shortened URL is: ${url}`,
   redIssueUrlBitly: `Some issue, your wallet is not charged.`,
+  redIssueSlugCuttly: `The preferred link name is already taken, try another.`,
   redIssueUrlCuttly: `Some issue`,
 }
 
