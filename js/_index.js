@@ -1184,8 +1184,10 @@ bot.on('message', async msg => {
       if (available > 0) return goto['get-free-domain']()
     }
     await saveInfo('price', price)
-    return goto.askCoupon('choose-domain-to-buy')
+    return goto.askDomainToUseWithShortener() // TODO: MAKE GOTO
   }
+  // TODO:
+  // if(act === a.askDomainToUseWithShortener) { saveinfo yes no  goto.askCoupon('choose-domain-to-buy')}
   if (action === a.askCoupon + 'choose-domain-to-buy') {
     if (message === 'Back') return goto['choose-domain-to-buy']()
     if (message === 'Skip') return (await saveInfo('couponApplied', false)) || goto['domain-pay']()
@@ -2012,6 +2014,10 @@ Best,
 Nomadly Bot`,
     o,
   )
+
+  // TODO
+  // let info = await get(state, chatId)
+  // if(info?.useUrlForShortner === "No") return
 
   const { server, error } = await saveDomainInServer(domain) // save domain in railway // can do separately maybe or just send messages of progress to user
   if (error) {
