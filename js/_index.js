@@ -43,6 +43,7 @@ const {
   validatorSelectCnam,
   redSelectRandomCustom,
   redSelectProvider,
+  
 } = require('./config.js')
 const createShortBitly = require('./bitly.js')
 const createShortUrlCuttly = require('./cuttly.js')
@@ -72,7 +73,7 @@ const cors = require('cors')
 const axios = require('axios')
 const express = require('express')
 const { log } = require('console')
-const { MongoClient } = require('mongodb')
+const { MongoClient, ReturnDocument } = require('mongodb')
 const { customAlphabet } = require('nanoid')
 const TelegramBot = require('node-telegram-bot-api')
 const { createCheckout } = require('./pay-fincra.js')
@@ -291,6 +292,7 @@ bot.on('message', async msg => {
     redSelectRandomCustom: 'redSelectRandomCustom',
     redSelectProvider: 'redSelectProvider',
     redSelectCustomExt: 'redSelectCustomExt',
+    //join channel
   }
   const firstSteps = [
     'block-user',
@@ -633,6 +635,13 @@ bot.on('message', async msg => {
       send(chatId, t.redSelectCustomExt, bc)
       set(state, chatId, 'action', a.redSelectCustomExt)
     },
+
+    //join channel
+
+    joinChannel:()=>{
+      send(chatId,t.joinChannel)
+      set(state,chatId)
+    }
   }
   const walletOk = {
     'plan-pay': async coin => {
@@ -1784,7 +1793,13 @@ bot.on('message', async msg => {
     return goto.walletSelectCurrency()
   }
 
-  //
+  //todo link to join channel setting
+
+  if(message === user.joinChannel){
+      return goto.joinChannel()
+  }
+
+
   if (message === user.viewPlan) {
     const subscribedPlan = await get(planOf, chatId)
 

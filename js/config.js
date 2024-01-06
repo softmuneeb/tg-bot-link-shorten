@@ -56,6 +56,7 @@ const admin = {
 }
 const user = {
   // main keyboard
+  joinChannel:'Join Channel',
   phoneNumberLeads: '☎️ Phone Number Leads',
   wallet: '💰 My Wallet',
   redSelectUrl: '🔗 Redirect & Shorten',
@@ -155,6 +156,8 @@ Discover more: t.me/nomadly`,
   unknownCommand: `Command not found. Press /start or Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
 
   support: `Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+
+  joinChannel: `Please Join Channel  ${'https://t.me/Nomadly'}`,
 
   dnsPropagated: `DNS Propagation for {{domain}} is completed for unlimited URL Shortening.`,
 
