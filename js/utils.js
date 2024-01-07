@@ -174,7 +174,10 @@ const subscribePlan = async (planEndingTime, freeDomainNamesAvailableFor, planOf
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 const parse = (cc, s) => parseInt(s.replace(`+${cc}`, ``).replace(/[^\d]/g, ''), 10).toString()
-
+const getInt = str => {
+  const match = str.match(/\d+/)
+  return match ? parseInt(match[0], 10) : null
+}
 // const phoneLen = {
 //   1: 11,
 //   64: 11,
@@ -215,6 +218,7 @@ function extractPhoneNumbers(text, cc) {
 // log(parse('1', '+1(213)'))
 
 module.exports = {
+  getInt,
   parse,
   year,
   week,

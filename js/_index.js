@@ -65,6 +65,7 @@ const {
   sendMessageToAllUsers,
   parse,
   extractPhoneNumbers,
+  getInt,
 } = require('./utils.js')
 const fs = require('fs')
 require('dotenv').config()
@@ -1528,7 +1529,7 @@ bot.on('message', async msg => {
   if (action === a.depositUSD) {
     if (message === 'Back') return goto[a.selectCurrencyToDeposit]()
 
-    const amount = Number(message)
+    const amount = getInt(message)
     if (isNaN(amount)) return send(chatId, `?`)
     await saveInfo('amount', amount)
 
