@@ -345,7 +345,7 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', 'choose-url-to-shorten')
       const m = 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com'
       send(chatId, m, bc)
-      adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
+      // adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
     },
     'choose-domain-with-shorten': domains => {
       send(chatId, t.chooseDomainWithShortener, show(domains))
