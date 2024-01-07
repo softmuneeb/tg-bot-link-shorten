@@ -101,9 +101,9 @@ Nomadly Bot`,
   askValidPayOption: 'Please choose a valid payment option',
   chooseSubscription: `<b>Elevate Your Brand with Our Subscription Plans!</b>
 
-- <b>Daily:</b> $${PRICE_DAILY} with ${DAILY_PLAN_FREE_DOMAINS} free ".sbs" domains.
-- <b>Weekly:</b> $${PRICE_WEEKLY} with ${WEEKLY_PLAN_FREE_DOMAINS} free ".sbs" domains.
-- <b>Monthly:</b> $${PRICE_MONTHLY} with ${MONTHLY_PLAN_FREE_DOMAINS} free ".sbs" domains.
+- <b>Daily:</b> $${PRICE_DAILY} with ${DAILY_PLAN_FREE_DOMAINS} free ".sbs" domains + unlimited “redirect & shorten”.
+- <b>Weekly:</b> $${PRICE_WEEKLY} with ${WEEKLY_PLAN_FREE_DOMAINS} free ".sbs" domains + unlimited “redirect & shorten.
+- <b>Monthly:</b> $${PRICE_MONTHLY} with ${MONTHLY_PLAN_FREE_DOMAINS} free ".sbs" domains + unlimited “redirect & shorten.
 
 (Exclusive to ".sbs" domains.)`,
 
