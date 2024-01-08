@@ -43,7 +43,7 @@ const {
   validatorSelectCnam,
   redSelectRandomCustom,
   redSelectProvider,
-  kOf,
+  yesNo,
 } = require('./config.js')
 const createShortBitly = require('./bitly.js')
 const createShortUrlCuttly = require('./cuttly.js')
@@ -248,6 +248,12 @@ bot.on('message', async msg => {
 
   // actions
   const a = {
+    // submenu
+    submenu1: 'submenu1',
+    submenu2: 'submenu2',
+
+    askDomainToUseWithShortener: 'askDomainToUseWithShortener',
+
     selectCurrencyToWithdraw: 'selectCurrencyToWithdraw',
 
     selectCurrencyToDeposit: 'selectCurrencyToDeposit',
@@ -297,14 +303,14 @@ bot.on('message', async msg => {
   const firstSteps = [
     'block-user',
     'unblock-user',
-    'choose-subscription',
-    'choose-domain-to-buy',
-    'choose-url-to-shorten',
-    'choose-domain-to-manage',
-    a.redSelectUrl,
     admin.messageUsers,
+
+    'choose-subscription',
     user.wallet,
     a.phoneNumberLeads,
+
+    a.submenu1,
+    a.submenu2,
   ]
   const goto = {
     askCoupon: action => {
@@ -331,6 +337,10 @@ bot.on('message', async msg => {
       }
       set(state, chatId, 'action', 'choose-domain-to-buy')
       send(chatId, t.chooseDomainToBuy(text), bc)
+    },
+    askDomainToUseWithShortener: () => {
+      set(state, chatId, 'action', a.askDomainToUseWithShortener)
+      send(chatId, t.askDomainToUseWithShortener, yes_no)
     },
     'plan-pay': () => {
       const { plan, price, couponApplied, newPrice } = info
@@ -634,6 +644,15 @@ bot.on('message', async msg => {
     redSelectCustomExt: () => {
       send(chatId, t.redSelectCustomExt, bc)
       set(state, chatId, 'action', a.redSelectCustomExt)
+    },
+
+    submenu1: () => {
+      set(state, chatId, 'action', a.submenu1)
+      send(chatId, t.select, k.of([user.redSelectUrl, user.urlShortener, user.viewShortLinks]))
+    },
+    submenu2: () => {
+      set(state, chatId, 'action', a.submenu2)
+      send(chatId, t.select, k.of([user.buyDomainName, user.viewDomainNames, user.dnsManagement]))
     },
   }
   const walletOk = {
@@ -968,7 +987,7 @@ bot.on('message', async msg => {
   }
   if (action === 'adminConfirmMessage') {
     if (message === 'Back' || message === 'No') return goto[admin.messageUsers]()
-    if (message !== 'Yes') return send(chatId, `?`)
+    if (message !== 'Yes') return send(chatId, t.what)
 
     set(state, chatId, 'action', 'none')
     sendMessageToAllUsers(bot, info?.messageContent, info?.messageMethod, nameOf, chatId)
@@ -981,6 +1000,7 @@ bot.on('message', async msg => {
   }
 
   if (action === a.redSelectUrl) {
+    if (message === 'Back') return goto.submenu1()
     if (!isValidUrl(message)) return send(chatId, t.redValidUrl, bc)
     saveInfo('url', message)
     return goto.redSelectProvider()
@@ -989,7 +1009,7 @@ bot.on('message', async msg => {
   if (action === a.redSelectProvider) {
     if (message === 'Back') return goto.redSelectUrl()
     if (message === user.buyPlan) return goto['choose-subscription']()
-    if (!redSelectProvider.includes(message)) return send(chatId, `?`)
+    if (!redSelectProvider.includes(message)) return send(chatId, t.what)
     saveInfo('provider', message)
     // bitly
     if (message === redSelectProvider[0]) {
@@ -999,14 +1019,14 @@ bot.on('message', async msg => {
     // cuttly
     if (redSelectProvider[1] === message) {
       if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId))))
-        return send(chatId, '📋 Subscribe first', kOf([...redSelectProvider, user.buyPlan]))
+        return send(chatId, '📋 Subscribe first', k.of([...redSelectProvider, user.buyPlan]))
       return goto.redSelectRandomCustom()
     }
   }
   if (action === a.redSelectRandomCustom) {
     if (message === 'Back') return goto.redSelectProvider()
 
-    if (!redSelectRandomCustom.includes(message)) return send(chatId, `?`)
+    if (!redSelectRandomCustom.includes(message)) return send(chatId, t.what)
     saveInfo('format', message)
 
     // random
@@ -1098,6 +1118,7 @@ bot.on('message', async msg => {
     return goto['choose-url-to-shorten']()
   }
   if (action === 'choose-url-to-shorten') {
+    if (message === 'Back') return goto.submenu1()
     if (!isValidUrl(message)) return send(chatId, 'Please provide a valid URL. e.g https://google.com', bc)
 
     set(state, chatId, 'url', message)
@@ -1107,6 +1128,7 @@ bot.on('message', async msg => {
   }
   if (action === 'choose-domain-with-shorten') {
     if (message === 'Back') return goto['choose-url-to-shorten']()
+    if (message === user.buyDomainName) return goto['choose-domain-to-buy']()
 
     const domain = message.toLowerCase()
     const domains = await getPurchasedDomains(chatId)
@@ -1119,7 +1141,7 @@ bot.on('message', async msg => {
   if (action === 'choose-link-type') {
     if (message === 'Back') return goto['choose-domain-with-shorten'](await getPurchasedDomains(chatId))
 
-    if (!linkOptions.includes(message)) return send(chatId, `?`)
+    if (!linkOptions.includes(message)) return send(chatId, t.what)
 
     if (message === 'Custom Link') {
       set(state, chatId, 'action', 'shorten-custom')
@@ -1175,21 +1197,31 @@ bot.on('message', async msg => {
     return goto['choose-domain-to-buy']()
   }
   if (action === 'choose-domain-to-buy') {
+    if (message === 'Back') return goto.submenu2()
     const domain = message.toLowerCase()
     const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/
     if (!domainRegex.test(domain)) return send(chatId, 'Domain name is invalid. Please try another domain name.')
     const { available, price, originalPrice } = await checkDomainPriceOnline(domain)
     if (!available) return send(chatId, 'Domain is not available. Please try another domain name.', rem)
-    await saveInfo('domain', domain)
-    if (originalPrice <= 2 && (await isSubscribed(chatId))) {
+    saveInfo('price', price)
+    saveInfo('domain', domain)
+    saveInfo('originalPrice', originalPrice)
+    return goto.askDomainToUseWithShortener()
+  }
+  if (action === a.askDomainToUseWithShortener) {
+    if (message === 'Back') return goto['choose-domain-to-buy']()
+    if (!yesNo.includes(message)) return send(chatId, t.what)
+    saveInfo('askDomainToUseWithShortener', message)
+
+    if (info?.originalPrice <= 2 && (await isSubscribed(chatId))) {
       const available = (await get(freeDomainNamesAvailableFor, chatId)) || 0
       if (available > 0) return goto['get-free-domain']()
     }
-    await saveInfo('price', price)
+
     return goto.askCoupon('choose-domain-to-buy')
   }
   if (action === a.askCoupon + 'choose-domain-to-buy') {
-    if (message === 'Back') return goto['choose-domain-to-buy']()
+    if (message === 'Back') return goto.askDomainToUseWithShortener()
     if (message === 'Skip') return (await saveInfo('couponApplied', false)) || goto['domain-pay']()
 
     const { price } = info
@@ -1263,7 +1295,7 @@ bot.on('message', async msg => {
   }
   if (action === 'get-free-domain') {
     if (message === 'Back' || message === 'No') return goto['choose-domain-to-buy']()
-    if (message !== 'Yes') return send(chatId, `?`)
+    if (message !== 'Yes') return send(chatId, t.what)
 
     const domain = info?.domain
     const error = await buyDomainFullProcess(chatId, domain)
@@ -1364,6 +1396,7 @@ bot.on('message', async msg => {
     return goto['choose-domain-to-manage']()
   }
   if (action === 'choose-domain-to-manage') {
+    if (message === 'Back') return goto.submenu2()
     const domain = message.toLowerCase()
 
     // if he not owns that domain then return
@@ -1400,7 +1433,7 @@ bot.on('message', async msg => {
   }
   if (action === 'confirm-dns-record-id-to-delete') {
     if (message === 'Back' || message === 'No') return goto['select-dns-record-id-to-delete']()
-    if (message !== 'Yes') return send(chatId, `?`)
+    if (message !== 'Yes') return send(chatId, t.what)
 
     const { domainNameId, dnsRecords, domainToManage, delId } = info
     const nsRecords = dnsRecords.filter(r => r.recordType === 'NS')
@@ -1498,7 +1531,7 @@ bot.on('message', async msg => {
   if (action === user.wallet) {
     if (message === u.deposit) return goto[a.selectCurrencyToDeposit]() // can be combine in one line with object
     if (message === u.withdraw) return goto[a.selectCurrencyToWithdraw]()
-    return send(chatId, `?`)
+    return send(chatId, t.what)
   }
 
   if (message === u.deposit) return goto[a.selectCurrencyToDeposit]()
@@ -1507,7 +1540,7 @@ bot.on('message', async msg => {
     if (message === 'Back') return goto[user.wallet]()
     if (message === u.usd) return goto[a.depositUSD]()
     if (message === u.ngn) return goto[a.depositNGN]()
-    return send(chatId, `?`)
+    return send(chatId, t.what)
   }
 
   if (action === a.depositNGN) {
@@ -1530,8 +1563,8 @@ bot.on('message', async msg => {
   if (action === a.depositUSD) {
     if (message === 'Back') return goto[a.selectCurrencyToDeposit]()
 
-    const amount = getInt(message)
-    if (isNaN(amount)) return send(chatId, `?`)
+    const amount = Number(message)
+    if (isNaN(amount)) return send(chatId, t.whatNum)
     await saveInfo('amount', amount)
 
     return goto[a.selectCryptoToDeposit]()
@@ -1551,7 +1584,7 @@ bot.on('message', async msg => {
     if (message === 'Back') return goto[info?.lastStep]()
 
     const coin = message
-    if (![u.usd, u.ngn].includes(coin)) return send(chatId, `?`)
+    if (![u.usd, u.ngn].includes(coin)) return send(chatId, t.what)
     await saveInfo('coin', coin)
 
     return goto.walletSelectCurrencyConfirm()
@@ -1559,12 +1592,18 @@ bot.on('message', async msg => {
   if (action === a.walletSelectCurrencyConfirm) {
     if (message === 'Back' || message === 'No') return goto[a.walletSelectCurrency]()
 
-    if (message !== 'Yes') return send(chatId, `?`)
+    if (message !== 'Yes') return send(chatId, t.what)
     return walletOk[info?.lastStep](info?.coin)
   }
 
   //
   //
+  if (message === user.urlShortenerMain) {
+    return goto.submenu1()
+  }
+  if (message === user.domainNames) {
+    return goto.submenu2()
+  }
   if (message === user.phoneNumberLeads) {
     return goto.phoneNumberLeads()
   }
@@ -1572,11 +1611,11 @@ bot.on('message', async msg => {
     if (phoneNumberLeads[1] === message) return goto.validatorSelectCountry()
     if (phoneNumberLeads[0] === message) return goto.buyLeadsSelectCountry()
 
-    return send(chatId, `?`)
+    return send(chatId, t.what)
   }
   if (action === a.buyLeadsSelectCountry) {
     if (message === 'Back') goto.phoneNumberLeads()
-    if (!buyLeadsSelectCountry.includes(message)) return send(chatId, `?`)
+    if (!buyLeadsSelectCountry.includes(message)) return send(chatId, t.what)
     if (areasOfCountry[message] && Object.keys(areasOfCountry[message]).length === 0) return send(chatId, `Coming Soon`)
     saveInfo('country', message)
     return goto.buyLeadsSelectSmsVoice()
@@ -1584,7 +1623,7 @@ bot.on('message', async msg => {
   if (action === a.buyLeadsSelectSmsVoice) {
     if (message === 'Back') return goto.buyLeadsSelectCountry()
     if (buyLeadsSelectSmsVoice[1] === message) return send(chatId, `Coming Soon`)
-    if (!buyLeadsSelectSmsVoice.includes(message)) return send(chatId, `?`)
+    if (!buyLeadsSelectSmsVoice.includes(message)) return send(chatId, t.what)
     saveInfo('smsVoice', message)
     saveInfo('cameFrom', a.buyLeadsSelectSmsVoice)
     if (['Australia'].includes(info?.country)) return goto.buyLeadsSelectCarrier()
@@ -1593,7 +1632,7 @@ bot.on('message', async msg => {
   }
   if (action === a.buyLeadsSelectArea) {
     if (message === 'Back') return goto.buyLeadsSelectSmsVoice()
-    if (!buyLeadsSelectArea(info?.country).includes(message)) return send(chatId, `?`)
+    if (!buyLeadsSelectArea(info?.country).includes(message)) return send(chatId, t.what)
     await saveInfo('area', message)
     saveInfo('cameFrom', a.buyLeadsSelectArea)
     return goto.buyLeadsSelectAreaCode()
@@ -1604,7 +1643,7 @@ bot.on('message', async msg => {
       info?.country,
       ['USA', 'Canada'].includes(info?.country) ? info?.area : 'Area Codes',
     )
-    if (!areaCodes.includes(message)) return send(chatId, `?`)
+    if (!areaCodes.includes(message)) return send(chatId, t.what)
 
     let cc = countryCodeOf[info?.country]
     saveInfo('areaCode', message === 'Mixed Area Codes' ? message : parse(cc, message))
@@ -1613,7 +1652,7 @@ bot.on('message', async msg => {
   }
   if (action === a.buyLeadsSelectCarrier) {
     if (message === 'Back') return goto?.[info?.cameFrom]()
-    if (!buyLeadsSelectCarrier(info?.country).includes(message)) return send(chatId, `?`)
+    if (!buyLeadsSelectCarrier(info?.country).includes(message)) return send(chatId, t.what)
     saveInfo('carrier', message)
     saveInfo('cameFrom', a.buyLeadsSelectCarrier)
     if (['USA'].includes(info?.country)) return goto.buyLeadsSelectCnam()
@@ -1621,7 +1660,7 @@ bot.on('message', async msg => {
   }
   if (action === a.buyLeadsSelectCnam) {
     if (message === 'Back') return goto.buyLeadsSelectCarrier()
-    if (!buyLeadsSelectCnam.includes(message)) return send(chatId, `?`)
+    if (!buyLeadsSelectCnam.includes(message)) return send(chatId, t.what)
     saveInfo('cnam', message === 'Yes')
     saveInfo('cameFrom', a.buyLeadsSelectCnam)
     return goto.buyLeadsSelectAmount()
@@ -1631,13 +1670,13 @@ bot.on('message', async msg => {
 
     const amount = Number(message)
     if (chatId === 6687923716) {
-      if (isNaN(amount)) return send(chatId, `?`)
+      if (isNaN(amount)) return send(chatId, t.whatNum)
     } else if (
       isNaN(amount) ||
       amount < Number(buyLeadsSelectAmount[0]) ||
       amount > Number(buyLeadsSelectAmount[buyLeadsSelectAmount.length - 1])
     )
-      return send(chatId, `?`)
+      return send(chatId, t.whatNum)
 
     saveInfo('amount', amount)
     let cnam = info?.country === 'USA' ? info?.cnam : false
@@ -1647,7 +1686,7 @@ bot.on('message', async msg => {
   }
   if (action === a.buyLeadsSelectFormat) {
     if (message === 'Back') return goto.buyLeadsSelectAmount()
-    if (!buyLeadsSelectFormat.includes(message)) return send(chatId, `?`)
+    if (!buyLeadsSelectFormat.includes(message)) return send(chatId, t.what)
     saveInfo('format', message)
     return goto.askCoupon(a.buyLeadsSelectFormat)
   }
@@ -1676,7 +1715,7 @@ bot.on('message', async msg => {
   //phone number validator
   if (action === a.validatorSelectCountry) {
     if (message === 'Back') return goto.phoneNumberLeads()
-    if (!validatorSelectCountry.includes(message)) return send(chatId, `?`)
+    if (!validatorSelectCountry.includes(message)) return send(chatId, t.what)
     saveInfo('country', message)
     return goto.validatorPhoneNumber()
   }
@@ -1704,6 +1743,7 @@ bot.on('message', async msg => {
     if (phones < diff) return send(chatId, t.validatorErrorFileData) // good phones are less than bad ones
     if (phones.length === 0) return send(chatId, t.validatorErrorNoPhonesFound)
     await saveInfo('phones', phones)
+    saveInfo('amount', phones.length)
 
     return goto.validatorSelectSmsVoice()
   }
@@ -1711,18 +1751,17 @@ bot.on('message', async msg => {
   if (action === a.validatorSelectSmsVoice) {
     if (message === 'Back') return goto.validatorPhoneNumber()
     if (validatorSelectSmsVoice[1] === message) return send(chatId, `Coming Soon`)
-    if (!validatorSelectSmsVoice.includes(message)) return send(chatId, `?`)
+    if (!validatorSelectSmsVoice.includes(message)) return send(chatId, t.what)
     saveInfo('smsVoice', message)
     return goto.validatorSelectCarrier() //////
   }
 
   if (action === a.validatorSelectCarrier) {
     if (message === 'Back') return goto.validatorSelectSmsVoice()
-    if (!validatorSelectCarrier(info?.country).includes(message)) return send(chatId, `?`)
+    if (!validatorSelectCarrier(info?.country).includes(message)) return send(chatId, t.what)
     saveInfo('carrier', message)
     saveInfo('history', [...(info?.history || []), a.validatorSelectCarrier])
     if (!['USA'].includes(info?.country) && info?.phones.length < 2000) {
-      saveInfo('amount', info?.phones.length)
       return goto.validatorSelectFormat()
     }
     if (!['USA'].includes(info?.country)) return goto.validatorSelectAmount()
@@ -1730,12 +1769,15 @@ bot.on('message', async msg => {
   }
   if (action === a.validatorSelectCnam) {
     if (message === 'Back') return goBack()
-    if (!validatorSelectCnam.includes(message)) return send(chatId, `?`)
+    if (!validatorSelectCnam.includes(message)) return send(chatId, t.what)
     saveInfo('cnam', message === 'Yes')
     saveInfo('history', [...(info?.history || []), a.validatorSelectCnam])
 
     if (info?.phones.length < 2000) {
-      saveInfo('amount', info?.phones.length)
+      let cnam = info?.country === 'USA' ? info?.cnam : false
+      const price = info?.amount * RATE_LEAD_VALIDATOR + (cnam ? info?.amount * RATE_CNAM_VALIDATOR : 0)
+      saveInfo('price', price)
+
       return goto.validatorSelectFormat()
     }
 
@@ -1758,7 +1800,7 @@ bot.on('message', async msg => {
   }
   if (action === a.validatorSelectFormat) {
     if (message === 'Back') return goBack()
-    if (!validatorSelectFormat.includes(message)) return send(chatId, `?`)
+    if (!validatorSelectFormat.includes(message)) return send(chatId, t.what)
     saveInfo('format', message)
     return goto.askCoupon(a.validatorSelectFormat)
   }
@@ -1784,7 +1826,10 @@ bot.on('message', async msg => {
     return goto.walletSelectCurrency()
   }
 
-  //
+  if (message === user.joinChannel) {
+    return send(chatId, t.joinChannel)
+  }
+
   if (message === user.viewPlan) {
     const subscribedPlan = await get(planOf, chatId)
 
@@ -1982,8 +2027,8 @@ async function buyDomain(chatId, domain) {
   // ref https://www.mongodb.com/docs/manual/core/dot-dollar-considerations
   const domainSanitizedForDb = domain.replaceAll('.', '@')
 
-  // set(domainsOf, chatId, domainSanitizedForDb, true);
-  // return { success: true };
+  // set(domainsOf, chatId, domainSanitizedForDb, true)
+  // return { success: true }
 
   const result = await buyDomainOnline(domain)
   if (result.success) {
@@ -2008,12 +2053,15 @@ const buyDomainFullProcess = async (chatId, domain) => {
   }
   send(
     chatId,
-    `Domain ${domain} is now yours. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain} Thank you for choosing us.
+    `Domain ${domain} is now yours.Thank you for choosing us.
 
 Best,
 Nomadly Bot`,
     o,
   )
+
+  let info = await get(state, chatId)
+  if (info?.askDomainToUseWithShortener === 'No') return
 
   const { server, error } = await saveDomainInServer(domain) // save domain in railway // can do separately maybe or just send messages of progress to user
   if (error) {
@@ -2021,7 +2069,10 @@ Nomadly Bot`,
     send(chatId, m)
     return m
   }
-  send(chatId, `Linking domain with your account...`) // save railway in domain
+  send(
+    chatId,
+    `Linking domain with your account. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain}`,
+  )
 
   const { error: saveServerInDomainError } = await saveServerInDomain(domain, server)
   if (saveServerInDomainError) {

@@ -56,17 +56,24 @@ const admin = {
 }
 const user = {
   // main keyboard
+  joinChannel: '✅ Join Channel',
   phoneNumberLeads: '☎️ Phone Number Leads',
   wallet: '💰 My Wallet',
+  urlShortenerMain: '🔗 URL Shortener',
+  buyPlan: '📋 Subscribe Here',
+  domainNames: '🌐 Domain Names',
+  viewPlan: '🔍 My Plan',
+  getSupport: '🛠️ Get Support',
+
+  // Sub Menu 1: urlShortenerMain
   redSelectUrl: '🔗 Redirect & Shorten',
   urlShortener: '🔗 Custom Domain Shortener',
-  buyPlan: '📋 Subscribe Here',
   viewShortLinks: '🔍 View Shortlink Analytics',
+
+  // Sub Menu 2: domainNames
   buyDomainName: '🌐 Buy Domain Names',
   viewDomainNames: '👀 My Domain Names',
   dnsManagement: '😎 DNS Management',
-  viewPlan: '🔍 My Plan',
-  getSupport: '🛠️ Get Support',
 }
 const u = {
   // other key boards
@@ -80,6 +87,9 @@ const u = {
 const view = num => Number(num).toFixed(2)
 const yesNo = ['Yes', 'No']
 const t = {
+  select: `Please select an option:`,
+  what: `Please choose option from keyboard`,
+  whatNum: `Please choose valid number`,
   phoneGenTimeout: 'Timeout',
   phoneGenNoGoodHits: 'Please contact support @nomadlysupport or select another area code',
 
@@ -132,7 +142,7 @@ Nomadly Bot`,
 
   chooseDomainToBuy: text =>
     `<b>Claim Your Corner of the Web!</b>  Please share the domain name you wish to purchase, like "abcpay.com".${text}`,
-
+  askDomainToUseWithShortener: `Do you wish to use domain with the shortener?`,
   blockUser: `Please share the username of the user that needs to be blocked.`,
   unblockUser: `Please share the username of the user that needs to be unblocked.`,
   blockedUser: `You are currently blocked from using the bot. Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
@@ -156,6 +166,8 @@ Discover more: t.me/nomadly`,
 
   support: `Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
 
+  joinChannel: `Please Join Channel https://t.me/Nomadly`,
+
   dnsPropagated: `DNS Propagation for {{domain}} is completed for unlimited URL Shortening.`,
 
   dnsNotPropagated: `DNS propagation for {{domain}} is in progress and you will be updated once it completes. ✅`,
@@ -164,7 +176,7 @@ Discover more: t.me/nomadly`,
 
   chooseDomainToManage: `Please select a domain if you wish to manage its DNS settings.`,
 
-  chooseDomainWithShortener: `Please select the domain you would like to connect with your shortened link.`,
+  chooseDomainWithShortener: `Please select or buy the domain name you would like to connect with your shortened link.`,
 
   viewDnsRecords: `Here are DNS Records for {{domain}}`,
 
@@ -452,7 +464,14 @@ const adminKeyboard = {
 
 const userKeyboard = {
   reply_markup: {
-    keyboard: Object.values(user).map(b => [b]),
+    keyboard: [
+      [user.joinChannel],
+      [user.phoneNumberLeads],
+      [user.wallet, user.buyPlan],
+      [user.urlShortenerMain],
+      [user.domainNames],
+      [user.viewPlan, user.getSupport],
+    ],
   },
   parse_mode: 'HTML',
   disable_web_page_preview: true,
@@ -530,7 +549,7 @@ const linkType = {
 
 const show = domains => ({
   reply_markup: {
-    keyboard: [...domains.map(d => [d]), _bc],
+    keyboard: [[user.buyDomainName], ...domains.map(d => [d]), _bc],
   },
 })
 
@@ -571,6 +590,7 @@ module.exports = {
   rem,
   user,
   show,
+  yesNo,
   html,
   payIn,
   admin,
