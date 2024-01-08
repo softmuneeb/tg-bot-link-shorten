@@ -1198,9 +1198,13 @@ bot.on('message', async msg => {
   }
   if (action === 'choose-domain-to-buy') {
     if (message === 'Back') return goto.submenu2()
-    const domain = message.toLowerCase()
+    let domain = message.toLowerCase()
+    domain = domain.replace('https://', '')
+    domain = domain.replace('http://', '')
+
     const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/
-    if (!domainRegex.test(domain)) return send(chatId, 'Domain name is invalid. Please try another domain name.')
+    if (!domainRegex.test(domain))
+      return send(chatId, 'Domain name is invalid. Please try another domain name. Use format abcpay.com')
     const { available, price, originalPrice } = await checkDomainPriceOnline(domain)
     if (!available) return send(chatId, 'Domain is not available. Please try another domain name.', rem)
     saveInfo('price', price)
