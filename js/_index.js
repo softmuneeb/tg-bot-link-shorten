@@ -43,6 +43,7 @@ const {
   validatorSelectCnam,
   redSelectRandomCustom,
   redSelectProvider,
+  kOf,
 } = require('./config.js')
 const createShortBitly = require('./bitly.js')
 const createShortUrlCuttly = require('./cuttly.js')
@@ -987,7 +988,7 @@ bot.on('message', async msg => {
 
   if (action === a.redSelectProvider) {
     if (message === 'Back') return goto.redSelectUrl()
-
+    if (message === user.buyPlan) return goto['choose-subscription']()
     if (!redSelectProvider.includes(message)) return send(chatId, `?`)
     saveInfo('provider', message)
     // bitly
@@ -998,7 +999,7 @@ bot.on('message', async msg => {
     // cuttly
     if (redSelectProvider[1] === message) {
       if (!((await freeLinksAvailable(chatId)) || (await isSubscribed(chatId))))
-        return send(chatId, '📋 Subscribe first')
+        return send(chatId, '📋 Subscribe first', kOf([...redSelectProvider, user.buyPlan]))
       return goto.redSelectRandomCustom()
     }
   }
@@ -1812,7 +1813,7 @@ bot.on('message', async msg => {
       return
     }
 
-    const linksText = formatLinks(links).join('\n\n')
+    const linksText = formatLinks(links.slice(-20)).join('\n\n')
     send(chatId, `Here are your shortened links:\n${linksText}`)
     return
   }

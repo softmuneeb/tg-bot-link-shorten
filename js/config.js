@@ -567,6 +567,7 @@ module.exports = {
   bc,
   npl,
   dns,
+  kOf,
   rem,
   user,
   show,
