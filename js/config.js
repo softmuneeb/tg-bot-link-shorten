@@ -131,7 +131,7 @@ Nomadly Bot`,
   couponInvalid: `Invalid coupon code, Please enter your coupon code again:`,
 
   lowPrice: `Sent price less than needed`,
-  planSubscribed: `Your payment was successful, and you're now subscribed to our {{plan}} plan. Enjoy the convenience of URL shortening with your personal domains. Thank you for choosing us.
+  planSubscribed: `Your payment was successful, and you're now subscribed to our {{plan}} plan. Enjoy the convenience of our URL-shortening services. We are adding BULKSMS soon. Thank you for choosing us.
 
 Best,
 Nomadly Bot`,
