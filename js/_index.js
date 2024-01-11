@@ -1105,6 +1105,7 @@ bot.on('message', async msg => {
     if (isNaN(discount)) return send(chatId, t.couponInvalid)
 
     const newPrice = price - (price * discount) / 100
+    send(chatId, t.redNewPrice(price, newPrice), k.pay)
     await saveInfo('newPrice', newPrice)
     await saveInfo('couponApplied', true)
     await saveInfo('lastStep', a.redSelectProvider)
