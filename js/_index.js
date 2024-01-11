@@ -1207,6 +1207,10 @@ bot.on('message', async msg => {
     if (!domainRegex.test(domain))
       return send(chatId, 'Domain name is invalid. Please try another domain name. Use format abcpay.com')
     const { available, price, originalPrice } = await checkDomainPriceOnline(domain)
+    if (!originalPrice) {
+      send(TELEGRAM_DEV_CHAT_ID, 'Some issue in getting price', rem)
+      return send(chatId, 'Some issue in getting price', rem)
+    }
     if (!available) return send(chatId, 'Domain is not available. Please try another domain name.', rem)
     saveInfo('price', price)
     saveInfo('domain', domain)

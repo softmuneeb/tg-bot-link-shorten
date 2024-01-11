@@ -76,7 +76,7 @@ async function set(c, key, value, valueInside) {
 async function del(c, _id) {
   try {
     const result = await c.deleteOne({ _id })
-    // console.log(`Deleted ${result.deletedCount >= 1 ? 'True' : 'False'} in ${c.collectionName} for ${chatId}`);
+    // console.log(`Deleted ${result.deletedCount >= 1 ? 'True' : 'False'} in ${c.collectionName}`);
     return result.deletedCount === 1
   } catch (error) {
     console.error('Error del:', error)
