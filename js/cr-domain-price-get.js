@@ -6,7 +6,7 @@ const PERCENT_INCREASE_DOMAIN = 1 + Number(process.env.PERCENT_INCREASE_DOMAIN)
 
 // Function to test domain availability
 async function checkDomainPriceOnline(domainName) {
-  const apiUrl = `https://api.connectreseller.com/ConnectReseller/ESHOP/checkDomainPrice?APIKey=${API_KEY}&websiteName=${domainName}`
+    const apiUrl = `https://api.connectreseller.com/ConnectReseller/ESHOP/checkDomainPrice?APIKey=${API_KEY}&websiteName=${domainName}`
 
   let response
 
@@ -16,7 +16,8 @@ async function checkDomainPriceOnline(domainName) {
 
     if (statusCode === 200) {
       const premiumPrice = response?.data?.responseData?.domainCheckResponce?.[0]?.creationSellFee
-      if (premiumPrice) return { available: true, price: premiumPrice }
+      // console.log(JSON.stringify(response.data, 0, 2))
+      if (premiumPrice) return { available: true, price: premiumPrice, originalPrice: premiumPrice }
       const [domainId] = Object.keys(response.data.responseData)
       const price1Year = Number(
         response?.data?.responseData[domainId]
