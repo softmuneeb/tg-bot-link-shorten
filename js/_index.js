@@ -181,6 +181,9 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
+  // buyDomainFullProcess(466590684, 'unlock-userid02.com')
+
+
   // set(freeShortLinksOf, 6687923716, 20)
   // Bohut zalil karaya is galat line nai : await set(wallet **** 00)
   // {
