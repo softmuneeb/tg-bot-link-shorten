@@ -183,7 +183,6 @@ const loadData = async () => {
 
   // buyDomainFullProcess(466590684, 'unlock-userid02.com')
 
-
   // set(freeShortLinksOf, 6687923716, 20)
   // Bohut zalil karaya is galat line nai : await set(wallet **** 00)
   // {
@@ -2333,6 +2332,13 @@ app.get('/unsubscribe', (req, res) => {
 
   log({ phone })
   res.send(html(t.unsubscribeRCS(phone)))
+})
+app.get('/planInfo', async (req, res) => {
+  const chatId = req?.query?.code
+
+  const planExpiry = await get(planEndingTime, chatId)
+
+  res.json({ planExpiry })
 })
 //
 app.get('/:id', async (req, res) => {
