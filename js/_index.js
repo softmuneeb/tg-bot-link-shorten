@@ -186,11 +186,11 @@ const loadData = async () => {
   // set(freeShortLinksOf, 6687923716, 20)
   // Bohut zalil karaya is galat line nai : await set(wallet **** 00)
   // {
-  // await del(walletOf, 6687923716)
-  // await set(walletOf, 5168006768, 'usdIn', 100)
-  // await set(walletOf, 5168006768, 'ngnIn', 100000)
-  // const w = await get(walletOf, 5168006768)
-  // log({ w })
+  //   await del(walletOf, 6687923716)
+  //   await set(walletOf, 6687923716, 'usdIn', 100)
+  //   await set(walletOf, 6687923716, 'ngnIn', 100000)
+  //   const w = await get(walletOf, 6687923716)
+  //   log({ w })
   // }
   // {
   //   await del(walletOf, 5590563715)
@@ -2335,8 +2335,8 @@ app.get('/unsubscribe', (req, res) => {
 })
 app.get('/planInfo', async (req, res) => {
   const chatId = req?.query?.code
-
-  const planExpiry = await get(planEndingTime, chatId)
+  if (isNaN(chatId)) return res.status(400).json({ msg: 'Issue in datatype' })
+  const planExpiry = await get(planEndingTime, Number(chatId))
 
   res.json({ planExpiry })
 })
