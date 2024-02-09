@@ -30,10 +30,10 @@ async function checkDomainPriceOnline(domainName) {
     } else if (statusCode === 400) {
       return {
         available: false,
-        message: 'domain name not available please try another domain name',
+        message: 'Domain name not available, please try another domain name',
       }
     } else {
-      return { available: false, message: 'invalid domain name' }
+      return { available: false, message: 'Invalid domain name, please try another domain name' }
     }
   } catch (error) {
     const message = `An error occurred while checking domain availability. Maybe IP Not Whitelisted. ${error.message}`

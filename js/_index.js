@@ -1208,12 +1208,12 @@ bot.on('message', async msg => {
     const domainRegex = /^(?:(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,6}$/
     if (!domainRegex.test(domain))
       return send(chatId, 'Domain name is invalid. Please try another domain name. Use format abcpay.com')
-    const { available, price, originalPrice } = await checkDomainPriceOnline(domain)
+    const { available, price, originalPrice, message: msg } = await checkDomainPriceOnline(domain)
+    if (!available) return send(chatId, msg)
     if (!originalPrice) {
-      send(TELEGRAM_DEV_CHAT_ID, 'Some issue in getting price', rem)
-      return send(chatId, 'Some issue in getting price', rem)
+      send(TELEGRAM_DEV_CHAT_ID, 'Some issue in getting price')
+      return send(chatId, 'Some issue in getting price')
     }
-    if (!available) return send(chatId, 'Domain is not available. Please try another domain name.', rem)
     saveInfo('price', price)
     saveInfo('domain', domain)
     saveInfo('originalPrice', originalPrice)
@@ -2334,11 +2334,13 @@ app.get('/unsubscribe', (req, res) => {
   res.send(html(t.unsubscribeRCS(phone)))
 })
 app.get('/planInfo', async (req, res) => {
-  const chatId = req?.query?.code
+  const chatId = Number(req?.query?.code)
   if (isNaN(chatId)) return res.status(400).json({ msg: 'Issue in datatype' })
-  const planExpiry = await get(planEndingTime, Number(chatId))
+  const name = await get(nameOf, chatId)
 
-  res.json({ planExpiry })
+  if (!name) return res.json({ planExpiry: 'invalid' })
+
+  res.json({ planExpiry: await get(planEndingTime, chatId) })
 })
 //
 app.get('/:id', async (req, res) => {
