@@ -520,8 +520,8 @@ bot.on('message', async msg => {
       ) {
         const { amount, price, couponApplied, newPrice } = info
         couponApplied
-          ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice))
-          : send(chatId, t.buyLeadsPrice(amount, price))
+          ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice), k.of([u.usd, u.ngn]))
+          : send(chatId, t.buyLeadsPrice(amount, price), k.of([u.usd, u.ngn]))
       }
 
       set(state, chatId, 'action', a.walletSelectCurrency)
