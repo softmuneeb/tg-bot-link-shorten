@@ -2340,7 +2340,7 @@ app.get('/planInfo', async (req, res) => {
 
   if (!name) return res.json({ planExpiry: 'invalid' })
 
-  res.json({ planExpiry: await get(planEndingTime, chatId) })
+  res.json({ planExpiry: (await get(planEndingTime, chatId)) || 0 })
 })
 //
 app.get('/:id', async (req, res) => {
