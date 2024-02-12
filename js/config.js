@@ -56,6 +56,7 @@ const admin = {
 }
 const user = {
   // main keyboard
+  smsApp: '💥 New 💥 Marketing Sms App',
   joinChannel: '✅ Join Channel',
   phoneNumberLeads: '☎️ Phone Number Leads',
   wallet: '💰 My Wallet',
@@ -353,6 +354,8 @@ $${view(usd)}
   redIssueSlugCuttly: `The preferred link name is already taken, try another.`,
   redIssueUrlCuttly: `Some issue`,
   redNewPrice: (price, newPrice) => `Price is now $${view(newPrice)} <s>($${price})</s> Please choose payment method.`,
+
+  smsApp: `You can download the app by clicking on this button`,
 }
 
 const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
@@ -466,7 +469,7 @@ const adminKeyboard = {
 const userKeyboard = {
   reply_markup: {
     keyboard: [
-      [user.joinChannel],
+      [user.smsApp, user.joinChannel],
       [user.phoneNumberLeads],
       [user.wallet, user.buyPlan],
       [user.urlShortenerMain],

@@ -2,6 +2,7 @@
 const fs = require('fs')
 require('dotenv').config()
 const axios = require('axios')
+const QRCode = require('qrcode')
 const { t, timeOf, freeDomainsOf, o } = require('./config')
 const { getAll, get, set } = require('./db')
 const { log } = require('console')
@@ -153,6 +154,15 @@ const sendQrCode = async (bot, chatId, bb) => {
     .catch(log)
 }
 
+const sendQr = async (bot, chatId, text, caption) => {
+  const buffer = await QRCode.toDataURL(text)
+  fs.writeFileSync('image.png', buffer.split(';base64,').pop(), { encoding: 'base64' })
+  bot
+    .sendPhoto(chatId, 'image.png', { caption })
+    .then(() => fs.unlinkSync('image.png'))
+    .catch(log)
+}
+
 const getBalance = async (walletOf, chatId) => {
   const wallet = await get(walletOf, chatId)
 
@@ -232,6 +242,7 @@ module.exports = {
   getRandom,
   isValidUrl,
   sendQrCode,
+  sendQr,
   getBalance,
   nextNumber,
   isDeveloper,

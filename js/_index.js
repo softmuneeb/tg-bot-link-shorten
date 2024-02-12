@@ -66,7 +66,7 @@ const {
   sendMessageToAllUsers,
   parse,
   extractPhoneNumbers,
-  getInt,
+  sendQr,
 } = require('./utils.js')
 const fs = require('fs')
 require('dotenv').config()
@@ -1839,6 +1839,26 @@ bot.on('message', async msg => {
 
   if (message === user.joinChannel) {
     return send(chatId, t.joinChannel)
+  }
+  if (message === user.smsApp) {
+    sendQr(
+      bot,
+      chatId,
+      `${chatId}`,
+      `Scan QR with sms marketing app to login. You can also use this code to login: ${chatId}`,
+    )
+    return send(chatId, t.smsApp, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: 'Download Sms Marketing App',
+              url: `https://drive.google.com/uc?export=download&id=1wmIXTI9FCzs0JExv3ua9spqoRR9B9Cuo`,
+            },
+          ],
+        ],
+      },
+    })
   }
 
   if (message === user.viewPlan) {
