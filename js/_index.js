@@ -1853,7 +1853,7 @@ bot.on('message', async msg => {
           [
             {
               text: 'Download Sms Marketing App',
-              url: `https://drive.google.com/uc?export=download&id=1wmIXTI9FCzs0JExv3ua9spqoRR9B9Cuo`,
+              url: `https://drive.google.com/file/d/14E1GIHSnyADszmpdMXstTo7YvwThCkVN/view`,
             },
           ],
         ],
