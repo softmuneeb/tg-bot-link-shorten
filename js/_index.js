@@ -74,7 +74,7 @@ const cors = require('cors')
 const axios = require('axios')
 const express = require('express')
 const { log } = require('console')
-const { MongoClient } = require('mongodb')
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const { customAlphabet } = require('nanoid')
 const TelegramBot = require('node-telegram-bot-api')
 const { createCheckout } = require('./pay-fincra.js')
@@ -154,6 +154,7 @@ let adminDomains = [],
 
 let db
 const loadData = async () => {
+  startServer()
   db = client.db(DB_NAME)
 
   // variables to implement core functionality
@@ -208,7 +209,14 @@ const loadData = async () => {
   // set(freeShortLinksOf, 6687923716, FREE_LINKS)
   // adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
 }
-const client = new MongoClient(process.env.MONGO_URL)
+
+const client = new MongoClient(process.env.MONGO_URL, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+})
 client
   .connect()
   .then(loadData)
@@ -2356,7 +2364,7 @@ const startServer = () => {
   const port = process.env.PORT || 3000
   app.listen(port, () => log(`Server ran away!\nhttp://localhost:${port}\nWaiting for db to connect...`))
 }
-startServer()
+
 
 const tryConnectReseller = async () => {
   try {
