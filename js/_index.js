@@ -405,8 +405,7 @@ bot.on('message', async msg => {
       const viewDnsRecords = records
         .map(
           ({ recordType, recordContent, nsId }, i) =>
-            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
-              recordContent || 'None'
+            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${recordContent || 'None'
             }`,
         )
         .join('\n')
@@ -2369,6 +2368,8 @@ const tryConnectReseller = async () => {
       const message = `Please add <code>${ip.data}</code> to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`
       send(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' })
       send(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' })
+    }).catch((error) => {
+      console.log("Error:", error.message);
     })
     //
   }
