@@ -50,3 +50,4 @@ If you're interested in contributing to this project, please read the [Contribut
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
