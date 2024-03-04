@@ -382,9 +382,9 @@ const validatorSelectFormat = ['Local Format', 'International Format']
 
 //redSelectRandomCustom
 
-const redSelectRandomCustom = ['Random Short Link', 'Custom Short Link']
+const redSelectRandomCustom = ['Random Short Link']
 
-const redSelectProvider = ['Bit.ly $10 (No trial)', 'Cutt.ly (Sub Required After Trial)']
+const redSelectProvider = ['Bit.ly $10 (No trial)', 'Ap1s.net (Sub Required After Trial)']
 
 const tickerOf = {
   BTC: 'btc',
@@ -469,7 +469,8 @@ const adminKeyboard = {
 const userKeyboard = {
   reply_markup: {
     keyboard: [
-      [user.smsApp, user.joinChannel],
+      [user.joinChannel],
+      // [user.smsApp, user.joinChannel],
       [user.phoneNumberLeads],
       [user.wallet, user.buyPlan],
       [user.urlShortenerMain],
