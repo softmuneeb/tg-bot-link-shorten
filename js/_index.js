@@ -46,7 +46,7 @@ const {
   yesNo,
 } = require('./config.js')
 const createShortBitly = require('./bitly.js')
-const createShortUrlCuttly = require('./cuttly.js')
+const createShortUrlApi = require('./cuttly.js')
 const {
   week,
   year,
@@ -1037,7 +1037,7 @@ bot.on('message', async msg => {
         const { url } = info
         const slug = nanoid()
         const __shortUrl = `${SELF_URL}/${slug}`
-        const _shortUrl = await createShortUrlCuttly(__shortUrl)
+        const _shortUrl = await createShortUrlApi(__shortUrl)
         const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
         increment(totalShortLinks)
         set(maskOf, shortUrl, _shortUrl)

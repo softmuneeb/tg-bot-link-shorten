@@ -1,18 +1,22 @@
 /* global process */
 require('dotenv').config()
 const axios = require('axios')
-const apiKey = process.env.API_CUTTLY
+const apiKey = process.env.API_AP1
 
-const createShortUrlCuttly = async longUrl => {
-  const cuttlyApiUrl = `https://cutt.ly/api/api.php?key=${apiKey}&short=${encodeURIComponent(longUrl)}`
+const createShortUrlApi = async longUrl => {
+  const apiUrl = `https://api.promptapi.com/short_url/hash`
+  const response = await axios.post(apiUrl, longUrl, {
+    headers: {
+      apikey: apiKey,
+    },
+  })
 
-  const response = await axios.get(cuttlyApiUrl)
-  const { status, shortLink } = response.data.url
-  if (status === 7) {
+  const shortLink = response.data.short_url
+  if (response.status === 200) {
     return shortLink
   } else {
-    console.error('Error creating short URL:', response.data.url.msg)
+    console.error('Error creating short URL, Code: ', response?.status)
   }
 }
-// createShortUrlCuttly('https://web.telegram.org/k/#@softlocalbot').then(console.log)
-module.exports = createShortUrlCuttly
+// createShortUrlApi('https://web.telegram.org/k/#@softlocalbot').then(console.log)
+module.exports = createShortUrlApi
