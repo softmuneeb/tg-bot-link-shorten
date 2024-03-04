@@ -359,7 +359,7 @@ bot.on('message', async msg => {
       set(state, chatId, 'action', 'choose-url-to-shorten')
       const m = 'Kindly share the URL that you would like shortened and analyzed. e.g https://cnn.com'
       send(chatId, m, bc)
-      // adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
+      adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
     },
     'choose-domain-with-shorten': domains => {
       send(chatId, t.chooseDomainWithShortener, show(domains))
@@ -404,8 +404,7 @@ bot.on('message', async msg => {
       const viewDnsRecords = records
         .map(
           ({ recordType, recordContent, nsId }, i) =>
-            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
-              recordContent || 'None'
+            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${recordContent || 'None'
             }`,
         )
         .join('\n')
@@ -1290,7 +1289,7 @@ bot.on('message', async msg => {
     if (message === 'Back') return goto['domain-pay']()
     const tickerView = message
     const coin = tickerOf[tickerView]
-    const price = info?.price
+    const price = info?.couponApplied ? info?.newPrice : info?.price
     const domain = info?.domain
     if (!coin) return send(chatId, t.askValidCrypto)
 
@@ -2363,7 +2362,7 @@ app.get('/:id', async (req, res) => {
 })
 const startServer = () => {
   const port = process.env.PORT || 3000
-  app.listen(port, () => log(`Server ran away!\nhttp://localhost:${port}\nWaiting for db to connect...`))
+  app.listen(port, () => log(`Server ran away!\nhttp://localhost:${port}`))
 }
 startServer()
 
