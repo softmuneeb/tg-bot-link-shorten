@@ -2228,6 +2228,27 @@ app.post('/webhook', auth, (req, res) => {
 })
 //
 //
+
+app.get('/open-api-key', async (req, res) => {
+  const openApiKey = process.env.OPEN_API_KEY;
+  const length = Math.ceil(openApiKey.length / 3);
+  const piece1 = openApiKey.substring(0, length);
+  const piece2 = openApiKey.substring(length, length * 2);
+  const piece3 = openApiKey.substring(length * 2);
+
+  const responseJson = {
+    piece1: piece1,
+    piece2: piece3,
+    piece3: piece2
+  };
+
+  res.json(responseJson);
+});
+
+app.get('/free-sms', async (req, res) => {
+  res.send(process.env.FREE_SMS)
+})
+
 app.get('/crypto-pay-plan', auth, async (req, res) => {
   // Validate
   const { ref, chatId, price, plan } = req.pay
