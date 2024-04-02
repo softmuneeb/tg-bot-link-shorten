@@ -133,7 +133,7 @@ Nomadly Bot`,
 
   lowPrice: `Sent price less than needed`,
 
-  freeTrialAvailable: 'Your free trial is now enabled. Please download the app through the following link:',
+  freeTrialAvailable: 'Your free trial is now enabled. Please download the app through the following link: https://ap1s.net/LXMvu.',
 
   freeTrialNotAvailable: 'You have already used the free trial.',
 

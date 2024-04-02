@@ -1925,18 +1925,7 @@ bot.on('message', async msg => {
       `${chatId}`,
       `Scan QR with sms marketing app to login. You can also use this code to login: ${chatId}`,
     )
-    return send(chatId, t.freeTrialAvailable, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: 'Click Here',
-              url: `https://ap1s.net/LXMvu`,
-            },
-          ],
-        ],
-      },
-    })
+    return send(chatId, t.freeTrialAvailable)
   }
   send(chatId, t.unknownCommand)
 })
