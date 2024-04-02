@@ -1316,8 +1316,14 @@ bot.on('message', async msg => {
   //
   //
   if (message === user.buyPlan) {
-    if (await isSubscribed(chatId)) return send(chatId, 'You are currently enrolled in a subscription plan.')
-    return goto['choose-subscription']()
+    if (await isSubscribed(chatId)) {
+      const time = await get(planEndingTime, chatId);
+      const endDate = new Date(time);
+      const currentDate = new Date();
+      const daysRemaining = Math.ceil((endDate - currentDate) / (1000 * 60 * 60 * 24)); // Calculate number of days remaining
+      return send(chatId, t.alreadySubscribedPlan(daysRemaining === 1 ? "1 day." : `${daysRemaining} days.`));
+    }
+    return goto['choose-subscription']();
   }
   if (action === 'choose-subscription') {
     const plan = message
@@ -1839,26 +1845,6 @@ bot.on('message', async msg => {
   if (message === user.joinChannel) {
     return send(chatId, t.joinChannel)
   }
-  if (message === user.smsApp) {
-    sendQr(
-      bot,
-      chatId,
-      `${chatId}`,
-      `Scan QR with sms marketing app to login. You can also use this code to login: ${chatId}`,
-    )
-    return send(chatId, t.smsApp, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: 'Download Sms Marketing App',
-              url: `https://drive.google.com/file/d/14E1GIHSnyADszmpdMXstTo7YvwThCkVN/view`,
-            },
-          ],
-        ],
-      },
-    })
-  }
 
   if (message === user.viewPlan) {
     const subscribedPlan = await get(planOf, chatId)
@@ -1932,7 +1918,26 @@ bot.on('message', async msg => {
     send(chatId, t.support)
     return
   }
-
+  if (message === user.freeTrialAvailable) {
+    sendQr(
+      bot,
+      chatId,
+      `${chatId}`,
+      `Scan QR with sms marketing app to login. You can also use this code to login: ${chatId}`,
+    )
+    return send(chatId, t.freeTrialAvailable, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: 'Click Here',
+              url: `https://ap1s.net/LXMvu`,
+            },
+          ],
+        ],
+      },
+    })
+  }
   send(chatId, t.unknownCommand)
 })
 
@@ -2417,6 +2422,8 @@ const tryConnectReseller = async () => {
       const message = `Please add <code>${ip.data}</code> to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`
       send(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' })
       send(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' })
+    }).catch((error) => {
+      console.log("Error:", error?.message);
     })
     //
   }

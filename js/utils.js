@@ -178,6 +178,12 @@ const subscribePlan = async (planEndingTime, freeDomainNamesAvailableFor, planOf
   set(planOf, chatId, plan)
   set(planEndingTime, chatId, Date.now() + timeOf[plan])
   set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan])
+  sendQr(
+    bot,
+    chatId,
+    `${chatId}`,
+    `Scan QR with sms marketing app to login. You can also use this code to login: ${chatId}`,
+  )
   bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan), keyboard)
   log('reply:\t' + t.planSubscribed.replace('{{plan}}', plan) + '\tto: ' + chatId)
 }

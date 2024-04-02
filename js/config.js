@@ -56,7 +56,6 @@ const admin = {
 }
 const user = {
   // main keyboard
-  smsApp: '💥 New 💥 Marketing Sms App',
   joinChannel: '✅ Join Channel',
   phoneNumberLeads: '☎️ Phone Number Leads',
   wallet: '💰 My Wallet',
@@ -65,6 +64,7 @@ const user = {
   domainNames: '🌐 Domain Names',
   viewPlan: '🔍 My Plan',
   getSupport: '🛠️ Get Support',
+  freeTrialAvailable: '✅ Free Trial',
 
   // Sub Menu 1: urlShortenerMain
   redSelectUrl: '🔗 Redirect & Shorten',
@@ -132,10 +132,17 @@ Nomadly Bot`,
   couponInvalid: `Invalid coupon code, Please enter your coupon code again:`,
 
   lowPrice: `Sent price less than needed`,
-  planSubscribed: `Your payment was successful, and you're now subscribed to our {{plan}} plan. Enjoy the convenience of our URL-shortening services. We are adding BULKSMS soon. Thank you for choosing us.
+
+  freeTrialAvailable: 'Your free trial is now enabled. Please download the app through the following link:',
+
+  freeTrialNotAvailable: 'You have already used the free trial.',
+
+  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening services, Mobile Messaging App for bulk SMS, and scheduled campaigns. Please download the app through the following link: https://ap1s.net/LXMvu. Thank you for choosing us.
 
 Best,
 Nomadly Bot`,
+
+  alreadySubscribedPlan: (days) => `Your subscription is active and expires in ${days}`,
 
   payError: `Payment session not found, please try again or contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
 
@@ -160,7 +167,6 @@ Discover more: t.me/nomadly`,
   successPayment: `Payment Processed Successfully! You can now close this window.`,
 
   welcome: `Thank you for choosing Nomadly Bot! Please choose an option below:`,
-
   welcomeFreeTrial: `Welcome to Nomadly! Enjoy our one-time free trial - shorten ${FREE_LINKS} URLs, active for ${FREE_LINKS_HOURS} hours. Experience the Nomadly difference!`,
 
   unknownCommand: `Command not found. Press /start or Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
@@ -180,7 +186,6 @@ Discover more: t.me/nomadly`,
   chooseDomainWithShortener: `Please select or buy the domain name you would like to connect with your shortened link.`,
 
   viewDnsRecords: `Here are DNS Records for {{domain}}`,
-
   addDns: 'Add DNS Record',
   updateDns: 'Update DNS Record',
   deleteDns: 'Delete DNS Record',
@@ -354,8 +359,6 @@ $${view(usd)}
   redIssueSlugCuttly: `The preferred link name is already taken, try another.`,
   redIssueUrlCuttly: `Some issue`,
   redNewPrice: (price, newPrice) => `Price is now $${view(newPrice)} <s>($${price})</s> Please choose payment method.`,
-
-  smsApp: `You can download the app by clicking on this button`,
 }
 
 const phoneNumberLeads = ['🙎‍♂️ Buy PhoneLeads', '☎️ Validate PhoneLeads']
@@ -469,10 +472,9 @@ const adminKeyboard = {
 const userKeyboard = {
   reply_markup: {
     keyboard: [
-      [user.joinChannel],
-      // [user.smsApp, user.joinChannel],
+      [user.joinChannel, user.wallet],
       [user.phoneNumberLeads],
-      [user.wallet, user.buyPlan],
+      [user.freeTrialAvailable, user.buyPlan],
       [user.urlShortenerMain],
       [user.domainNames],
       [user.viewPlan, user.getSupport],
