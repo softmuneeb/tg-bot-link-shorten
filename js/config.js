@@ -133,11 +133,11 @@ Nomadly Bot`,
 
   lowPrice: `Sent price less than needed`,
 
-  freeTrialAvailable: 'Your free trial is now enabled. Please download the app through the following link: https://ap1s.net/LXMvu.',
+  freeTrialAvailable: 'Your free trial is now enabled. Please download the app through the following link: https://ap1s.net/OI4Fq.',
 
   freeTrialNotAvailable: 'You have already used the free trial.',
 
-  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening services, Mobile Messaging App for bulk SMS, and scheduled campaigns. Please download the app through the following link: https://ap1s.net/LXMvu. Thank you for choosing us.
+  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening services, Mobile Messaging App for bulk SMS, and scheduled campaigns. Please download the app through the following link: https://ap1s.net/OI4Fq. Thank you for choosing us.
 
 Best,
 Nomadly Bot`,
