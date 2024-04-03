@@ -64,7 +64,7 @@ const user = {
   domainNames: '🌐 Domain Names',
   viewPlan: '🔍 My Plan',
   getSupport: '🛠️ Get Support',
-  freeTrialAvailable: '✅ Free Trial',
+  freeTrialAvailable: '📩 SMS-Free Trial',
 
   // Sub Menu 1: urlShortenerMain
   redSelectUrl: '🔗 Redirect & Shorten',
