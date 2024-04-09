@@ -2,6 +2,7 @@ const { areasOfCountry, carriersOf, countryCodeOf } = require('./areasOfCountry'
 
 const format = (cc, n) => `+${cc}(${n.toString().padStart(2, '0')})`
 
+
 /* global process */
 require('dotenv').config()
 const SELF_URL = process.env.SELF_URL
