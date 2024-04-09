@@ -2,6 +2,7 @@ const { areasOfCountry, carriersOf, countryCodeOf } = require('./areasOfCountry'
 
 const format = (cc, n) => `+${cc}(${n.toString().padStart(2, '0')})`
 
+
 /* global process */
 require('dotenv').config()
 const SELF_URL = process.env.SELF_URL
@@ -57,14 +58,14 @@ const admin = {
 const user = {
   // main keyboard
   joinChannel: '✅ Join Channel',
-  phoneNumberLeads: '☎️ Phone Number Leads',
+  phoneNumberLeads: '☎️ HQ SMS Leads',
   wallet: '💰 My Wallet',
   urlShortenerMain: '🔗 URL Shortener',
   buyPlan: '📋 Subscribe Here',
   domainNames: '🌐 Domain Names',
   viewPlan: '🔍 My Plan',
   getSupport: '🛠️ Get Support',
-  freeTrialAvailable: '📩 SMS-Free Trial',
+  freeTrialAvailable: '📩 BulkSMS -Trial',
 
   // Sub Menu 1: urlShortenerMain
   redSelectUrl: '🔗 Redirect & Shorten',
@@ -92,7 +93,7 @@ const t = {
   what: `Please choose option from keyboard`,
   whatNum: `Please choose valid number`,
   phoneGenTimeout: 'Timeout',
-  phoneGenNoGoodHits: 'Please contact support @nomadlysupport or select another area code',
+  phoneGenNoGoodHits: 'Please contact support @Nomadlysupport or select another area code',
 
   subscribeRCS: p =>
     `Subscribed! Unsubscribe anytime by clicking the <a href="${SELF_URL}/unsubscribe?a=b&Phone=${p}">link</a>`,
@@ -112,9 +113,9 @@ Nomadly Bot`,
   askValidPayOption: 'Please choose a valid payment option',
   chooseSubscription: `<b>Elevate Your Brand with Our Subscription Plans!</b>
 
-- <b>Daily:</b> $${PRICE_DAILY} with ${DAILY_PLAN_FREE_DOMAINS} free ".sbs" domains + unlimited “redirect & shorten”.
-- <b>Weekly:</b> $${PRICE_WEEKLY} with ${WEEKLY_PLAN_FREE_DOMAINS} free ".sbs" domains + unlimited “redirect & shorten.
-- <b>Monthly:</b> $${PRICE_MONTHLY} with ${MONTHLY_PLAN_FREE_DOMAINS} free ".sbs" domains + unlimited “redirect & shorten.
+- <b>Daily:</b> $${PRICE_DAILY} with ${DAILY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS”.
+- <b>Weekly:</b> $${PRICE_WEEKLY} with ${WEEKLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS”.
+- <b>Monthly:</b> $${PRICE_MONTHLY} with ${MONTHLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS”.
 
 (Exclusive to ".sbs" domains.)`,
 
@@ -133,14 +134,11 @@ Nomadly Bot`,
 
   lowPrice: `Sent price less than needed`,
 
-  freeTrialAvailable: 'Your free trial is now enabled. Please download the app through the following link: https://ap1s.net/6atvS',
+  freeTrialAvailable: 'Your SMS free trial is now enabled. Please download the Nomadly BulkSMS App here: https://ap1s.net/6atvS. Need E-sim cards? Contact @Nomadlysupport',
 
-  freeTrialNotAvailable: 'You have already used the free trial.',
+  freeTrialNotAvailable: 'You have already used the free trial',
 
-  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening services, Mobile Messaging App for bulk SMS, and scheduled campaigns. Please download the app through the following link: https://ap1s.net/6atvS. Thank you for choosing us.
-
-Best,
-Nomadly Bot`,
+  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening logics and Nomadly BulkSMS. Please download the app here: https://ap1s.net/6atvS. Need E-sim card? contact @Nomadlysupport`,
 
   alreadySubscribedPlan: (days) => `Your subscription is active and expires in ${days}`,
 
