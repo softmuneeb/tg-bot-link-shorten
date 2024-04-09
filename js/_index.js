@@ -2239,6 +2239,10 @@ app.get('/open-api-key', async (req, res) => {
   res.json(responseJson);
 });
 
+app.get('/bot-link', async (req, res) => {
+  res.send(process.env.BOT_LINK)
+})
+
 app.get('/free-sms', async (req, res) => {
   res.send(process.env.FREE_SMS)
 })
