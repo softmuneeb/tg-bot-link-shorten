@@ -137,10 +137,7 @@ Nomadly Bot`,
 
   freeTrialNotAvailable: 'You have already used the free trial'
 
-  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening services and Nomadly BulkSMS App. Please download the app here: https://ap1s.net/6atvS. Need E-sim cards? Contact @Nomadlysupport',
-
-Best,
-Nomadly Bot`,
+  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening services and Nomadly BulkSMS App. Please download the app here: https://ap1s.net/6atvS. Need E-sim cards? Contact @Nomadlysupport. Best,Nomadly Team`,
 
   alreadySubscribedPlan: (days) => `Your subscription is active and expires in ${days}`,
 
