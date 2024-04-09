@@ -57,7 +57,7 @@ const admin = {
 const user = {
   // main keyboard
   joinChannel: '✅ Join Channel',
-  phoneNumberLeads: '☎️ SMS Leads',
+  phoneNumberLeads: '☎️ HQ SMS Leads',
   wallet: '💰 My Wallet',
   urlShortenerMain: '🔗 URL Shortener',
   buyPlan: '📋 Subscribe Here',
@@ -135,7 +135,7 @@ Nomadly Bot`,
 
   freeTrialAvailable: 'Your SMS free trial is now enabled. Please download the Nomadly BulkSMS App here: https://ap1s.net/6atvS. Need E-sim cards? Contact @Nomadlysupport'
 
-  freeTrialNotAvailable: 'You have already used the free trial.',
+  freeTrialNotAvailable: 'You have already used the free trial.'
 
   planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening services and Nomadly BulkSMS App. Please download the app here: https://ap1s.net/6atvS. Need E-sim cards? Contact @Nomadlysupport.
 
