@@ -113,8 +113,8 @@ Nomadly Bot`,
   chooseSubscription: `<b>Elevate Your Brand with Our Subscription Plans!</b>
 
 - <b>Daily:</b> $${PRICE_DAILY} with ${DAILY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS”.
-- <b>Weekly:</b> $${PRICE_WEEKLY} with ${WEEKLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS.
-- <b>Monthly:</b> $${PRICE_MONTHLY} with ${MONTHLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS.
+- <b>Weekly:</b> $${PRICE_WEEKLY} with ${WEEKLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS”.
+- <b>Monthly:</b> $${PRICE_MONTHLY} with ${MONTHLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS”.
 
 (Exclusive to ".sbs" domains.)`,
 
@@ -133,9 +133,9 @@ Nomadly Bot`,
 
   lowPrice: `Sent price less than needed`,
 
-  freeTrialAvailable: 'Your SMS free trial is now enabled. Please download the Nomadly BulkSMS App here: https://ap1s.net/6atvS. Need E-sim cards? Contact @Nomadlysupport'
+  freeTrialAvailable: 'Your SMS free trial is now enabled. Please download the Nomadly BulkSMS App here: https://ap1s.net/6atvS. Need E-sim cards? Contact @Nomadlysupport',
 
-  freeTrialNotAvailable: 'You have already used the free trial.'
+  freeTrialNotAvailable: 'You have already used the free trial'
 
   planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening services and Nomadly BulkSMS App. Please download the app here: https://ap1s.net/6atvS. Need E-sim cards? Contact @Nomadlysupport.
 
