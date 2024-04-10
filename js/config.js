@@ -134,11 +134,11 @@ Nomadly Bot`,
 
   lowPrice: `Sent price less than needed`,
 
-  freeTrialAvailable: 'Your SMS free trial is now enabled. Please download the Nomadly BulkSMS App here: https://ap1s.net/6atvS. Need E-sim cards? Contact @Nomadlysupport',
+  freeTrialAvailable: 'Your SMS free trial is now enabled. Please download the Nomadly BulkSMS App here: https://ap1s.net/NDN4A. Need E-sim cards? Contact @Nomadlysupport',
 
   freeTrialNotAvailable: 'You have already used the free trial',
 
-  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening logics and Nomadly BulkSMS. Please download the app here: https://ap1s.net/6atvS. Need E-sim card? contact @Nomadlysupport`,
+  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening logics and Nomadly BulkSMS. Please download the app here: https://ap1s.net/NDN4A. Need E-sim card? contact @Nomadlysupport`,
 
   alreadySubscribedPlan: (days) => `Your subscription is active and expires in ${days}`,
 
