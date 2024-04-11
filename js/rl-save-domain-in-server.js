@@ -4,13 +4,14 @@ const axios = require('axios')
 const { log } = require('console')
 const API_TOKEN = process.env.API_KEY_RAILWAY
 const ENVIRONMENT_ID = process.env.RAILWAY_ENVIRONMENT_ID
+const PROJECT_ID = process.env.RAILWAY_PROJECT_ID
 const SERVICE_ID = process.env.RAILWAY_SERVICE_ID
 const GRAPHQL_ENDPOINT = 'https://backboard.railway.app/graphql/v2'
 async function saveDomainInServer(domain) {
   const GRAPHQL_QUERY = `
   mutation customDomainCreate {
       customDomainCreate(
-          input: { domain: "${domain}", environmentId: "${ENVIRONMENT_ID}", serviceId: "${SERVICE_ID}"}
+          input: { domain: "${domain}", environmentId: "${ENVIRONMENT_ID}", projectId: "${PROJECT_ID}", serviceId: "${SERVICE_ID}"}
       ) {
           id
           status {
