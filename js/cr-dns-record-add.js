@@ -39,7 +39,8 @@ const saveServerInDomain = async (domainName, server, RecordType = 'CNAME', doma
       WebsiteId: websiteId,
     }
     const url = `https://api.connectreseller.com/ConnectReseller/ESHOP/ManageDNSRecords`
-    await axios.get(url, { params }) // Enable DNS Management
+    const dnsMgmtRes = await axios.get(url, { params }) // Enable DNS Management
+    console.log({ dnsMgmtRes: dnsMgmtRes?.data })
   }
 
   try {
@@ -53,12 +54,12 @@ const saveServerInDomain = async (domainName, server, RecordType = 'CNAME', doma
       dnsZoneId = response?.data?.responseData?.dnszoneId
     } else {
       let e = response?.data?.responseMsg?.message
-      console.error('Error saveServerInDomain 1', e)
+      console.error('Error saveServerInDomain 3', e)
       return { error: e }
     }
   } catch (error) {
     let e = `${error?.message} ${JSON.stringify(error?.response?.data)}`
-    console.error('Error saveServerInDomain 2', e)
+    console.error('Error saveServerInDomain 4', e)
     return { error: e }
   }
 
@@ -80,11 +81,11 @@ const saveServerInDomain = async (domainName, server, RecordType = 'CNAME', doma
     const success = 200 === response?.data?.responseData?.statusCode
     return success ? { success } : { error: response?.data?.responseData?.message }
   } catch (error) {
-    console.error('Error saveServerInDomain 3', error?.message, error?.response?.data)
+    console.error('Error saveServerInDomain 5', error?.message, error?.response?.data)
     return { error: `${error?.message} ${error?.response?.data}` }
   }
 }
 
-// saveServerInDomain('cakes-and-bakes.sbs', 'server.sbs').then(console.log);
+// saveServerInDomain('flower-season.sbs', 'abc.server.rail.app').then(console.log)
 
 module.exports = { saveServerInDomain }

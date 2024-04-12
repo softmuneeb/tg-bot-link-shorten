@@ -67,6 +67,7 @@ const {
   parse,
   extractPhoneNumbers,
   sendQr,
+  sleep,
 } = require('./utils.js')
 const fs = require('fs')
 require('dotenv').config()
@@ -116,7 +117,7 @@ if (!DB_NAME || !RATE_LEAD_VALIDATOR) {
 }
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
-log('Bot ran!')
+log('Bot ran away!' + new Date())
 
 const send = (chatId, message, options) => {
   log('reply: ' + message + ' ' + (options?.reply_markup?.keyboard?.map(i => i) || '') + '\tto: ' + chatId + '\n')
@@ -181,7 +182,7 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
-  // buyDomainFullProcess(466590684, 'unlock-userid02.com')
+  // buyDomainFullProcess(6687923716, 'zohaib.sbs')
 
   // set(freeShortLinksOf, 6687923716, 20)
   // Bohut zalil karaya is galat line nai : await set(wallet **** 00)
@@ -404,7 +405,8 @@ bot.on('message', async msg => {
       const viewDnsRecords = records
         .map(
           ({ recordType, recordContent, nsId }, i) =>
-            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${recordContent || 'None'
+            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
+              recordContent || 'None'
             }`,
         )
         .join('\n')
@@ -1317,13 +1319,13 @@ bot.on('message', async msg => {
   //
   if (message === user.buyPlan) {
     if (await isSubscribed(chatId)) {
-      const time = await get(planEndingTime, chatId);
-      const endDate = new Date(time);
-      const currentDate = new Date();
-      const daysRemaining = Math.ceil((endDate - currentDate) / (1000 * 60 * 60 * 24)); // Calculate number of days remaining
-      return send(chatId, t.alreadySubscribedPlan(daysRemaining === 1 ? "1 day." : `${daysRemaining} days.`));
+      const time = await get(planEndingTime, chatId)
+      const endDate = new Date(time)
+      const currentDate = new Date()
+      const daysRemaining = Math.ceil((endDate - currentDate) / (1000 * 60 * 60 * 24)) // Calculate number of days remaining
+      return send(chatId, t.alreadySubscribedPlan(daysRemaining === 1 ? '1 day.' : `${daysRemaining} days.`))
     }
-    return goto['choose-subscription']();
+    return goto['choose-subscription']()
   }
   if (action === 'choose-subscription') {
     const plan = message
@@ -2067,46 +2069,54 @@ const formatLinks = links => {
 }
 
 const buyDomainFullProcess = async (chatId, domain) => {
-  const { error: buyDomainError } = await buyDomain(chatId, domain)
-  if (buyDomainError) {
-    const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`
-    log(m)
-    send(TELEGRAM_DEV_CHAT_ID, m)
-    send(chatId, m)
-    return m
-  }
-  send(
-    chatId,
-    `Domain ${domain} is now yours.Thank you for choosing us.
+  try {
+    const { error: buyDomainError } = await buyDomain(chatId, domain)
+    if (buyDomainError) {
+      const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`
+      log(m)
+      send(TELEGRAM_DEV_CHAT_ID, m)
+      send(chatId, m)
+      return m
+    }
+    send(
+      chatId,
+      `Domain ${domain} is now yours.Thank you for choosing us.
 
 Best,
 Nomadly Bot`,
-    o,
-  )
+      o,
+    )
 
-  let info = await get(state, chatId)
-  if (info?.askDomainToUseWithShortener === 'No') return
+    let info = await get(state, chatId)
+    if (info?.askDomainToUseWithShortener === 'No') return
 
-  const { server, error } = await saveDomainInServer(domain) // save domain in railway // can do separately maybe or just send messages of progress to user
-  if (error) {
-    const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`
-    send(chatId, m)
-    return m
+    const { server, error } = await saveDomainInServer(domain) // save domain in railway // can do separately maybe or just send messages of progress to user
+    if (error) {
+      const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`
+      send(chatId, m)
+      return m
+    }
+    send(
+      chatId,
+      `Linking domain with your account. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain}`,
+    )
+
+    await sleep(65000) // sleep 65 seconds so that CR API can get the info that
+
+    const { error: saveServerInDomainError } = await saveServerInDomain(domain, server)
+    if (saveServerInDomainError) {
+      const m = `Error saving server in domain ${saveServerInDomainError}`
+      send(chatId, m)
+      return m
+    }
+    send(chatId, t.domainBought.replaceAll('{{domain}}', domain))
+    regularCheckDns(bot, chatId, domain)
+    return false // error = false
+  } catch (error) {
+    const errorMessage = `err buyDomainFullProcess ${error?.message} ${JSON.stringify(error?.response?.data, null, 2)}`
+    console.error(errorMessage)
+    return errorMessage
   }
-  send(
-    chatId,
-    `Linking domain with your account. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain}`,
-  )
-
-  const { error: saveServerInDomainError } = await saveServerInDomain(domain, server)
-  if (saveServerInDomainError) {
-    const m = `Error saving server in domain ${saveServerInDomainError}`
-    send(chatId, m)
-    return m
-  }
-  send(chatId, t.domainBought.replaceAll('{{domain}}', domain))
-  regularCheckDns(bot, chatId, domain)
-  return false // error = false
 }
 
 const auth = async (req, res, next) => {
@@ -2224,20 +2234,20 @@ app.post('/webhook', auth, (req, res) => {
 //
 
 app.get('/open-api-key', async (req, res) => {
-  const openApiKey = process.env.OPEN_API_KEY;
-  const length = Math.ceil(openApiKey.length / 3);
-  const piece1 = openApiKey.substring(0, length);
-  const piece2 = openApiKey.substring(length, length * 2);
-  const piece3 = openApiKey.substring(length * 2);
+  const openApiKey = process.env.OPEN_API_KEY
+  const length = Math.ceil(openApiKey.length / 3)
+  const piece1 = openApiKey.substring(0, length)
+  const piece2 = openApiKey.substring(length, length * 2)
+  const piece3 = openApiKey.substring(length * 2)
 
   const responseJson = {
     piece1: piece1,
     piece2: piece3,
-    piece3: piece2
-  };
+    piece3: piece2,
+  }
 
-  res.json(responseJson);
-});
+  res.json(responseJson)
+})
 
 app.get('/bot-link', async (req, res) => {
   res.send(process.env.SUPPORT_LINK)
@@ -2411,13 +2421,16 @@ const tryConnectReseller = async () => {
     connect_reseller_working = true
   } catch (error) {
     //
-    axios.get('https://api.ipify.org/').then(ip => {
-      const message = `Please add <code>${ip.data}</code> to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`
-      send(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' })
-      send(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' })
-    }).catch((error) => {
-      console.log("Error:", error?.message);
-    })
+    axios
+      .get('https://api.ipify.org/')
+      .then(ip => {
+        const message = `Please add <code>${ip.data}</code> to whitelist in Connect Reseller, API Section. https://global.connectreseller.com/tools/profile`
+        send(TELEGRAM_DEV_CHAT_ID, message, { parse_mode: 'HTML' })
+        send(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' })
+      })
+      .catch(error => {
+        console.log('Error:', error?.message)
+      })
     //
   }
 }
