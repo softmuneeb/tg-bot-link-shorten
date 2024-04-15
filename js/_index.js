@@ -84,7 +84,7 @@ const { buyDomainOnline } = require('./cr-domain-register.js')
 const { saveServerInDomain } = require('./cr-dns-record-add.js')
 const { updateDNSRecord } = require('./cr-dns-record-update.js')
 const { checkDomainPriceOnline } = require('./cr-domain-price-get.js')
-const { saveDomainInServer } = require('./rl-save-domain-in-server.js')
+const { saveDomainInServerRailway, saveDomainInServerRender } = require('./rl-save-domain-in-server.js')
 const { get, set, del, increment, getAll, decrement } = require('./db.js')
 const { getRegisteredDomainNames } = require('./cr-domain-purchased-get.js')
 const { getCryptoDepositAddress, convert } = require('./pay-blockbee.js')
@@ -103,6 +103,7 @@ const PRICE_BITLY_LINK = Number(process.env.PRICE_BITLY_LINK)
 const RATE_LEAD_VALIDATOR = Number(process.env.RATE_LEAD_VALIDATOR)
 const RATE_CNAM_VALIDATOR = Number(process.env.RATE_CNAM_VALIDATOR)
 const FREE_LINKS = Number(process.env.FREE_LINKS)
+const HOSTED_ON = process.env.HOSTED_ON
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const TELEGRAM_DEV_CHAT_ID = process.env.TELEGRAM_DEV_CHAT_ID
@@ -111,8 +112,8 @@ const FREE_LINKS_TIME_SECONDS = Number(process.env.FREE_LINKS_TIME_SECONDS) * 10
 const TELEGRAM_DOMAINS_SHOW_CHAT_ID = Number(process.env.TELEGRAM_DOMAINS_SHOW_CHAT_ID)
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5)
 
-if (!DB_NAME || !RATE_LEAD_VALIDATOR) {
-  return log('something missing from env file')
+if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON) {
+  return log('something ENV variable is missing from env file')
 }
 
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
@@ -181,7 +182,7 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
-  // buyDomainFullProcess(466590684, 'unlock-userid02.com')
+  // buyDomainFullProcess(6687923716, 'ehtesham.sbs')
 
   // set(freeShortLinksOf, 6687923716, 20)
   // Bohut zalil karaya is galat line nai : await set(wallet **** 00)
@@ -2051,6 +2052,8 @@ async function buyDomain(chatId, domain) {
   // ref https://www.mongodb.com/docs/manual/core/dot-dollar-considerations
   const domainSanitizedForDb = domain.replaceAll('.', '@')
 
+  // These below two lines are for testing
+  // so that real domain is not bought
   // set(domainsOf, chatId, domainSanitizedForDb, true)
   // return { success: true }
 
@@ -2087,7 +2090,9 @@ Nomadly Bot`,
   let info = await get(state, chatId)
   if (info?.askDomainToUseWithShortener === 'No') return
 
-  const { server, error } = await saveDomainInServer(domain) // save domain in railway // can do separately maybe or just send messages of progress to user
+  // saveDomainInServerRender 
+  const { server, error, recordType } = process.env.HOSTED_ON === 'render' ? await saveDomainInServerRender(domain) : await saveDomainInServerRailway(domain)// save domain in railway // can do separately maybe or just send messages of progress to user
+
   if (error) {
     const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`
     send(chatId, m)
@@ -2098,7 +2103,7 @@ Nomadly Bot`,
     `Linking domain with your account. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain}`,
   )
 
-  const { error: saveServerInDomainError } = await saveServerInDomain(domain, server)
+  const { error: saveServerInDomainError } = await saveServerInDomain(domain, server, recordType)
   if (saveServerInDomainError) {
     const m = `Error saving server in domain ${saveServerInDomainError}`
     send(chatId, m)
