@@ -8,6 +8,7 @@ const RENDER_AUTH_TOKEN = process.env.RENDER_AUTH_TOKEN
 const RENDER_SERVICE_ID = process.env.RENDER_SERVICE_ID
 const RENDER_APP_IP_ADDRESS = process.env.RENDER_APP_IP_ADDRESS
 const ENVIRONMENT_ID = process.env.RAILWAY_ENVIRONMENT_ID
+const PROJECT_ID = process.env.RAILWAY_PROJECT_ID
 const SERVICE_ID = process.env.RAILWAY_SERVICE_ID
 const GRAPHQL_ENDPOINT = 'https://backboard.railway.app/graphql/v2'
 
@@ -34,7 +35,7 @@ async function saveDomainInServerRailway(domain) {
   const GRAPHQL_QUERY = `
   mutation customDomainCreate {
       customDomainCreate(
-          input: { domain: "${domain}", environmentId: "${ENVIRONMENT_ID}", serviceId: "${SERVICE_ID}"}
+          input: { domain: "${domain}", environmentId: "${ENVIRONMENT_ID}", projectId: "${PROJECT_ID}", serviceId: "${SERVICE_ID}"}
       ) {
           id
           status {
