@@ -105,6 +105,10 @@ const RATE_LEAD_VALIDATOR = Number(process.env.RATE_LEAD_VALIDATOR)
 const RATE_CNAM_VALIDATOR = Number(process.env.RATE_CNAM_VALIDATOR)
 const FREE_LINKS = Number(process.env.FREE_LINKS)
 const HOSTED_ON = process.env.HOSTED_ON
+
+const CHAT_BOT_NAME = process.env.CHAT_BOT_NAME
+const TG_HANDLE = process.env.TG_HANDLE
+
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
 const REST_APIS_ON = process.env.REST_APIS_ON
 const TELEGRAM_BOT_ON = process.env.TELEGRAM_BOT_ON
@@ -115,17 +119,14 @@ const FREE_LINKS_TIME_SECONDS = Number(process.env.FREE_LINKS_TIME_SECONDS) * 10
 const TELEGRAM_DOMAINS_SHOW_CHAT_ID = Number(process.env.TELEGRAM_DOMAINS_SHOW_CHAT_ID)
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5)
 
-if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_APIS_ON) {
-  return log('service paused because some ENV variable is missing')
+if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_APIS_ON || !CHAT_BOT_NAME) {
+  return log('Service is paused because some ENV variable is missing')
 }
 
-let bot;
+let bot
 
-if (TELEGRAM_BOT_ON === "true")
-  bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
-else bot = { on: () => { } }
-
-
+if (TELEGRAM_BOT_ON === 'true') bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
+else bot = { on: () => {} }
 
 log('Bot ran away!' + new Date())
 
@@ -190,8 +191,7 @@ const loadData = async () => {
   clicksOn = db.collection('clicksOn')
   chatIdOf = db.collection('chatIdOf')
 
-  if (REST_APIS_ON === "true")
-    startServer()
+  if (REST_APIS_ON === 'true') startServer()
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
@@ -418,7 +418,8 @@ bot?.on('message', async msg => {
       const viewDnsRecords = records
         .map(
           ({ recordType, recordContent, nsId }, i) =>
-            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${recordContent || 'None'
+            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
+              recordContent || 'None'
             }`,
         )
         .join('\n')
@@ -2094,21 +2095,24 @@ const buyDomainFullProcess = async (chatId, domain) => {
     }
     send(
       chatId,
-      `Domain ${domain} is now yours.Thank you for choosing us.
+      `Domain ${domain} is now yours. Thank you for choosing us.
 
 Best,
-Nomadly Bot`,
+${CHAT_BOT_NAME}`,
       o,
     )
 
     let info = await get(state, chatId)
     if (info?.askDomainToUseWithShortener === 'No') return
 
-    // saveDomainInServerRender 
-    const { server, error, recordType } = process.env.HOSTED_ON === 'render' ? await saveDomainInServerRender(domain) : await saveDomainInServerRailway(domain)// save domain in railway // can do separately maybe or just send messages of progress to user
+    // saveDomainInServerRender
+    const { server, error, recordType } =
+      process.env.HOSTED_ON === 'render'
+        ? await saveDomainInServerRender(domain)
+        : await saveDomainInServerRailway(domain) // save domain in railway // can do separately maybe or just send messages of progress to user
 
     if (error) {
-      const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`
+      const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more ${TG_HANDLE}.`
       send(chatId, m)
       return m
     }
@@ -2134,8 +2138,6 @@ Nomadly Bot`,
     return errorMessage
   }
 }
-
-
 
 const auth = async (req, res, next) => {
   log(req.hostname + req.originalUrl)

@@ -2,12 +2,20 @@ const { areasOfCountry, carriersOf, countryCodeOf } = require('./areasOfCountry'
 
 const format = (cc, n) => `+${cc}(${n.toString().padStart(2, '0')})`
 
-
 /* global process */
 require('dotenv').config()
 const SELF_URL = process.env.SELF_URL
 const FREE_LINKS = Number(process.env.FREE_LINKS)
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
+
+const TG_HANDLE = process.env.TG_HANDLE
+const TG_CHANNEL = process.env.TG_CHANNEL
+const SMS_APP_NAME = process.env.SMS_APP_NAME
+const SMS_APP_LINK = process.env.SMS_APP_LINK
+const CHAT_BOT_NAME = process.env.CHAT_BOT_NAME
+const CHAT_BOT_BRAND = process.env.CHAT_BOT_BRAND
+const SUPPORT_HANDLE = process.env.SUPPORT_HANDLE
+
 const PRICE_DAILY = Number(process.env.PRICE_DAILY_SUBSCRIPTION)
 const PRICE_WEEKLY = Number(process.env.PRICE_WEEKLY_SUBSCRIPTION)
 const PRICE_MONTHLY = Number(process.env.PRICE_MONTHLY_SUBSCRIPTION)
@@ -93,7 +101,7 @@ const t = {
   what: `Please choose option from keyboard`,
   whatNum: `Please choose valid number`,
   phoneGenTimeout: 'Timeout',
-  phoneGenNoGoodHits: 'Please contact support @Nomadlysupport or select another area code',
+  phoneGenNoGoodHits: `Please contact support ${SUPPORT_HANDLE} or select another area code`,
 
   subscribeRCS: p =>
     `Subscribed! Unsubscribe anytime by clicking the <a href="${SELF_URL}/unsubscribe?a=b&Phone=${p}">link</a>`,
@@ -104,7 +112,7 @@ const t = {
     ngn => `Please remit ${ngn} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your wallet will updated.
 
 Best regards,
-Nomadly Bot`,
+${CHAT_BOT_NAME}`,
 
   askEmail: `Please provide an email for payment confirmation.`,
   askValidAmount: 'Please provide a valid number',
@@ -134,15 +142,15 @@ Nomadly Bot`,
 
   lowPrice: `Sent price less than needed`,
 
-  freeTrialAvailable: 'Your SMS free trial is now enabled. Please download the Nomadly BulkSMS App here: https://ap1s.net/NDN4A. Need E-sim cards? Contact @Nomadlysupport',
+  freeTrialAvailable: `Your SMS free trial is now enabled. Please download the ${SMS_APP_NAME} here: ${SMS_APP_LINK}. Need E-sim cards? Contact ${SUPPORT_HANDLE}`,
 
   freeTrialNotAvailable: 'You have already used the free trial',
 
-  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening logics and Nomadly BulkSMS. Please download the app here: https://ap1s.net/NDN4A. Need E-sim card? contact @Nomadlysupport`,
+  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening logics and ${SMS_APP_NAME}. Please download the app here: https://ap1s.net/NDN4A. Need E-sim card? contact ${SUPPORT_HANDLE}`,
 
-  alreadySubscribedPlan: (days) => `Your subscription is active and expires in ${days}`,
+  alreadySubscribedPlan: days => `Your subscription is active and expires in ${days}`,
 
-  payError: `Payment session not found, please try again or contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+  payError: `Payment session not found, please try again or contact support ${SUPPORT_USERNAME}. Discover more ${TG_HANDLE}.`,
 
   chooseFreeDomainText: `<b>Great News!</b> This domain is available for free with your subscription. Would you like to claim it?`,
 
@@ -151,27 +159,27 @@ Nomadly Bot`,
   askDomainToUseWithShortener: `Do you wish to use domain with the shortener?`,
   blockUser: `Please share the username of the user that needs to be blocked.`,
   unblockUser: `Please share the username of the user that needs to be unblocked.`,
-  blockedUser: `You are currently blocked from using the bot. Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+  blockedUser: `You are currently blocked from using the bot. Please contact support ${SUPPORT_USERNAME}. Discover more ${TG_HANDLE}.`,
 
   greet: `Keep your eyes on this space! We're gearing up to launch our URL shortening application that will make your links short, sweet, and to the point. Stay tuned for our big reveal!
 
 Support ${SUPPORT_USERNAME} at Telegram.`,
 
-  linkExpired: `Your Nomadly trial has ended and your short link is deactivated. We invite you to subscribe to maintain access to our URL service and free domain names. Choose a suitable plan and follow the instructions to subscribe. Please Contact us for any queries.  
+  linkExpired: `Your ${CHAT_BOT_BRAND} trial has ended and your short link is deactivated. We invite you to subscribe to maintain access to our URL service and free domain names. Choose a suitable plan and follow the instructions to subscribe. Please Contact us for any queries.  
 Best,  
-Nomadly Team
-Discover more: t.me/nomadly`,
+${CHAT_BOT_BRAND} Team
+Discover more: ${TG_CHANNEL}`,
 
   successPayment: `Payment Processed Successfully! You can now close this window.`,
 
-  welcome: `Thank you for choosing Nomadly Bot! Please choose an option below:`,
-  welcomeFreeTrial: `Welcome to Nomadly! Enjoy our one-time free trial - shorten ${FREE_LINKS} URLs, active for ${FREE_LINKS_HOURS} hours. Experience the Nomadly difference!`,
+  welcome: `Thank you for choosing ${CHAT_BOT_NAME}! Please choose an option below:`,
+  welcomeFreeTrial: `Welcome to ${CHAT_BOT_BRAND}! Enjoy our one-time free trial - shorten ${FREE_LINKS} URLs, active for ${FREE_LINKS_HOURS} hours. Experience the ${CHAT_BOT_BRAND} difference!`,
 
-  unknownCommand: `Command not found. Press /start or Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+  unknownCommand: `Command not found. Press /start or Please contact support ${SUPPORT_USERNAME}. Discover more ${TG_HANDLE}.`,
 
-  support: `Please contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+  support: `Please contact support ${SUPPORT_USERNAME}. Discover more ${TG_HANDLE}.`,
 
-  joinChannel: `Please Join Channel https://t.me/Nomadly`,
+  joinChannel: `Please Join Channel ${TG_CHANNEL}`,
 
   dnsPropagated: `DNS Propagation for {{domain}} is completed for unlimited URL Shortening.`,
 
@@ -224,7 +232,7 @@ Discover more: t.me/nomadly`,
 
   provideLink: 'Please provide a valid URL. e.g https://google.com',
 
-  comingSoonWithdraw: `Withdraw coming soon. Contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`,
+  comingSoonWithdraw: `Withdraw coming soon. Contact support ${SUPPORT_USERNAME}. Discover more ${TG_HANDLE}.`,
 
   selectCurrencyToDeposit: `Please select currency to deposit USD / NGN`,
 
@@ -240,7 +248,7 @@ Discover more: t.me/nomadly`,
   ) => `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
 
 Best regards,
-Nomadly Bot`,
+${CHAT_BOT_NAME}`,
 
   bankPayDomain: (
     priceNGN,
@@ -248,7 +256,7 @@ Nomadly Bot`,
   ) => `Please remit ${priceNGN} NGN by clicking “Make Payment” below. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} domain will be seamlessly activated.
 
 Best regards,
-Nomadly Bot`,
+${CHAT_BOT_NAME}`,
 
   showDepositCryptoInfoPlan: (priceCrypto, tickerView, address, plan) =>
     `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
@@ -256,7 +264,7 @@ Nomadly Bot`,
 Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your ${plan} plan will be seamlessly activated.
     
 Best regards,
-Nomadly Bot`,
+${CHAT_BOT_NAME}`,
 
   showDepositCryptoInfoDomain: (priceCrypto, tickerView, address, domain) =>
     `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
@@ -264,7 +272,7 @@ Nomadly Bot`,
 Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your ${domain} domain will be seamlessly activated.
     
 Best regards,
-Nomadly Bot`,
+${CHAT_BOT_NAME}`,
 
   showDepositCryptoInfo: (priceCrypto, tickerView, address) =>
     `Please remit ${priceCrypto} ${tickerView} to\n\n<code>${address}</code>
@@ -272,14 +280,14 @@ Nomadly Bot`,
 Please note, crypto transactions can take up to 30 minutes to complete. Once the transaction has been confirmed, you will be promptly notified, and your wallet will be updated.
 
 Best regards,
-Nomadly Bot`,
+${CHAT_BOT_NAME}`,
 
   confirmationDepositMoney: (
     amount,
     usd,
   ) => `Your payment of ${amount} ($${usd}) is processed. Thank you for choosing us.
 Best,
-Nomadly Bot`,
+${CHAT_BOT_NAME}`,
 
   showWallet: (usd, ngn) => `Wallet Balance:
 $${view(usd)}
