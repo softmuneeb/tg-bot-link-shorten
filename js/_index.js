@@ -181,6 +181,8 @@ const loadData = async () => {
   clicksOn = db.collection('clicksOn')
   chatIdOf = db.collection('chatIdOf')
 
+  startServer()
+
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
   // buyDomainFullProcess(6687923716, 'ehtesham.sbs')
@@ -2416,10 +2418,9 @@ app.get('/:id', async (req, res) => {
   increment(clicksOn, shortUrlSanitized)
 })
 const startServer = () => {
-  const port = process.env.PORT || 3000
+  const port = process.env.PORT || 4000
   app.listen(port, () => log(`Server ran away!\nhttp://localhost:${port}`))
 }
-startServer()
 
 const tryConnectReseller = async () => {
   try {
