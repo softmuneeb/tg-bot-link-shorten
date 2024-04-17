@@ -106,6 +106,8 @@ const RATE_CNAM_VALIDATOR = Number(process.env.RATE_CNAM_VALIDATOR)
 const FREE_LINKS = Number(process.env.FREE_LINKS)
 const HOSTED_ON = process.env.HOSTED_ON
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
+const REST_APIS_ON = process.env.REST_APIS_ON
+const TELEGRAM_BOT_ON = process.env.TELEGRAM_BOT_ON
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const TELEGRAM_DEV_CHAT_ID = process.env.TELEGRAM_DEV_CHAT_ID
 const TELEGRAM_ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID
@@ -113,11 +115,18 @@ const FREE_LINKS_TIME_SECONDS = Number(process.env.FREE_LINKS_TIME_SECONDS) * 10
 const TELEGRAM_DOMAINS_SHOW_CHAT_ID = Number(process.env.TELEGRAM_DOMAINS_SHOW_CHAT_ID)
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5)
 
-if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON) {
+if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_APIS_ON) {
   return log('something ENV variable is missing from env file')
 }
 
-const bot = {on:()=>{}}//new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
+let bot;
+
+if (TELEGRAM_BOT_ON === "true")
+  bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
+else bot = { on: () => { } }
+
+
+
 log('Bot ran away!' + new Date())
 
 const send = (chatId, message, options) => {
@@ -181,7 +190,8 @@ const loadData = async () => {
   clicksOn = db.collection('clicksOn')
   chatIdOf = db.collection('chatIdOf')
 
-  startServer()
+  if (REST_APIS_ON === "true")
+    startServer()
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
