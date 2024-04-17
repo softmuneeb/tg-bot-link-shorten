@@ -117,12 +117,12 @@ if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON) {
   return log('something ENV variable is missing from env file')
 }
 
-const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
+const bot = {on:()=>{}}//new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 log('Bot ran away!' + new Date())
 
 const send = (chatId, message, options) => {
   log('reply: ' + message + ' ' + (options?.reply_markup?.keyboard?.map(i => i) || '') + '\tto: ' + chatId + '\n')
-  bot.sendMessage(chatId, message, options).catch(e => log(e.message + ': ' + chatId))
+  bot?.sendMessage(chatId, message, options).catch(e => log(e.message + ': ' + chatId))
 }
 
 // variables to implement core functionality
@@ -217,7 +217,7 @@ client
   .then(loadData)
   .catch(err => log('DB Error bro', err, err?.message))
 
-bot.on('message', async msg => {
+bot?.on('message', async msg => {
   const chatId = msg?.chat?.id
   const message = msg?.text || ''
   log('message: ' + message + '\tfrom: ' + chatId + ' ' + msg?.from?.username)
@@ -763,21 +763,21 @@ bot.on('message', async msg => {
       const re = cc === '+1' ? '' : '0'
       const file1 = 'leads.txt'
       fs.writeFile(file1, res.map(a => (l ? a[0].replace(cc, re) : a[0])).join('\n'), () => {
-        bot.sendDocument(chatId, file1)
+        bot?.sendDocument(chatId, file1)
       })
 
       if (cnam) {
         const file2 = 'leads_with_cnam.txt'
         fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[3]).join('\n'), () => {
-          bot.sendDocument(chatId, file2)
-          bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2)
+          bot?.sendDocument(chatId, file2)
+          bot?.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2)
         })
       } else {
         if (country !== 'USA') {
           const file2 = 'leads_with_carriers.txt'
           fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[1]).join('\n'), () => {
-            bot.sendDocument(chatId, file2)
-            bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2)
+            bot?.sendDocument(chatId, file2)
+            bot?.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2)
           })
         }
       }
@@ -788,7 +788,7 @@ bot.on('message', async msg => {
           fs.writeFile(
             file2,
             res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[1] + ' ' + a[2]).join('\n'),
-            () => bot.sendDocument(chatId, file2),
+            () => bot?.sendDocument(chatId, file2),
           )
       }
 
@@ -839,21 +839,21 @@ bot.on('message', async msg => {
       const re = cc === '+1' ? '' : '0'
       const file1 = 'leads.txt'
       fs.writeFile(file1, res.map(a => (l ? a[0].replace(cc, re) : a[0])).join('\n'), () => {
-        bot.sendDocument(chatId, file1).catch()
+        bot?.sendDocument(chatId, file1).catch()
       })
 
       if (cnam) {
         const file2 = 'leads_with_cnam.txt'
         fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[3]).join('\n'), () => {
-          bot.sendDocument(chatId, file2).catch()
-          bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2).catch()
+          bot?.sendDocument(chatId, file2).catch()
+          bot?.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2).catch()
         })
       } else {
         if (country !== 'USA') {
           const file2 = 'leads_with_carriers.txt'
           fs.writeFile(file2, res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[1]).join('\n'), () => {
-            bot.sendDocument(chatId, file2).catch()
-            bot.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2).catch()
+            bot?.sendDocument(chatId, file2).catch()
+            bot?.sendDocument(TELEGRAM_ADMIN_CHAT_ID, file2).catch()
           })
         }
       }
@@ -864,7 +864,7 @@ bot.on('message', async msg => {
           fs.writeFile(
             file2,
             res.map(a => (l ? a[0].replace(cc, re) : a[0]) + ' ' + a[1] + ' ' + a[2]).join('\n'),
-            () => bot.sendDocument(chatId, file2).catch(),
+            () => bot?.sendDocument(chatId, file2).catch(),
           )
       }
 
@@ -1748,7 +1748,7 @@ bot.on('message', async msg => {
 
     if (msg.document) {
       try {
-        const fileLink = await bot.getFileLink(msg.document.file_id)
+        const fileLink = await bot?.getFileLink(msg.document.file_id)
         content = (await axios.get(fileLink, { responseType: 'text' }))?.data
       } catch (error) {
         console.error('Error:', error.message)
