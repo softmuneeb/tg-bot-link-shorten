@@ -108,7 +108,6 @@ const FREE_LINKS = Number(process.env.FREE_LINKS)
 const HOSTED_ON = process.env.HOSTED_ON
 
 const CHAT_BOT_NAME = process.env.CHAT_BOT_NAME
-const HIDE_BANK_PAYMENT = process.env.HIDE_BANK_PAYMENT
 const REST_APIS_ON = process.env.REST_APIS_ON
 const TELEGRAM_BOT_ON = process.env.TELEGRAM_BOT_ON
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
@@ -165,7 +164,6 @@ let adminDomains = [],
 
 let db
 const loadData = async () => {
-  startServer()
   db = client.db(DB_NAME)
 
   // variables to implement core functionality
