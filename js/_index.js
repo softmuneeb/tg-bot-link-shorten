@@ -1395,7 +1395,8 @@ bot?.on('message', async msg => {
     const email = message
     if (!isValidEmail(email)) return send(chatId, t.askValidEmail)
 
-    const { plan, price } = info
+    const { plan } = info
+    const price = info?.couponApplied ? info?.newPrice : info?.price
     const priceNGN = Number(await usdToNgn(price))
 
     const ref = nanoid()
@@ -1419,7 +1420,8 @@ bot?.on('message', async msg => {
 
     log({ ref })
     sendQrCode(bot, chatId, bb)
-    const { plan, price } = info
+    const { plan } = info
+    const price = info?.couponApplied ? info?.newPrice : info?.price
     set(state, chatId, 'action', 'none')
     set(chatIdOfPayment, ref, { chatId, price, plan })
     const priceCrypto = await convert(price, 'usd', ticker)
