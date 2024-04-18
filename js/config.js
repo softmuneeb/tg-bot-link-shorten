@@ -9,6 +9,7 @@ const SELF_URL = process.env.SELF_URL
 const FREE_LINKS = Number(process.env.FREE_LINKS)
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
 
+const HIDE_SMS_APP = process.env.HIDE_SMS_APP
 const TG_HANDLE = process.env.TG_HANDLE
 const TG_CHANNEL = process.env.TG_CHANNEL
 const SMS_APP_NAME = process.env.SMS_APP_NAME
@@ -127,11 +128,20 @@ ${CHAT_BOT_NAME}`,
   askValidEmail: 'Please provide a valid email',
   askValidCrypto: 'Please choose a valid crypto currency',
   askValidPayOption: 'Please choose a valid payment option',
-  chooseSubscription: `<b>Elevate Your Brand with Our Subscription Plans!</b>
+  chooseSubscription:
+    HIDE_SMS_APP === 'true'
+      ? `<b>Elevate Your Brand with Our Subscription Plans!</b>
 
-- <b>Daily:</b> $${PRICE_DAILY} with ${DAILY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS”.
-- <b>Weekly:</b> $${PRICE_WEEKLY} with ${WEEKLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS”.
-- <b>Monthly:</b> $${PRICE_MONTHLY} with ${MONTHLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS”.
+- <b>Daily:</b> $${PRICE_DAILY} with ${DAILY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner.
+- <b>Weekly:</b> $${PRICE_WEEKLY} with ${WEEKLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner.
+- <b>Monthly:</b> $${PRICE_MONTHLY} with ${MONTHLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner.
+
+(Exclusive to ".sbs" domains.)`
+      : `<b>Elevate Your Brand with Our Subscription Plans!</b>
+
+- <b>Daily:</b> $${PRICE_DAILY} with ${DAILY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS.
+- <b>Weekly:</b> $${PRICE_WEEKLY} with ${WEEKLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS.
+- <b>Monthly:</b> $${PRICE_MONTHLY} with ${MONTHLY_PLAN_FREE_DOMAINS} free ".sbs" domains, unlimited URL shortner and unlimited BulkSMS.
 
 (Exclusive to ".sbs" domains.)`,
 
@@ -499,7 +509,7 @@ const userKeyboard = {
     keyboard: [
       [user.joinChannel, user.wallet],
       [user.phoneNumberLeads],
-      [user.freeTrialAvailable, user.buyPlan],
+      HIDE_SMS_APP === 'true' ? [user.buyPlan] : [user.freeTrialAvailable, user.buyPlan],
       [user.urlShortenerMain],
       [user.domainNames],
       [user.viewPlan, user.getSupport],
