@@ -17,7 +17,7 @@ const createCheckout = async (amount, redirectPath, email, name, ref) => {
       currency: 'NGN',
       customer: { name: 'Name is ' + name, email },
       paymentMethods: ['bank_transfer', 'card'],
-      amount,
+      amount: Number(amount),
       redirectUrl: `${process.env.SELF_URL}${redirectPath}`,
       reference: ref,
       feeBearer: 'business', // 'customer',
@@ -49,6 +49,6 @@ const getBusinessId = async () => {
 }
 // getBusinessId().then(log)
 // createCheckout('100', '/uptime?a=b&ref=two_tx__70', 'softmuneeb@gmail.com', 'M', 'two_tx__70').then(console.log)
-// createCheckout('100', '/uptime?a=b&ref=two_tx__130', 'softmuneeb@gmail.com', 'M', 'two_tx__130').then(console.log)
+// createCheckout('10000', '/uptime?a=b&ref=two_tx__130', 'softmuneeb@gmail.com', 'M', 'two_tx__131').then(console.log)
 
 module.exports = { createCheckout, getBusinessId }
