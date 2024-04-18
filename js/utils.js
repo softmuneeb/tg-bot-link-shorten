@@ -176,10 +176,13 @@ const getBalance = async (walletOf, chatId) => {
   return { usdBal, ngnBal: ngnIn - ngnOut }
 }
 
-const subscribePlan = async (planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot, keyboard) => {
+const subscribePlan = async (planEndingTime, freeDomainNamesAvailableFor, planOf, chatId, plan, bot) => {
   set(planOf, chatId, plan)
   set(planEndingTime, chatId, Date.now() + timeOf[plan])
   set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan])
+
+  sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan))
+  log('reply:\t' + t.planSubscribed.replace('{{plan}}', plan) + '\tto: ' + chatId)
 
   HIDE_SMS_APP !== 'true' &&
     sendQr(
@@ -188,9 +191,6 @@ const subscribePlan = async (planEndingTime, freeDomainNamesAvailableFor, planOf
       `${chatId}`,
       `Scan QR with sms marketing app to login. You can also use this code to login: ${chatId}`,
     )
-
-  bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan), keyboard)
-  log('reply:\t' + t.planSubscribed.replace('{{plan}}', plan) + '\tto: ' + chatId)
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
@@ -228,6 +228,7 @@ function extractPhoneNumbers(text, cc) {
 
 const sendMessage = async (chatId, message) => {
   try {
+    console.log({ message, chatId })
     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       chat_id: chatId,
       text: message,

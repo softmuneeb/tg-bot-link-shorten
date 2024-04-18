@@ -197,6 +197,7 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
+  // send(6687923716, 'bot started')
   // buyDomainFullProcess(6687923716, 'ehtesham.sbs')
 
   // set(freeShortLinksOf, 6687923716, 20)
@@ -2313,6 +2314,9 @@ app.get('/crypto-pay-plan', auth, async (req, res) => {
   const { ref, chatId, price, plan } = req.pay
   const coin = req?.query?.coin
   const value = req?.query?.value_coin
+
+  console.log({ method: '/crypto-pay-plan', ref, chatId, plan, price, coin, value })
+
   if (!ref || !chatId || !plan || !price || !coin || !value) return log(t.argsErr) || res.send(html(t.argsErr))
 
   // Logs
@@ -2322,11 +2326,14 @@ app.get('/crypto-pay-plan', auth, async (req, res) => {
 
   // Update Wallet
   const usdIn = await convert(value, coin, 'usd')
-  if (usdIn * 1.06 < price) {
+  const usdNeed = usdIn * 1.06
+  console.log(`usdIn ${usdIn}, usdNeed ${usdNeed}, Crypto, Plan, ${chatId}, ${name}`)
+  if (usdNeed < price) {
     sendMessage(chatId, t.sentLessMoney(`$${price}`, `$${usdIn}`))
     addFundsTo(walletOf, chatId, 'usd', usdIn)
     return res.send(html(t.lowPrice))
   }
+  console.log(`usdIn > price = ${usdIn > price}`)
   if (usdIn > price) {
     addFundsTo(walletOf, chatId, 'usd', usdIn - price)
     sendMessage(chatId, t.sentMoreMoney(`$${price}`, `$${usdIn}`))
