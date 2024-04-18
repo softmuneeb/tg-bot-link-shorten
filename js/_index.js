@@ -125,7 +125,7 @@ if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_
 let bot
 
 if (TELEGRAM_BOT_ON === 'true') bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
-else bot = { on: () => {}, sendMessage: () => {} }
+else bot = { on: () => {}, sendMessage: () => {}, sendPhoto: () => {}, sendDocument: () => {} }
 
 log('TELEGRAM_BOT_ON: ' + TELEGRAM_BOT_ON)
 log('Bot ran away!' + new Date())
@@ -503,6 +503,7 @@ bot?.on('message', async msg => {
 
       set(state, chatId, 'action', 'none')
       if (error) return send(chatId, error, o)
+      console.log('showDepositNgnInfo', url)
       send(chatId, t.showDepositNgnInfo(ngn), payBank(url))
       return send(chatId, `Bank ₦aira + Card 🌐︎`, o)
     },
@@ -1307,6 +1308,7 @@ bot?.on('message', async msg => {
     const { url, error } = await createCheckout(priceNGN, `/ok?a=b&ref=${ref}&`, email, username, ref)
     if (error) return send(chatId, error, o)
     send(chatId, `Bank ₦aira + Card 🌐︎`, o)
+    console.log('showDepositNgnInfo', url)
     return send(chatId, t.bankPayDomain(priceNGN, domain), payBank(url))
   }
   if (action === 'crypto-pay-domain') {
@@ -1407,6 +1409,7 @@ bot?.on('message', async msg => {
     log({ ref })
     if (error) return send(chatId, error, o)
     send(chatId, `Bank ₦aira + Card 🌐︎`, o)
+    console.log('showDepositNgnInfo', url)
     return send(chatId, t['bank-pay-plan'](priceNGN, plan), payBank(url))
   }
   if (action === 'crypto-pay-plan') {
