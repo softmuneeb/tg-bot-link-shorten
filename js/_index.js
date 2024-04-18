@@ -44,6 +44,7 @@ const {
   redSelectRandomCustom,
   redSelectProvider,
   yesNo,
+  payOpts,
 } = require('./config.js')
 const createShortBitly = require('./bitly.js')
 const createShortUrlApi = require('./cuttly.js')
@@ -75,7 +76,7 @@ const cors = require('cors')
 const axios = require('axios')
 const express = require('express')
 const { log } = require('console')
-const { MongoClient } = require('mongodb')
+const { MongoClient, ServerApiVersion } = require('mongodb')
 const { customAlphabet } = require('nanoid')
 const TelegramBot = require('node-telegram-bot-api')
 const { createCheckout } = require('./pay-fincra.js')
@@ -105,7 +106,8 @@ const RATE_LEAD_VALIDATOR = Number(process.env.RATE_LEAD_VALIDATOR)
 const RATE_CNAM_VALIDATOR = Number(process.env.RATE_CNAM_VALIDATOR)
 const FREE_LINKS = Number(process.env.FREE_LINKS)
 const HOSTED_ON = process.env.HOSTED_ON
-const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
+
+const CHAT_BOT_NAME = process.env.CHAT_BOT_NAME
 const REST_APIS_ON = process.env.REST_APIS_ON
 const TELEGRAM_BOT_ON = process.env.TELEGRAM_BOT_ON
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
@@ -115,18 +117,16 @@ const FREE_LINKS_TIME_SECONDS = Number(process.env.FREE_LINKS_TIME_SECONDS) * 10
 const TELEGRAM_DOMAINS_SHOW_CHAT_ID = Number(process.env.TELEGRAM_DOMAINS_SHOW_CHAT_ID)
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 5)
 
-if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_APIS_ON) {
-  return log('something ENV variable is missing from env file')
+if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_APIS_ON || !CHAT_BOT_NAME) {
+  return log('Service is paused because some ENV variable is missing')
 }
 
-let bot;
+let bot
 
-if (TELEGRAM_BOT_ON === "true")
-  bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
-else bot = { on: () => { } }
+if (TELEGRAM_BOT_ON === 'true') bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
+else bot = { on: () => {} }
 
-
-
+log('TELEGRAM_BOT_ON: ' + TELEGRAM_BOT_ON)
 log('Bot ran away!' + new Date())
 
 const send = (chatId, message, options) => {
@@ -190,8 +190,7 @@ const loadData = async () => {
   clicksOn = db.collection('clicksOn')
   chatIdOf = db.collection('chatIdOf')
 
-  if (REST_APIS_ON === "true")
-    startServer()
+  if (REST_APIS_ON === 'true') startServer()
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
@@ -221,7 +220,14 @@ const loadData = async () => {
   // set(freeShortLinksOf, 6687923716, FREE_LINKS)
   // adminDomains = await getPurchasedDomains(TELEGRAM_DOMAINS_SHOW_CHAT_ID)
 }
-const client = new MongoClient(process.env.MONGO_URL)
+
+const client = new MongoClient(process.env.MONGO_URL, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+})
 client
   .connect()
   .then(loadData)
@@ -418,7 +424,8 @@ bot?.on('message', async msg => {
       const viewDnsRecords = records
         .map(
           ({ recordType, recordContent, nsId }, i) =>
-            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${recordContent || 'None'
+            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
+              recordContent || 'None'
             }`,
         )
         .join('\n')
@@ -472,7 +479,7 @@ bot?.on('message', async msg => {
     //
     [a.selectCurrencyToDeposit]: () => {
       set(state, chatId, 'action', a.selectCurrencyToDeposit)
-      send(chatId, t.selectCurrencyToDeposit, k.of([u.usd, u.ngn]))
+      send(chatId, t.selectCurrencyToDeposit, payOpts)
     },
     //
     [a.depositNGN]: () => {
@@ -533,13 +540,13 @@ bot?.on('message', async msg => {
       ) {
         const { amount, price, couponApplied, newPrice } = info
         couponApplied
-          ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice), k.of([u.usd, u.ngn]))
-          : send(chatId, t.buyLeadsPrice(amount, price), k.of([u.usd, u.ngn]))
+          ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice), payOpts)
+          : send(chatId, t.buyLeadsPrice(amount, price), payOpts)
       }
 
       set(state, chatId, 'action', a.walletSelectCurrency)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
-      send(chatId, t.walletSelectCurrency(usdBal, ngnBal), k.of([u.usd, u.ngn]))
+      send(chatId, t.walletSelectCurrency(usdBal, ngnBal), payOpts)
     },
     walletSelectCurrencyConfirm: async () => {
       const { price, couponApplied, newPrice, coin } = info
@@ -2086,36 +2093,29 @@ const buyDomainFullProcess = async (chatId, domain) => {
   try {
     const { error: buyDomainError } = await buyDomain(chatId, domain)
     if (buyDomainError) {
-      const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`
+      const m = `Domain purchase fails, try another name. ${domain} ${buyDomainError}`
       log(m)
       send(TELEGRAM_DEV_CHAT_ID, m)
       send(chatId, m)
       return m
     }
-    send(
-      chatId,
-      `Domain ${domain} is now yours.Thank you for choosing us.
-
-Best,
-Nomadly Bot`,
-      o,
-    )
+    send(chatId, t.domainBoughtSuccess(domain), o)
 
     let info = await get(state, chatId)
     if (info?.askDomainToUseWithShortener === 'No') return
 
-    // saveDomainInServerRender 
-    const { server, error, recordType } = process.env.HOSTED_ON === 'render' ? await saveDomainInServerRender(domain) : await saveDomainInServerRailway(domain)// save domain in railway // can do separately maybe or just send messages of progress to user
+    // saveDomainInServerRender
+    const { server, error, recordType } =
+      process.env.HOSTED_ON === 'render'
+        ? await saveDomainInServerRender(domain)
+        : await saveDomainInServerRailway(domain) // save domain in railway // can do separately maybe or just send messages of progress to user
 
     if (error) {
-      const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more @Nomadly.`
-      send(chatId, m)
+      const m = t.errorSavingDomain
+      send(chatId, t.errorSavingDomain)
       return m
     }
-    send(
-      chatId,
-      `Linking domain with your account. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain}`,
-    )
+    send(chatId, t.domainLinking(domain))
 
     await sleep(65000) // sleep 65 seconds so that CR API can get the info that
 
@@ -2134,8 +2134,6 @@ Nomadly Bot`,
     return errorMessage
   }
 }
-
-
 
 const auth = async (req, res, next) => {
   log(req.hostname + req.originalUrl)
@@ -2437,7 +2435,7 @@ app.get('/:id', async (req, res) => {
   increment(clicksOn, shortUrlSanitized)
 })
 const startServer = () => {
-  const port = process.env.PORT || 4000
+  const port = process.env.PORT || 4001
   app.listen(port, () => log(`Server ran away!\nhttp://localhost:${port}`))
 }
 

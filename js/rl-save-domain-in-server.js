@@ -5,29 +5,28 @@ const { log } = require('console')
 const API_TOKEN = process.env.API_KEY_RAILWAY
 
 const RENDER_AUTH_TOKEN = process.env.RENDER_AUTH_TOKEN
-const RENDER_SERVICE_ID = process.env.RENDER_SERVICE_ID
+const DOMAINS_CONNECT_TO_RENDER_SERVICE_ID = process.env.DOMAINS_CONNECT_TO_RENDER_SERVICE_ID
 const RENDER_APP_IP_ADDRESS = process.env.RENDER_APP_IP_ADDRESS
 const ENVIRONMENT_ID = process.env.RAILWAY_ENVIRONMENT_ID
 const PROJECT_ID = process.env.RAILWAY_PROJECT_ID
 const SERVICE_ID = process.env.RAILWAY_SERVICE_ID
 const GRAPHQL_ENDPOINT = 'https://backboard.railway.app/graphql/v2'
 
-
-const saveDomainInServerRender = async (domain) => {
-  const url = `https://api.render.com/v1/services/${RENDER_SERVICE_ID}/custom-domains`;
-  const payload = { "name": domain };
+const saveDomainInServerRender = async domain => {
+  const url = `https://api.render.com/v1/services/${DOMAINS_CONNECT_TO_RENDER_SERVICE_ID}/custom-domains`
+  const payload = { name: domain }
   const headers = {
-    "accept": "application/json",
-    "content-type": "application/json",
-    "authorization": `Bearer ${RENDER_AUTH_TOKEN}`
-  };
+    accept: 'application/json',
+    'content-type': 'application/json',
+    authorization: `Bearer ${RENDER_AUTH_TOKEN}`,
+  }
 
   try {
-    await axios.post(url, payload, { headers });
+    await axios.post(url, payload, { headers })
     return { server: RENDER_APP_IP_ADDRESS, recordType: 'A' }
   } catch (err) {
-    const error = err?.message + " " + JSON.stringify(err?.response?.data, 0, 2)
-    log('err saveDomainInServerRender', error)
+    const error = err?.message + ' ' + JSON.stringify(err?.response?.data, 0, 2)
+    log('err saveDomainInServerRender', { url, payload, headers }, error)
     return { error }
   }
 }
