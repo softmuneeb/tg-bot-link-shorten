@@ -124,7 +124,7 @@ if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_
 let bot
 
 if (TELEGRAM_BOT_ON === 'true') bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
-else bot = { on: () => {}, sendMessage: () => {} }
+else bot = { on: () => { }, sendMessage: () => { } }
 
 log('TELEGRAM_BOT_ON: ' + TELEGRAM_BOT_ON)
 log('Bot ran away!' + new Date())
@@ -2275,20 +2275,20 @@ app.get('/bot-link', async (req, res) => {
 
 app.get('/login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
-  const loginCount = (await get(loginCountOf, chatId)) || 0
+  const loginCount = (await get(loginCountOf, Number(chatId))) || 0
   res.send("" + loginCount)
 })
 
 app.post('/increment-login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
-  await increment(loginCountOf, chatId)
+  await increment(loginCountOf, Number(chatId))
   res.send("ok")
 })
 
 
 app.post('/decrement-login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
-  await decrement(loginCountOf, chatId)
+  await decrement(loginCountOf, Number(chatId))
   res.send("ok")
 })
 app.get('/phone-numbers-demo-link', async (req, res) => {
