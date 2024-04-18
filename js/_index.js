@@ -124,14 +124,14 @@ if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_
 let bot
 
 if (TELEGRAM_BOT_ON === 'true') bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
-else bot = { on: () => { } }
+else bot = { on: () => {}, sendMessage: () => {} }
 
 log('TELEGRAM_BOT_ON: ' + TELEGRAM_BOT_ON)
 log('Bot ran away!' + new Date())
 
 const send = (chatId, message, options) => {
   log('reply: ' + message + ' ' + (options?.reply_markup?.keyboard?.map(i => i) || '') + '\tto: ' + chatId + '\n')
-  bot?.sendMessage(chatId, message, options).catch(e => log(e.message + ': ' + chatId))
+  bot?.sendMessage(chatId, message, options)?.catch(e => log(e.message + ': ' + chatId))
 }
 
 // variables to implement core functionality
