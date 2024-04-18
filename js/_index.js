@@ -126,6 +126,7 @@ let bot
 if (TELEGRAM_BOT_ON === 'true') bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 else bot = { on: () => {} }
 
+log('TELEGRAM_BOT_ON: ' + TELEGRAM_BOT_ON)
 log('Bot ran away!' + new Date())
 
 const send = (chatId, message, options) => {
