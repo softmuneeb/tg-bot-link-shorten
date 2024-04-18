@@ -2269,6 +2269,15 @@ app.get('/bot-link', async (req, res) => {
   res.send(process.env.SUPPORT_LINK)
 })
 
+
+app.get('/phone-numbers-demo-link', async (req, res) => {
+  res.send(process.env.PHONE_NUMBERS_DEMO_LINK)
+})
+
+app.get('/content-demo-link', async (req, res) => {
+  res.send(process.env.CONTENT_DEMO_LINK)
+})
+
 app.get('/free-sms', async (req, res) => {
   res.send(process.env.FREE_SMS)
 })
