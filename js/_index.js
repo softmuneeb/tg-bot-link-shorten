@@ -69,6 +69,7 @@ const {
   extractPhoneNumbers,
   sendQr,
   sleep,
+  sendMessage,
 } = require('./utils.js')
 const fs = require('fs')
 require('dotenv').config()
@@ -426,7 +427,8 @@ bot?.on('message', async msg => {
       const viewDnsRecords = records
         .map(
           ({ recordType, recordContent, nsId }, i) =>
-            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${recordContent || 'None'
+            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
+              recordContent || 'None'
             }`,
         )
         .join('\n')
@@ -2159,7 +2161,7 @@ const addFundsTo = async (walletOf, chatId, coin, valueIn) => {
   const key = `${coin}In`
   await increment(walletOf, chatId, key, valueIn)
   const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
-  send(chatId, t.showWallet(usdBal, ngnBal))
+  sendMessage(chatId, t.showWallet(usdBal, ngnBal))
 }
 //
 //
@@ -2179,13 +2181,13 @@ const bankApis = {
     // Update Wallet
     const ngnPrice = await usdToNgn(price)
     if (usdIn * 1.06 < price) {
-      send(chatId, t.sentLessMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
+      sendMessage(chatId, t.sentLessMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
       addFundsTo(walletOf, chatId, 'ngn', ngnIn)
       return res.send(html(t.lowPrice))
     }
     if (ngnIn > ngnPrice) {
       addFundsTo(walletOf, chatId, 'ngn', ngnIn - ngnPrice)
-      send(chatId, t.sentMoreMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
+      sendMessage(chatId, t.sentMoreMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
     }
 
     // Subscribe Plan
@@ -2207,13 +2209,13 @@ const bankApis = {
     // Update Wallet
     const ngnPrice = await usdToNgn(price)
     if (usdIn * 1.06 < price) {
-      send(chatId, t.sentLessMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
+      sendMessage(chatId, t.sentLessMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
       addFundsTo(walletOf, chatId, 'ngn', ngnIn)
       return res.send(html(t.lowPrice))
     }
     if (ngnIn > ngnPrice) {
       addFundsTo(walletOf, chatId, 'ngn', ngnIn - ngnPrice)
-      send(chatId, t.sentMoreMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
+      sendMessage(chatId, t.sentMoreMoney(`${ngnPrice} NGN`, `${ngnIn} NGN`))
     }
 
     // Buy Domain
@@ -2230,7 +2232,7 @@ const bankApis = {
     // Update Wallet
     const usdIn = await ngnToUsd(ngnIn)
     addFundsTo(walletOf, chatId, 'ngn', ngnIn)
-    send(chatId, t.confirmationDepositMoney(`${ngnIn} NGN`, usdIn))
+    sendMessage(chatId, t.confirmationDepositMoney(`${ngnIn} NGN`, usdIn))
 
     // Logs
     res.send(html())
@@ -2272,24 +2274,22 @@ app.get('/bot-link', async (req, res) => {
   res.send(process.env.SUPPORT_LINK)
 })
 
-
 app.get('/login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
   const loginCount = (await get(loginCountOf, chatId)) || 0
-  res.send("" + loginCount)
+  res.send('' + loginCount)
 })
 
 app.post('/increment-login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
   await increment(loginCountOf, chatId)
-  res.send("ok")
+  res.send('ok')
 })
-
 
 app.post('/decrement-login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
   await decrement(loginCountOf, chatId)
-  res.send("ok")
+  res.send('ok')
 })
 app.get('/phone-numbers-demo-link', async (req, res) => {
   res.send(process.env.PHONE_NUMBERS_DEMO_LINK)
@@ -2318,13 +2318,13 @@ app.get('/crypto-pay-plan', auth, async (req, res) => {
   // Update Wallet
   const usdIn = await convert(value, coin, 'usd')
   if (usdIn * 1.06 < price) {
-    send(chatId, t.sentLessMoney(`$${price}`, `$${usdIn}`))
+    sendMessage(chatId, t.sentLessMoney(`$${price}`, `$${usdIn}`))
     addFundsTo(walletOf, chatId, 'usd', usdIn)
     return res.send(html(t.lowPrice))
   }
   if (usdIn > price) {
     addFundsTo(walletOf, chatId, 'usd', usdIn - price)
-    send(chatId, t.sentMoreMoney(`$${price}`, `$${usdIn}`))
+    sendMessage(chatId, t.sentMoreMoney(`$${price}`, `$${usdIn}`))
   }
 
   // Subscribe Plan
@@ -2346,13 +2346,13 @@ app.get('/crypto-pay-domain', auth, async (req, res) => {
   // Update Wallet
   const usdIn = await convert(value, coin, 'usd')
   if (usdIn * 1.06 < price) {
-    send(chatId, t.sentLessMoney(`$${price}`, `$${usdIn}`))
+    sendMessage(chatId, t.sentLessMoney(`$${price}`, `$${usdIn}`))
     addFundsTo(walletOf, chatId, 'usd', usdIn)
     return res.send(html(t.lowPrice))
   }
   if (usdIn > price) {
     addFundsTo(walletOf, chatId, 'usd', usdIn - price)
-    send(chatId, t.sentMoreMoney(`$${price}`, `$${usdIn}`))
+    sendMessage(chatId, t.sentMoreMoney(`$${price}`, `$${usdIn}`))
   }
 
   // Buy Domain
@@ -2370,7 +2370,7 @@ app.get('/crypto-wallet', auth, async (req, res) => {
   // Update Wallet
   const usdIn = await convert(value, coin, 'usd')
   addFundsTo(walletOf, chatId, 'usd', usdIn)
-  send(chatId, t.confirmationDepositMoney(value + ' ' + tickerViewOf[coin], usdIn))
+  sendMessage(chatId, t.confirmationDepositMoney(value + ' ' + tickerViewOf[coin], usdIn))
 
   // Logs
   res.send(html())

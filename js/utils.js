@@ -8,6 +8,7 @@ const { getAll, get, set } = require('./db')
 const { log } = require('console')
 const resolveDns = require('./resolve-cname.js')
 
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE
 const UPDATE_DNS_INTERVAL = Number(process.env.UPDATE_DNS_INTERVAL || 60)
 const PERCENT_INCREASE_USD_TO_NAIRA = Number(process.env.PERCENT_INCREASE_USD_TO_NAIRA)
@@ -221,6 +222,18 @@ function extractPhoneNumbers(text, cc) {
   return { phones, diff: lenBefore - lenAfter }
 }
 
+const sendMessage = async (chatId, message) => {
+  try {
+    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      chat_id: chatId,
+      text: message,
+    })
+  } catch (error) {
+    console.error('Error sending message:', { code: error?.message, data: error?.response?.data, chatId, message })
+  }
+}
+// sendMessage(6687923716, 'Hello, world!') // unit test
+
 // log(format('1', '4'))
 // log(format('1', '20'))
 // log(format('1', '200'))
@@ -242,6 +255,7 @@ module.exports = {
   month,
   date,
   sleep,
+  sendMessage,
   isAdmin,
   usdToNgn,
   ngnToUsd,
