@@ -164,7 +164,10 @@ ${CHAT_BOT_NAME}`,
 
   freeTrialNotAvailable: 'You have already used the free trial',
 
-  planSubscribed: `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening logics and ${SMS_APP_NAME}. Please download the app here: https://ap1s.net/NDN4A. Need E-sim card? contact ${SUPPORT_HANDLE}`,
+  planSubscribed:
+    HIDE_SMS_APP !== 'true'
+      ? `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening logics and ${SMS_APP_NAME}. Need E-sim card? contact ${SUPPORT_HANDLE}`
+      : `You have successfully subscribed to our {{plan}} plan. Enjoy our URL-shortening logics and ${SMS_APP_NAME}. Please download the app here: https://ap1s.net/NDN4A. Need E-sim card? contact ${SUPPORT_HANDLE}`,
 
   alreadySubscribedPlan: days => `Your subscription is active and expires in ${days}`,
 

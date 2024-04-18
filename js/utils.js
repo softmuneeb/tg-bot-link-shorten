@@ -8,6 +8,7 @@ const { getAll, get, set } = require('./db')
 const { log } = require('console')
 const resolveDns = require('./resolve-cname.js')
 
+const HIDE_SMS_APP = process.env.HIDE_SMS_APP
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const API_KEY_CURRENCY_EXCHANGE = process.env.API_KEY_CURRENCY_EXCHANGE
 const UPDATE_DNS_INTERVAL = Number(process.env.UPDATE_DNS_INTERVAL || 60)
@@ -179,12 +180,15 @@ const subscribePlan = async (planEndingTime, freeDomainNamesAvailableFor, planOf
   set(planOf, chatId, plan)
   set(planEndingTime, chatId, Date.now() + timeOf[plan])
   set(freeDomainNamesAvailableFor, chatId, freeDomainsOf[plan])
-  sendQr(
-    bot,
-    chatId,
-    `${chatId}`,
-    `Scan QR with sms marketing app to login. You can also use this code to login: ${chatId}`,
-  )
+
+  HIDE_SMS_APP !== 'true' &&
+    sendQr(
+      bot,
+      chatId,
+      `${chatId}`,
+      `Scan QR with sms marketing app to login. You can also use this code to login: ${chatId}`,
+    )
+
   bot.sendMessage(chatId, t.planSubscribed.replace('{{plan}}', plan), keyboard)
   log('reply:\t' + t.planSubscribed.replace('{{plan}}', plan) + '\tto: ' + chatId)
 }
