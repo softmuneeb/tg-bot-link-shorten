@@ -124,7 +124,7 @@ if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_
 let bot
 
 if (TELEGRAM_BOT_ON === 'true') bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
-else bot = { on: () => {} }
+else bot = { on: () => { } }
 
 log('TELEGRAM_BOT_ON: ' + TELEGRAM_BOT_ON)
 log('Bot ran away!' + new Date())
@@ -155,6 +155,7 @@ let nameOf = {},
   payments = {},
   clicksOf = {},
   clicksOn = {},
+  loginCountOf = {},
   chatIdOf = {}
 
 // some info to use with bot
@@ -175,6 +176,7 @@ const loadData = async () => {
   maskOf = db.collection('maskOf')
   fullUrlOf = db.collection('fullUrlOf')
   domainsOf = db.collection('domainsOf')
+  loginCountOf = db.collection('loginCountOf')
   chatIdBlocked = db.collection('chatIdBlocked')
   planEndingTime = db.collection('planEndingTime')
   chatIdOfPayment = db.collection('chatIdOfPayment')
@@ -424,8 +426,7 @@ bot?.on('message', async msg => {
       const viewDnsRecords = records
         .map(
           ({ recordType, recordContent, nsId }, i) =>
-            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
-              recordContent || 'None'
+            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${recordContent || 'None'
             }`,
         )
         .join('\n')
@@ -2025,6 +2026,7 @@ function restoreData() {
     Object.assign(nameOf, restoredData.nameOfChatId)
     Object.assign(chatIdOf, restoredData.chatIdOfName)
     Object.assign(chatIdBlocked, restoredData.chatIdBlocked)
+    Object.assign(loginCountOf, restoredData.loginCountOf)
     Object.assign(planEndingTime, restoredData.planEndingTime)
     Object.assign(chatIdOfPayment, restoredData.chatIdOfPayment)
     Object.assign(totalShortLinks, restoredData.totalShortLinks)
@@ -2044,6 +2046,7 @@ async function backupTheData() {
     expiryOf: await getAll(expiryOf),
     fullUrlOf: await getAll(fullUrlOf),
     domainsOf: await getAll(domainsOf),
+    loginCountOf: await getAll(loginCountOf),
     chatIdBlocked: await getAll(chatIdBlocked),
     planEndingTime: await getAll(planEndingTime),
     chatIdOfPayment: await getAll(chatIdOfPayment),
@@ -2270,6 +2273,17 @@ app.get('/bot-link', async (req, res) => {
 })
 
 
+app.get('/login-count/:chatId', async (req, res) => {
+  const chatId = req?.params?.chatId
+  const loginCount = await get(loginCountOf, chatId)
+  res.send(loginCount)
+})
+
+app.post('/increment-login-count/:chatId', async (req, res) => {
+  const chatId = req?.params?.chatId
+  await increment(loginCountOf, chatId)
+  res.send("ok")
+})
 app.get('/phone-numbers-demo-link', async (req, res) => {
   res.send(process.env.PHONE_NUMBERS_DEMO_LINK)
 })
