@@ -4,6 +4,7 @@ const format = (cc, n) => `+${cc}(${n.toString().padStart(2, '0')})`
 
 /* global process */
 require('dotenv').config()
+const HIDE_BANK_PAYMENT = process.env.HIDE_BANK_PAYMENT
 const SELF_URL = process.env.SELF_URL
 const FREE_LINKS = Number(process.env.FREE_LINKS)
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
@@ -96,6 +97,13 @@ const u = {
 }
 const view = num => Number(num).toFixed(2)
 const yesNo = ['Yes', 'No']
+
+const bal = (usd, ngn) =>
+  HIDE_BANK_PAYMENT !== 'true'
+    ? `$${view(usd)}
+₦${view(ngn)}`
+    : `$${view(usd)}`
+
 const t = {
   select: `Please select an option:`,
   what: `Please choose option from keyboard`,
@@ -244,7 +252,7 @@ ${CHAT_BOT_NAME}`,
 
   comingSoonWithdraw: `Withdraw coming soon. Contact support ${SUPPORT_USERNAME}. Discover more ${TG_HANDLE}.`,
 
-  selectCurrencyToDeposit: `Please select currency to deposit USD / NGN`,
+  selectCurrencyToDeposit: `Please select currency to deposit`,
 
   depositNGN: `Please enter NGN Amount:`,
   askEmailForNGN: `Please provide an email for payment confirmation`,
@@ -300,18 +308,18 @@ Best,
 ${CHAT_BOT_NAME}`,
 
   showWallet: (usd, ngn) => `Wallet Balance:
-$${view(usd)}
-₦${view(ngn)}`,
+
+${bal(usd, ngn)}`,
 
   wallet: (usd, ngn) => `Wallet Balance:
-$${view(usd)}
-₦${view(ngn)}
+
+  ${bal(usd, ngn)}
 
 Select wallet option:`,
 
   walletSelectCurrency: (usd, ngn) => `Please select currency to pay from your Wallet Balance:
-$${view(usd)}
-₦${view(ngn)}`,
+
+${bal(usd, ngn)}  `,
 
   walletBalanceLow: `Please top up your wallet to continue`,
 
@@ -419,7 +427,7 @@ const _bc = ['Back', 'Cancel']
 
 const payIn = {
   crypto: 'Crypto',
-  bank: 'Bank ₦aira + Card🌐︎',
+  ...(HIDE_BANK_PAYMENT !== 'true' && { bank: 'Bank ₦aira + Card🌐︎' }),
   wallet: '💰 Wallet',
 }
 
@@ -478,6 +486,7 @@ const k = {
 
   redSelectProvider: kOf(redSelectProvider),
 }
+const payOpts = HIDE_BANK_PAYMENT !== 'true' ? k.of([u.usd, u.ngn]) : k.of([u.usd])
 
 const adminKeyboard = {
   reply_markup: {
@@ -617,6 +626,7 @@ module.exports = {
   html,
   payIn,
   admin,
+  payOpts,
   yes_no,
   timeOf,
   payBank,

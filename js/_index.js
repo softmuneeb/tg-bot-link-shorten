@@ -44,6 +44,7 @@ const {
   redSelectRandomCustom,
   redSelectProvider,
   yesNo,
+  payOpts,
 } = require('./config.js')
 const createShortBitly = require('./bitly.js')
 const createShortUrlApi = require('./cuttly.js')
@@ -107,6 +108,7 @@ const FREE_LINKS = Number(process.env.FREE_LINKS)
 const HOSTED_ON = process.env.HOSTED_ON
 
 const CHAT_BOT_NAME = process.env.CHAT_BOT_NAME
+const HIDE_BANK_PAYMENT = process.env.HIDE_BANK_PAYMENT
 const REST_APIS_ON = process.env.REST_APIS_ON
 const TELEGRAM_BOT_ON = process.env.TELEGRAM_BOT_ON
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
@@ -478,7 +480,7 @@ bot?.on('message', async msg => {
     //
     [a.selectCurrencyToDeposit]: () => {
       set(state, chatId, 'action', a.selectCurrencyToDeposit)
-      send(chatId, t.selectCurrencyToDeposit, k.of([u.usd, u.ngn]))
+      send(chatId, t.selectCurrencyToDeposit, payOpts)
     },
     //
     [a.depositNGN]: () => {
@@ -539,13 +541,13 @@ bot?.on('message', async msg => {
       ) {
         const { amount, price, couponApplied, newPrice } = info
         couponApplied
-          ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice), k.of([u.usd, u.ngn]))
-          : send(chatId, t.buyLeadsPrice(amount, price), k.of([u.usd, u.ngn]))
+          ? send(chatId, t.buyLeadsNewPrice(amount, price, newPrice), payOpts)
+          : send(chatId, t.buyLeadsPrice(amount, price), payOpts)
       }
 
       set(state, chatId, 'action', a.walletSelectCurrency)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
-      send(chatId, t.walletSelectCurrency(usdBal, ngnBal), k.of([u.usd, u.ngn]))
+      send(chatId, t.walletSelectCurrency(usdBal, ngnBal), payOpts)
     },
     walletSelectCurrencyConfirm: async () => {
       const { price, couponApplied, newPrice, coin } = info
@@ -2425,7 +2427,7 @@ app.get('/:id', async (req, res) => {
   increment(clicksOn, shortUrlSanitized)
 })
 const startServer = () => {
-  const port = process.env.PORT || 4000
+  const port = process.env.PORT || 4001
   app.listen(port, () => log(`Server ran away!\nhttp://localhost:${port}`))
 }
 
