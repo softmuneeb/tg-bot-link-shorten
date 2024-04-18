@@ -107,9 +107,6 @@ const FREE_LINKS = Number(process.env.FREE_LINKS)
 const HOSTED_ON = process.env.HOSTED_ON
 
 const CHAT_BOT_NAME = process.env.CHAT_BOT_NAME
-const TG_HANDLE = process.env.TG_HANDLE
-
-const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
 const REST_APIS_ON = process.env.REST_APIS_ON
 const TELEGRAM_BOT_ON = process.env.TELEGRAM_BOT_ON
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
@@ -2087,20 +2084,13 @@ const buyDomainFullProcess = async (chatId, domain) => {
   try {
     const { error: buyDomainError } = await buyDomain(chatId, domain)
     if (buyDomainError) {
-      const m = `Domain purchase fails, try another name. ${chatId} ${domain} ${buyDomainError}`
+      const m = `Domain purchase fails, try another name. ${domain} ${buyDomainError}`
       log(m)
       send(TELEGRAM_DEV_CHAT_ID, m)
       send(chatId, m)
       return m
     }
-    send(
-      chatId,
-      `Domain ${domain} is now yours. Thank you for choosing us.
-
-Best,
-${CHAT_BOT_NAME}`,
-      o,
-    )
+    send(chatId, t.domainBoughtSuccess(domain), o)
 
     let info = await get(state, chatId)
     if (info?.askDomainToUseWithShortener === 'No') return
@@ -2112,14 +2102,11 @@ ${CHAT_BOT_NAME}`,
         : await saveDomainInServerRailway(domain) // save domain in railway // can do separately maybe or just send messages of progress to user
 
     if (error) {
-      const m = `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more ${TG_HANDLE}.`
-      send(chatId, m)
+      const m = t.errorSavingDomain
+      send(chatId, t.errorSavingDomain)
       return m
     }
-    send(
-      chatId,
-      `Linking domain with your account. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain}`,
-    )
+    send(chatId, t.domainLinking(domain))
 
     await sleep(65000) // sleep 65 seconds so that CR API can get the info that
 

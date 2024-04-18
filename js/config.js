@@ -185,7 +185,17 @@ Discover more: ${TG_CHANNEL}`,
 
   dnsNotPropagated: `DNS propagation for {{domain}} is in progress and you will be updated once it completes. ✅`,
 
+  domainBoughtSuccess: domain => `Domain ${domain} is now yours. Thank you for choosing us.
+
+Best,
+${CHAT_BOT_NAME}`,
+
   domainBought: `Your domain {{domain}} is now linked to your account while DNS propagates. You will be updated automatically about the status momentarily.🚀`,
+
+  domainLinking: domain =>
+    `Linking domain with your account. Please note that DNS updates can take up to 30 minutes. You can check your DNS update status here: https://www.whatsmydns.net/#A/${domain}`,
+
+  errorSavingDomain: `Error saving domain in server, contact support ${SUPPORT_USERNAME}. Discover more ${TG_HANDLE}.`,
 
   chooseDomainToManage: `Please select a domain if you wish to manage its DNS settings.`,
 
