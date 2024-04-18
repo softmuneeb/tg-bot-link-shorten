@@ -197,7 +197,7 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
-  // send(6687923716, 'bot started')
+  // sendMessage(6687923716, 'bot started')
   // buyDomainFullProcess(6687923716, 'ehtesham.sbs')
 
   // set(freeShortLinksOf, 6687923716, 20)
@@ -2106,11 +2106,11 @@ const buyDomainFullProcess = async (chatId, domain) => {
     if (buyDomainError) {
       const m = `Domain purchase fails, try another name. ${domain} ${buyDomainError}`
       log(m)
-      send(TELEGRAM_DEV_CHAT_ID, m)
-      send(chatId, m)
+      sendMessage(TELEGRAM_DEV_CHAT_ID, m)
+      sendMessage(chatId, m)
       return m
     }
-    send(chatId, t.domainBoughtSuccess(domain), o)
+    sendMessage(chatId, t.domainBoughtSuccess(domain), o)
 
     let info = await get(state, chatId)
     if (info?.askDomainToUseWithShortener === 'No') return
@@ -2123,24 +2123,25 @@ const buyDomainFullProcess = async (chatId, domain) => {
 
     if (error) {
       const m = t.errorSavingDomain
-      send(chatId, t.errorSavingDomain)
+      sendMessage(chatId, t.errorSavingDomain)
       return m
     }
-    send(chatId, t.domainLinking(domain))
+    sendMessage(chatId, t.domainLinking(domain))
 
     await sleep(65000) // sleep 65 seconds so that CR API can get the info that
 
     const { error: saveServerInDomainError } = await saveServerInDomain(domain, server, recordType)
     if (saveServerInDomainError) {
       const m = `Error saving server in domain ${saveServerInDomainError}`
-      send(chatId, m)
+      sendMessage(chatId, m)
       return m
     }
-    send(chatId, t.domainBought.replaceAll('{{domain}}', domain))
+    sendMessage(chatId, t.domainBought.replaceAll('{{domain}}', domain))
     regularCheckDns(bot, chatId, domain)
     return false // error = false
   } catch (error) {
     const errorMessage = `err buyDomainFullProcess ${error?.message} ${JSON.stringify(error?.response?.data, null, 2)}`
+    sendMessage(TELEGRAM_DEV_CHAT_ID, errorMessage)
     console.error(errorMessage)
     return errorMessage
   }
