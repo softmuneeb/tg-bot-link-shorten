@@ -2275,13 +2275,20 @@ app.get('/bot-link', async (req, res) => {
 
 app.get('/login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
-  const loginCount = await get(loginCountOf, chatId)
-  res.send(loginCount)
+  const loginCount = (await get(loginCountOf, chatId)) || 0
+  res.send("" + loginCount)
 })
 
 app.post('/increment-login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
   await increment(loginCountOf, chatId)
+  res.send("ok")
+})
+
+
+app.post('/decrement-login-count/:chatId', async (req, res) => {
+  const chatId = req?.params?.chatId
+  await decrement(loginCountOf, chatId)
   res.send("ok")
 })
 app.get('/phone-numbers-demo-link', async (req, res) => {
