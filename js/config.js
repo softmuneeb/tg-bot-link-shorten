@@ -313,18 +313,18 @@ ${bal(usd, ngn)}`,
 
   wallet: (usd, ngn) => `Wallet Balance:
 
-  ${bal(usd, ngn)}
+${bal(usd, ngn)}
 
 Select wallet option:`,
 
   walletSelectCurrency: (usd, ngn) => `Please select currency to pay from your Wallet Balance:
 
-${bal(usd, ngn)}  `,
+${bal(usd, ngn)}`,
 
   walletBalanceLow: `Please top up your wallet to continue`,
 
   sentLessMoney: (expected, got) =>
-    `You sent less money than expected so we credited amount received into your wallet. We expected ${expected} but recieved ${got}`,
+    `You sent less money than expected so we credited amount received into your wallet. We expected ${expected} but received ${got}`,
   sentMoreMoney: (expected, got) =>
     `You sent more money than expected so we credited the extra amount into your wallet. We expected ${expected} but received ${got}`,
 
