@@ -2262,7 +2262,7 @@ app.post('/webhook', auth, (req, res) => {
 //
 
 app.get('/open-api-key', async (req, res) => {
-  const openApiKey = process.env.OPEN_API_KEY
+  const openApiKey = process.env.APP_OPEN_API_KEY
   const length = Math.ceil(openApiKey.length / 3)
   const piece1 = openApiKey.substring(0, length)
   const piece2 = openApiKey.substring(length, length * 2)
@@ -2278,7 +2278,7 @@ app.get('/open-api-key', async (req, res) => {
 })
 
 app.get('/bot-link', async (req, res) => {
-  res.send(process.env.SUPPORT_LINK)
+  res.send(process.env.APP_SUPPORT_LINK)
 })
 
 app.get('/login-count/:chatId', async (req, res) => {
@@ -2299,15 +2299,15 @@ app.get('/decrement-login-count/:chatId', async (req, res) => {
   res.send('ok')
 })
 app.get('/phone-numbers-demo-link', async (req, res) => {
-  res.send(process.env.PHONE_NUMBERS_DEMO_LINK)
+  res.send(process.env.APP_PHONE_NUMBERS_DEMO_LINK)
 })
 
 app.get('/content-demo-link', async (req, res) => {
-  res.send(process.env.CONTENT_DEMO_LINK)
+  res.send(process.env.APP_CONTENT_DEMO_LINK)
 })
 
 app.get('/free-sms', async (req, res) => {
-  res.send(process.env.FREE_SMS)
+  res.send(process.env.APP_FREE_SMS)
 })
 
 app.get('/crypto-pay-plan', auth, async (req, res) => {
