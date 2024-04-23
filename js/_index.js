@@ -273,7 +273,6 @@ bot?.on('message', async msg => {
     info = await get(state, chatId)
   }
   const action = info?.action
-
   // actions
   const a = {
     // submenu
@@ -1958,10 +1957,8 @@ bot?.on('message', async msg => {
     )
     return send(chatId, t.freeTrialAvailable)
   }
-
-
   if (action === 'listen_reset_login') {
-    if (message === '/yes') {
+    if (message === 'Yes') {
       const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
       await set(loginCountOf, Number(chatId), { loginCount: loginData.loginCount, canLogin: true })
       sendMessage(chatId, t.resetLoginAdmit)
@@ -2301,6 +2298,12 @@ app.get('/bot-link', async (req, res) => {
 app.get('/login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
   const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
+  if (!loginData.canLogin) {
+    log('hello hello ')
+    sendMessage(Number(chatId), "Click Yes to reset login", yes_no)
+    await set(state, Number(chatId), 'action', 'listen_reset_login')
+    return res.send('Already Logged In')
+  }
   res.json(loginData)
 })
 
@@ -2308,13 +2311,6 @@ app.get('/increment-login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
 
   const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
-
-  if (!loginData.canLogin) {
-    sendMessage(Number(chatId), "Click /yes to reset login")
-    await set(state, chatId, 'action', 'listen_reset_login')
-    return res.send('Already Logged In')
-  }
-
   await set(loginCountOf, Number(chatId), { loginCount: loginData.loginCount + 1, canLogin: false })
 
   res.send('ok')
@@ -2474,14 +2470,15 @@ app.get('/unsubscribe', (req, res) => {
   log({ phone })
   res.send(html(t.unsubscribeRCS(phone)))
 })
+
 app.get('/planInfo', async (req, res) => {
-  const chatId = Number(req?.query?.code)
+  const chatId = Number(req?.query?.code);
   if (isNaN(chatId)) return res.status(400).json({ msg: 'Issue in datatype' })
   const name = await get(nameOf, chatId)
 
   if (!name) return res.json({ planExpiry: 'invalid' })
-
-  res.json({ planExpiry: (await get(planEndingTime, chatId)) || 0 })
+  const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
+  res.json({ pauseTime: 2 * 1000, planExpiry: (await get(planEndingTime, chatId)) || 0, loginCount: loginData.loginCount })
 })
 //
 app.get('/:id', async (req, res) => {

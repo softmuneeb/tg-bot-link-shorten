@@ -226,12 +226,13 @@ function extractPhoneNumbers(text, cc) {
   return { phones, diff: lenBefore - lenAfter }
 }
 
-const sendMessage = async (chatId, message) => {
+const sendMessage = async (chatId, message, reply_markup) => {
   try {
     console.log({ message, chatId })
     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       chat_id: chatId,
       text: message,
+      ...reply_markup
     })
   } catch (error) {
     console.error('Error sending message:', { code: error?.message, data: error?.response?.data, chatId, message })
