@@ -1961,11 +1961,10 @@ bot?.on('message', async msg => {
     if (message === 'Yes') {
       const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
       await set(loginCountOf, Number(chatId), { loginCount: loginData.loginCount, canLogin: true })
-      sendMessage(chatId, t.resetLoginAdmit)
+      send(chatId, t.resetLoginAdmit, o)
     } else {
-      sendMessage(chatId, t.resetLoginDeny)
+      send(chatId, t.resetLoginDeny, o)
     }
-
     return
   }
 

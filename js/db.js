@@ -7,8 +7,6 @@
 // del should be some mark X instead of del
 
 const increment = async (c, key, val = 1, valueInside) => {
-
-  log(c, key, val, valueInside, 'hello hello')
   try {
     if (valueInside) {
       const count = (await get(c, key))?.[val] || 0
