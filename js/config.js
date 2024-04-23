@@ -106,6 +106,8 @@ const bal = (usd, ngn) =>
     : `$${view(usd)}`
 
 const t = {
+  resetLoginAdmit: `You can log in now`,
+  resetLoginDeny: 'Ok sure',
   select: `Please select an option:`,
   what: `Please choose option from keyboard`,
   whatNum: `Please choose valid number`,

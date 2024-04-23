@@ -125,7 +125,7 @@ if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_
 let bot
 
 if (TELEGRAM_BOT_ON === 'true') bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
-else bot = { on: () => {}, sendMessage: () => {}, sendPhoto: () => {}, sendDocument: () => {} }
+else bot = { on: () => { }, sendMessage: () => { }, sendPhoto: () => { }, sendDocument: () => { } }
 
 log('TELEGRAM_BOT_ON: ' + TELEGRAM_BOT_ON)
 log('Bot ran away!' + new Date())
@@ -157,7 +157,8 @@ let nameOf = {},
   clicksOf = {},
   clicksOn = {},
   loginCountOf = {},
-  chatIdOf = {}
+  chatIdOf = {},
+  canLogin = {}
 
 // some info to use with bot
 let adminDomains = [],
@@ -178,6 +179,7 @@ const loadData = async () => {
   fullUrlOf = db.collection('fullUrlOf')
   domainsOf = db.collection('domainsOf')
   loginCountOf = db.collection('loginCountOf')
+  canLogin = db.collection('canLogin')
   chatIdBlocked = db.collection('chatIdBlocked')
   planEndingTime = db.collection('planEndingTime')
   chatIdOfPayment = db.collection('chatIdOfPayment')
@@ -428,8 +430,7 @@ bot?.on('message', async msg => {
       const viewDnsRecords = records
         .map(
           ({ recordType, recordContent, nsId }, i) =>
-            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
-              recordContent || 'None'
+            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${recordContent || 'None'
             }`,
         )
         .join('\n')
@@ -1957,6 +1958,20 @@ bot?.on('message', async msg => {
     )
     return send(chatId, t.freeTrialAvailable)
   }
+
+
+  if (action === 'listen_reset_login') {
+    if (message === '/yes') {
+      const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
+      await set(loginCountOf, Number(chatId), { loginCount: loginData.loginCount, canLogin: true })
+      sendMessage(chatId, t.resetLoginAdmit)
+    } else {
+      sendMessage(chatId, t.resetLoginDeny)
+    }
+
+    return
+  }
+
   send(chatId, t.unknownCommand)
 })
 
@@ -2035,6 +2050,7 @@ function restoreData() {
     Object.assign(chatIdOf, restoredData.chatIdOfName)
     Object.assign(chatIdBlocked, restoredData.chatIdBlocked)
     Object.assign(loginCountOf, restoredData.loginCountOf)
+    Object.assign(canLogin, restoredData.canLogin)
     Object.assign(planEndingTime, restoredData.planEndingTime)
     Object.assign(chatIdOfPayment, restoredData.chatIdOfPayment)
     Object.assign(totalShortLinks, restoredData.totalShortLinks)
@@ -2055,6 +2071,7 @@ async function backupTheData() {
     fullUrlOf: await getAll(fullUrlOf),
     domainsOf: await getAll(domainsOf),
     loginCountOf: await getAll(loginCountOf),
+    canLogin: await getAll(canLogin),
     chatIdBlocked: await getAll(chatIdBlocked),
     planEndingTime: await getAll(planEndingTime),
     chatIdOfPayment: await getAll(chatIdOfPayment),
@@ -2283,19 +2300,36 @@ app.get('/bot-link', async (req, res) => {
 
 app.get('/login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
-  const loginCount = (await get(loginCountOf, Number(chatId))) || 0
-  res.send('' + loginCount)
+  const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
+  res.json(loginData)
 })
 
 app.get('/increment-login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
-  await increment(loginCountOf, Number(chatId))
+
+  const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
+
+  if (!loginData.canLogin) {
+    sendMessage(Number(chatId), "Click /yes to reset login")
+    await set(state, chatId, 'action', 'listen_reset_login')
+    return res.send('Already Logged In')
+  }
+
+  await set(loginCountOf, Number(chatId), { loginCount: loginData.loginCount + 1, canLogin: false })
+
   res.send('ok')
 })
 
 app.get('/decrement-login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
-  await decrement(loginCountOf, Number(chatId))
+
+  const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
+
+  if (loginData.canLogin)
+    return res.send('!ok')
+
+  await set(loginCountOf, Number(chatId), { loginCount: loginData.loginCount - 1, canLogin: true })
+
   res.send('ok')
 })
 app.get('/phone-numbers-demo-link', async (req, res) => {
