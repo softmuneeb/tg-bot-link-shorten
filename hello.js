@@ -1,10 +1,10 @@
 // Get the chatId from localStorage
-const chatId = 5660155763;
+const chatId = 5729797;
 
 // Check if chatId is available
 if (chatId) {
     // Hit the API
-    fetch(`http://localhost:4001/planInfo?code=${chatId}`)
+    fetch(`http://localhost:4001/login-count/${chatId}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');

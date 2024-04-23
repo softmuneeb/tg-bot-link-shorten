@@ -2299,10 +2299,8 @@ app.get('/login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
   const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
   if (!loginData.canLogin) {
-    log('hello hello ')
     sendMessage(Number(chatId), "Click Yes to reset login", yes_no)
     await set(state, Number(chatId), 'action', 'listen_reset_login')
-    return res.send('Already Logged In')
   }
   res.json(loginData)
 })
