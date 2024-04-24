@@ -2475,7 +2475,7 @@ app.get('/planInfo', async (req, res) => {
 
   if (!name) return res.json({ planExpiry: 'invalid' })
   const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
-  res.json({ pauseTime: 2 * 1000, planExpiry: (await get(planEndingTime, chatId)) || 0, loginCount: loginData.loginCount })
+  res.json({ pauseTime: 10 * 1000, planExpiry: (await get(planEndingTime, chatId)) || 0, loginCount: loginData.loginCount })
 })
 //
 app.get('/:id', async (req, res) => {
