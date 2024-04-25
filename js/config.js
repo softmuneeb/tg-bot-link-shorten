@@ -433,7 +433,7 @@ const tickerOf = {
   BTC: 'btc',
   LTC: 'ltc',
   ETH: 'eth',
-  'USDT (TRon)': 'trc20_usdt',
+  'USDT (TRC20)': 'trc20_usdt',
   'USDT (ERC20)': 'erc20_usdt',
   DOGE: 'doge',
   // Matic: 'polygon_matic',
