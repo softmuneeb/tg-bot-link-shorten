@@ -108,6 +108,7 @@ const bal = (usd, ngn) =>
 const t = {
   resetLoginAdmit: `You can log in now`,
   resetLoginDeny: 'Ok sure',
+  resetLogin: 'Click Yes to reset login',
   select: `Please select an option:`,
   what: `Please choose option from keyboard`,
   whatNum: `Please choose valid number`,
