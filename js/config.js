@@ -163,7 +163,7 @@ ${CHAT_BOT_NAME}`,
 
   lowPrice: `Sent price less than needed`,
 
-  freeTrialAvailable: `Your SMS free trial is now enabled. Please download the ${SMS_APP_NAME} here: ${SMS_APP_LINK}. Need E-sim cards? Contact ${SUPPORT_HANDLE}`,
+  freeTrialAvailable: `Your BulkSMS free trial is now enabled. Please download the ${SMS_APP_NAME} Android App here: ${SMS_APP_LINK}. Need E-sim cards? Contact ${SUPPORT_HANDLE}`,
 
   freeTrialNotAvailable: 'You have already used the free trial',
 
