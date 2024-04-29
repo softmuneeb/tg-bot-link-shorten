@@ -106,9 +106,9 @@ const bal = (usd, ngn) =>
     : `$${view(usd)}`
 
 const t = {
-  resetLoginAdmit: `NomadlySMS: You have been successfully logged out of your previous device. Please login now`,
+  resetLoginAdmit: `${CHAT_BOT_BRAND}SMS: You have been successfully logged out of your previous device. Please login now`,
   resetLoginDeny: 'Ok sure. No further action required.',
-  resetLogin: 'NomadlySMS: Are you trying to log out of your previous device?',
+  resetLogin: `${CHAT_BOT_BRAND}SMS: Are you trying to log out of your previous device?`,
   select: `Please select an option:`,
   what: `Please choose option from keyboard`,
   whatNum: `Please choose valid number`,
