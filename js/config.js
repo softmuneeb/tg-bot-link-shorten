@@ -68,7 +68,7 @@ const admin = {
 const user = {
   // main keyboard
   joinChannel: '✅ Join Channel',
-  phoneNumberLeads: '☎️ HQ SMS Leads',
+  phoneNumberLeads: '☎️ HQ SMS Lead',
   wallet: '💰 My Wallet',
   urlShortenerMain: '🔗 URL Shortener',
   buyPlan: '📋 Subscribe Here',
