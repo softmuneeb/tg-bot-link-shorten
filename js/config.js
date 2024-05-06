@@ -68,7 +68,7 @@ const admin = {
 const user = {
   // main keyboard
   joinChannel: '✅ Join Channel',
-  phoneNumberLeads: '☎️ HQ SMS Leads',
+  phoneNumberLeads: '☎️ HQ SMS Lead',
   wallet: '💰 My Wallet',
   urlShortenerMain: '🔗 URL Shortener',
   buyPlan: '📋 Subscribe Here',
@@ -106,8 +106,9 @@ const bal = (usd, ngn) =>
     : `$${view(usd)}`
 
 const t = {
-  resetLoginAdmit: `You can log in now`,
-  resetLoginDeny: 'Ok sure',
+  resetLoginAdmit: `${CHAT_BOT_BRAND}SMS: You have been successfully logged out of your previous device. Please login now`,
+  resetLoginDeny: 'Ok sure. No further action required.',
+  resetLogin: `${CHAT_BOT_BRAND}SMS: Are you trying to log out of your previous device?`,
   select: `Please select an option:`,
   what: `Please choose option from keyboard`,
   whatNum: `Please choose valid number`,
@@ -162,7 +163,7 @@ ${CHAT_BOT_NAME}`,
 
   lowPrice: `Sent price less than needed`,
 
-  freeTrialAvailable: `Your SMS free trial is now enabled. Please download the ${SMS_APP_NAME} here: ${SMS_APP_LINK}. Need E-sim cards? Contact ${SUPPORT_HANDLE}`,
+  freeTrialAvailable: `Your BulkSMS free trial is now enabled. Please download the ${SMS_APP_NAME} Android App here: ${SMS_APP_LINK}. Need E-sim cards? Contact ${SUPPORT_HANDLE}`,
 
   freeTrialNotAvailable: 'You have already used the free trial',
 
@@ -432,7 +433,7 @@ const tickerOf = {
   BTC: 'btc',
   LTC: 'ltc',
   ETH: 'eth',
-  'USDT (TRon)': 'trc20_usdt',
+  'USDT (TRC20)': 'trc20_usdt',
   'USDT (ERC20)': 'erc20_usdt',
   DOGE: 'doge',
   // Matic: 'polygon_matic',
