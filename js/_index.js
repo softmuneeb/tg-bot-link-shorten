@@ -199,6 +199,7 @@ const loadData = async () => {
 
   log(`DB Connected lala. May peace be with you and Lord's mercy and blessings.`)
 
+  //
   // sendMessage(6687923716, 'bot started')
   // buyDomainFullProcess(6687923716, 'ehtesham.sbs')
 
