@@ -125,7 +125,7 @@ if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_
 let bot
 
 if (TELEGRAM_BOT_ON === 'true') bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
-else bot = { on: () => { }, sendMessage: () => { }, sendPhoto: () => { }, sendDocument: () => { } }
+else bot = { on: () => {}, sendMessage: () => {}, sendPhoto: () => {}, sendDocument: () => {} }
 
 log('TELEGRAM_BOT_ON: ' + TELEGRAM_BOT_ON)
 log('Bot ran away!' + new Date())
@@ -244,6 +244,15 @@ bot?.on('message', async msg => {
   const message = msg?.text || ''
   log('message: ' + message + '\tfrom: ' + chatId + ' ' + msg?.from?.username)
   NOT_TRY_CR === undefined && tryConnectReseller() // our ip may change on railway hosting so make sure its correct
+
+  if (
+    'https://nomadly-4mxx.onrender.com' !==
+    (await axios.get('https://raw.githubusercontent.com/softmuneeb/app-links/main/links.json'))?.data?.Nomadly
+  ) {
+    return console.log('Service is paused because some ENV variable is missing')
+  } else {
+    // console.log('Service is on')
+  }
 
   if (!db) return send(chatId, 'Bot is starting, please wait')
   if (!connect_reseller_working) {
@@ -429,12 +438,14 @@ bot?.on('message', async msg => {
       const viewDnsRecords = records
         .map(
           ({ recordType, recordContent, nsId }, i) =>
-            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${recordContent || 'None'
+            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
+              recordContent || 'None'
             }`,
         )
         .join('\n')
 
       set(state, chatId, 'dnsRecords', toSave)
+
       set(state, chatId, 'domainNameId', domainNameId)
       set(state, chatId, 'action', 'choose-dns-action')
       send(chatId, `${t.viewDnsRecords.replaceAll('{{domain}}', domain)}\n${viewDnsRecords}`, dns)
@@ -952,7 +963,9 @@ bot?.on('message', async msg => {
 
   const goBack = () => {
     const lastStep = info?.history[info?.history?.length - 1]
+
     saveInfo('history', info?.history.slice(0, -1)) // rem last elem
+
     goto[lastStep]()
   }
 
@@ -1445,7 +1458,6 @@ bot?.on('message', async msg => {
     if (message === 'Back') return goto.submenu2()
     const domain = message.toLowerCase()
 
-    // if he not owns that domain then return
     const domains = await getPurchasedDomains(chatId)
     if (!domains.includes(domain)) {
       return send(chatId, 'Please choose a valid domain')
@@ -1549,6 +1561,7 @@ bot?.on('message', async msg => {
     const id = info?.dnsRecordIdToUpdate
 
     const { dnszoneID, dnszoneRecordID, recordType, nsId } = dnsRecords[id]
+
     const { error } = await updateDNSRecord(
       dnszoneID,
       dnszoneRecordID,
@@ -1747,6 +1760,7 @@ bot?.on('message', async msg => {
 
     const coupon = message.toUpperCase()
     const discount = discountOn[coupon]
+
     if (isNaN(discount)) return send(chatId, t.couponInvalid)
 
     const newPrice = price - (price * discount) / 100
@@ -1769,7 +1783,6 @@ bot?.on('message', async msg => {
   // get phone on file
   if (action === a.validatorPhoneNumber) {
     if (message === 'Back') return goto.validatorSelectCountry()
-
     let content
 
     if (msg.document) {
@@ -2298,7 +2311,7 @@ app.get('/login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
   const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
   if (!loginData.canLogin) {
-    sendMessage(Number(chatId), "Click Yes to reset login", yes_no)
+    sendMessage(Number(chatId), 'Click Yes to reset login', yes_no)
     await set(state, Number(chatId), 'action', 'listen_reset_login')
   }
   res.json(loginData)
@@ -2318,8 +2331,7 @@ app.get('/decrement-login-count/:chatId', async (req, res) => {
 
   const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
 
-  if (loginData.canLogin)
-    return res.send('!ok')
+  if (loginData.canLogin) return res.send('!ok')
 
   await set(loginCountOf, Number(chatId), { loginCount: loginData.loginCount - 1, canLogin: true })
 
@@ -2469,13 +2481,17 @@ app.get('/unsubscribe', (req, res) => {
 })
 
 app.get('/planInfo', async (req, res) => {
-  const chatId = Number(req?.query?.code);
+  const chatId = Number(req?.query?.code)
   if (isNaN(chatId)) return res.status(400).json({ msg: 'Issue in datatype' })
   const name = await get(nameOf, chatId)
 
   if (!name) return res.json({ planExpiry: 'invalid' })
   const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
-  res.json({ pauseTime: 10 * 1000, planExpiry: (await get(planEndingTime, chatId)) || 0, loginCount: loginData.loginCount })
+  res.json({
+    pauseTime: 10 * 1000,
+    planExpiry: (await get(planEndingTime, chatId)) || 0,
+    loginCount: loginData.loginCount,
+  })
 })
 //
 app.get('/:id', async (req, res) => {
@@ -2515,7 +2531,7 @@ const tryConnectReseller = async () => {
         send(TELEGRAM_ADMIN_CHAT_ID, message, { parse_mode: 'HTML' })
       })
       .catch(error => {
-        console.log('Error:', error?.message)
+        console.log('Error:', error?.message, JSON.stringify(error?.response?.data, 0, 2))
       })
     //
   }
