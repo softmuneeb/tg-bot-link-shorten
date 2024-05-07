@@ -930,11 +930,11 @@ bot?.on('message', async msg => {
       if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
 
       try {
-        const { url } = info
-        const slug = nanoid()
-        const __shortUrl = `${SELF_URL}/${slug}`
-        const _shortUrl = await createShortBitly(__shortUrl)
-        const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
+        const { url } = info // https://drive.com/f/1/csdjan123ncsjdbnskjdfbskfbjsdkfjbs
+        // const slug = nanoid() // abcde
+        // const __shortUrl = `${SELF_URL}/${slug}` // https://nomad.ly/abcde
+        const _shortUrl = await createShortBitly(url) // https://bit.ly/pouii
+        const shortUrl = _shortUrl.replaceAll('.', '@').replace('https://', '') // bit@ly/pouii
         increment(totalShortLinks)
         set(maskOf, shortUrl, _shortUrl)
         set(fullUrlOf, shortUrl, url)
