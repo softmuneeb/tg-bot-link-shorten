@@ -10,6 +10,7 @@ const FREE_LINKS = Number(process.env.FREE_LINKS)
 const SUPPORT_USERNAME = process.env.SUPPORT_USERNAME
 
 const HIDE_SMS_APP = process.env.HIDE_SMS_APP
+const HIDE_BECOME_RESELLER = process.env.HIDE_BECOME_RESELLER
 const TG_HANDLE = process.env.TG_HANDLE
 const TG_CHANNEL = process.env.TG_CHANNEL
 const SMS_APP_NAME = process.env.SMS_APP_NAME
@@ -74,6 +75,7 @@ const user = {
   buyPlan: '📋 Subscribe Here',
   domainNames: '🌐 Domain Names',
   viewPlan: '🔍 My Plan',
+  becomeReseller: "👨‍💼 Become A Reseller",
   getSupport: '🛠️ Get Support',
   freeTrialAvailable: '📩 BulkSMS -Trial',
 
@@ -106,7 +108,25 @@ const bal = (usd, ngn) =>
     : `$${view(usd)}`
 
 const t = {
-  resetLoginAdmit: `${CHAT_BOT_BRAND}SMS: You have been successfully logged out of your previous device. Please login now`,
+  becomeReseller: `Hi,
+
+I'm reaching out to offer you a fantastic opportunity to become a reseller for NomadlyBot's powerful SMS marketing and hosting software.
+
+Key Details:
+
+Profit Share: Earn a competitive 65/35% split on each sale.
+
+Set-up Fee: Contact support for details 
+
+Interested? Reach out to us at ${SUPPORT_HANDLE} to learn more about this lucrative partnership.
+
+Looking forward to potentially collaborating with you!
+
+Best regards,
+
+Nomadly Team
+`,
+  resetLoginAdmit: `${CHAT_BOT_BRAND} SMS: You have been successfully logged out of your previous device.Please login now`,
   resetLoginDeny: 'Ok sure. No further action required.',
   resetLogin: `${CHAT_BOT_BRAND}SMS: Are you trying to log out of your previous device?`,
   select: `Please select an option:`,
@@ -519,7 +539,7 @@ const userKeyboard = {
       HIDE_SMS_APP === 'true' ? [user.buyPlan] : [user.freeTrialAvailable, user.buyPlan],
       [user.urlShortenerMain],
       [user.domainNames],
-      [user.viewPlan, user.getSupport],
+      HIDE_BECOME_RESELLER === 'true' ? [user.viewPlan, user.getSupport] : [user.viewPlan, user.becomeReseller, user.getSupport],
     ],
   },
   parse_mode: 'HTML',

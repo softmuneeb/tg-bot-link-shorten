@@ -47,7 +47,7 @@ const {
   payOpts,
 } = require('./config.js')
 const createShortBitly = require('./bitly.js')
-const createShortUrlApi = require('./cuttly.js')
+const { createShortUrlApi, analyticsCuttly } = require('./cuttly.js');
 const {
   week,
   year,
@@ -125,7 +125,7 @@ if (!DB_NAME || !RATE_LEAD_VALIDATOR || !HOSTED_ON || !TELEGRAM_BOT_ON || !REST_
 let bot
 
 if (TELEGRAM_BOT_ON === 'true') bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
-else bot = { on: () => {}, sendMessage: () => {}, sendPhoto: () => {}, sendDocument: () => {} }
+else bot = { on: () => { }, sendMessage: () => { }, sendPhoto: () => { }, sendDocument: () => { } }
 
 log('TELEGRAM_BOT_ON: ' + TELEGRAM_BOT_ON)
 log('Bot ran away!' + new Date())
@@ -439,8 +439,7 @@ bot?.on('message', async msg => {
       const viewDnsRecords = records
         .map(
           ({ recordType, recordContent, nsId }, i) =>
-            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${
-              recordContent || 'None'
+            `${i + 1}.\t${recordType === 'NS' ? recordType + nsId : recordType === 'A' ? 'A Record' : recordType}:\t${recordContent || 'None'
             }`,
         )
         .join('\n')
@@ -1072,16 +1071,27 @@ bot?.on('message', async msg => {
 
     // random
     if (redSelectRandomCustom[0] === message) {
+
       try {
         const { url } = info
-        const slug = nanoid()
-        const __shortUrl = `${SELF_URL}/${slug}`
-        const _shortUrl = await createShortUrlApi(__shortUrl)
-        const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
+        let _shortUrl, shortUrl;
+        if (process.env.LINK_TO_SELF_SERVER === 'false') {
+          _shortUrl = await createShortUrlApi(url)
+          shortUrl = _shortUrl.replaceAll('.', '@').replace('https://', '')
+          set(linksOf, chatId, shortUrl, url)
+        }
+        else {
+          const slug = nanoid()
+          const __shortUrl = `${SELF_URL}/${slug}`
+          _shortUrl = await createShortUrlApi(__shortUrl)
+          shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
+          const shortUrlLink = _shortUrl.replaceAll('.', '@').replace('https://', '')
+          set(linksOf, chatId, shortUrlLink, url)
+        }
         increment(totalShortLinks)
         set(maskOf, shortUrl, _shortUrl)
         set(fullUrlOf, shortUrl, url)
-        set(linksOf, chatId, shortUrl, url)
+
         if (!(await isSubscribed(chatId))) {
           decrement(freeShortLinksOf, chatId)
           set(expiryOf, shortUrl, Date.now() + FREE_LINKS_TIME_SECONDS)
@@ -1911,6 +1921,9 @@ bot?.on('message', async msg => {
     send(chatId, 'You are not currently subscribed to any plan.')
     return
   }
+  if (message === user.becomeReseller) {
+    return send(chatId, t.becomeReseller)
+  }
   if (message === user.viewShortLinks) {
     const links = await getShortLinks(chatId)
     if (links.length === 0) {
@@ -2015,11 +2028,20 @@ async function getShortLinks(chatId) {
 
   let ret = []
   for (let i = 0; i < ans.length; i++) {
-    const link = ans[i]
-    let clicks = (await get(clicksOn, link.shorter)) || 0
+    const link = ans[i];
 
-    const shorter = (await get(maskOf, link.shorter)) || link.shorter.replaceAll('@', '.')
-    ret.push({ clicks, shorter, url: link.url })
+    if (link.shorter.includes('ap1s@net')) {
+      const lastPart = link.shorter.substring(link.shorter.lastIndexOf('/') + 1);
+      let clicks = ((await analyticsCuttly(lastPart)) === 'No such url' ? 0 : (await analyticsCuttly(lastPart))) || 0
+      const shorter = (await get(maskOf, link.shorter)) || link.shorter.replaceAll('@', '.')
+      ret.push({ clicks, shorter, url: link.url })
+    }
+    else {
+      let clicks = (await get(clicksOn, link.shorter)) || 0
+      const shorter = (await get(maskOf, link.shorter)) || link.shorter.replaceAll('@', '.')
+      ret.push({ clicks, shorter, url: link.url })
+    }
+
   }
 
   return ret

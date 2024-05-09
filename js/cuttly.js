@@ -18,5 +18,40 @@ const createShortUrlApi = async longUrl => {
     console.error('Error creating short URL, Code: ', response?.status)
   }
 }
-// createShortUrlApi('https://web.telegram.org/k/#@softlocalbot').then(console.log)
-module.exports = createShortUrlApi
+
+
+const sumObjectValues = (obj) => {
+  let sum = 0;
+  for (let key in obj) {
+    if (typeof obj[key] === 'number') {
+      sum += obj[key];
+    }
+  }
+  return sum;
+}
+
+const analyticsCuttly = async shortUrlHash => {
+
+  const config = {
+    method: 'get',
+    url: `https://api.promptapi.com/short_url/stats/${shortUrlHash}`,
+    headers: {
+      'apikey': apiKey
+    }
+  };
+
+  try {
+    const response = await axios(config)
+    if (response.status === 200) {
+      return sumObjectValues(response.data.device.type);
+    } else {
+      console.error('Error getting total clicks, Code: ', response?.status)
+    }
+  } catch (error) {
+    return error?.response?.data?.message;
+  }
+
+}
+// createShortUrlApi('https://google.com').then(console.log)
+// analyticsCuttly('vJnro').then(console.log)
+module.exports = { createShortUrlApi, analyticsCuttly }
