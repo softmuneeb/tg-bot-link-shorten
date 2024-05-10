@@ -110,7 +110,7 @@ const bal = (usd, ngn) =>
 const t = {
   becomeReseller: `Hi,
 
-I'm reaching out to offer you a fantastic opportunity to become a reseller for NomadlyBot's powerful SMS marketing and hosting software.
+I'm reaching out to offer you a fantastic opportunity to become a reseller for ${CHAT_BOT_BRAND}Bot's powerful SMS marketing and hosting software.
 
 Key Details:
 
@@ -124,7 +124,7 @@ Looking forward to potentially collaborating with you!
 
 Best regards,
 
-Nomadly Team
+${CHAT_BOT_BRAND} Team
 `,
   resetLoginAdmit: `${CHAT_BOT_BRAND} SMS: You have been successfully logged out of your previous device.Please login now`,
   resetLoginDeny: 'Ok sure. No further action required.',
