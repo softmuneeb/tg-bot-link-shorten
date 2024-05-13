@@ -149,20 +149,20 @@ const sendQrCode = async (bot, chatId, bb) => {
   const buffer = Buffer.from(qrCode?.qr_code, 'base64')
   fs.writeFileSync('image.png', buffer)
   bot
-    .sendPhoto(chatId, 'image.png', {
+    ?.sendPhoto(chatId, 'image.png', {
       caption: 'Here is your QR code!',
     })
-    .then(() => fs.unlinkSync('image.png'))
-    .catch(log)
+    ?.then(() => fs.unlinkSync('image.png'))
+    ?.catch(log)
 }
 
 const sendQr = async (bot, chatId, text, caption) => {
   const buffer = await QRCode.toDataURL(text)
   fs.writeFileSync('image.png', buffer.split(';base64,').pop(), { encoding: 'base64' })
   bot
-    .sendPhoto(chatId, 'image.png', { caption })
-    .then(() => fs.unlinkSync('image.png'))
-    .catch(log)
+    ?.sendPhoto(chatId, 'image.png', { caption })
+    ?.then(() => fs.unlinkSync('image.png'))
+    ?.catch(log)
 }
 
 const getBalance = async (walletOf, chatId) => {
@@ -232,7 +232,7 @@ const sendMessage = async (chatId, message, reply_markup) => {
     await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       chat_id: chatId,
       text: message,
-      ...reply_markup
+      ...reply_markup,
     })
   } catch (error) {
     console.error('Error sending message:', { code: error?.message, data: error?.response?.data, chatId, message })
