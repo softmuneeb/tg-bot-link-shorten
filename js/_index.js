@@ -2326,7 +2326,7 @@ app.get('/bot-link', async (req, res) => {
 app.get('/free-sms-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
   let freeSmsCountOf = (await get(freeSmsCountOf, Number(chatId))) || 0
-  res.send(freeSmsCountOf)
+  res.send("" + freeSmsCountOf)
 })
 
 app.get('/increment-free-sms-count/:chatId', async (req, res) => {
