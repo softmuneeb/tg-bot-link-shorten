@@ -148,6 +148,7 @@ let state = {},
   chatIdOfPayment = {},
   totalShortLinks = {},
   freeShortLinksOf = {},
+  freeSmsCountOf = {},
   freeDomainNamesAvailableFor = {}
 
 // variables to view system information
@@ -185,6 +186,7 @@ const loadData = async () => {
   chatIdOfPayment = db.collection('chatIdOfPayment')
   totalShortLinks = db.collection('totalShortLinks')
   freeShortLinksOf = db.collection('freeShortLinksOf')
+  freeSmsCountOf = db.collection('freeSmsCountOf')
   freeDomainNamesAvailableFor = db.collection('freeDomainNamesAvailableFor')
 
   // variables to view system information
@@ -698,6 +700,7 @@ bot?.on('message', async msg => {
       set(state, chatId, 'action', 'none')
 
       const plan = info?.plan
+      const name = await get(nameOf, chatId)
       const price = info?.couponApplied ? info?.newPrice : info?.price
       const wallet = await get(walletOf, chatId)
       const { usdBal, ngnBal } = await getBalance(walletOf, chatId)
@@ -707,13 +710,13 @@ bot?.on('message', async msg => {
       if (coin === u.usd) {
         const priceUsd = price
         if (usdBal < priceUsd) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
-
+        set(payments, nanoid(), `Wallet,Plan,${plan},$${priceUsd},${chatId},${name},${new Date()}`)
         const usdOut = (wallet?.usdOut || 0) + priceUsd
         await set(walletOf, chatId, 'usdOut', usdOut)
       } else {
         const priceNgn = await usdToNgn(price)
         if (ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
-
+        set(payments, nanoid(), `Wallet,Plan,${plan},$${price},${chatId},${name},${new Date()},${priceNgn} NGN`)
         const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
         await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
       }
@@ -741,13 +744,16 @@ bot?.on('message', async msg => {
       const domain = info?.domain
       const error = await buyDomainFullProcess(chatId, domain)
       if (error) return
+      const name = await get(nameOf, chatId)
 
       // wallet update
       if (coin === u.usd) {
+        set(payments, nanoid(), `Wallet,Domain,${domain},$${priceUsd},${chatId},${name},${new Date()}`)
         const usdOut = (wallet?.usdOut || 0) + priceUsd
         await set(walletOf, chatId, 'usdOut', usdOut)
       }
       if (coin === u.ngn) {
+        set(payments, nanoid(), `Wallet,Domain,${domain},$${priceUsd},${chatId},${name},${new Date()},${priceNgn} NGN`)
         const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
         await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
       }
@@ -786,7 +792,7 @@ bot?.on('message', async msg => {
       const l = format === buyLeadsSelectFormat[0]
 
       // buy leads
-      send(chatId, t.validateBulkNumbersStart, o)
+      send(chatId, t.validatorBulkNumbersStart, o)
       const res = await validateBulkNumbers(info?.carrier, info?.amount, cc, areaCodes, cnam, bot, chatId)
       if (!res) return send(chatId, t.buyLeadsError)
 
@@ -824,12 +830,15 @@ bot?.on('message', async msg => {
             () => bot?.sendDocument(chatId, file2),
           )
       }
+      const name = await get(nameOf, chatId)
 
       // wallet update
       if (coin === u.usd) {
+        set(payments, nanoid(), `Wallet,Phone Leads,${info?.amount},$${priceUsd},${chatId},${name},${new Date()}`)
         const usdOut = (wallet?.usdOut || 0) + priceUsd
         await set(walletOf, chatId, 'usdOut', usdOut)
       } else if (coin === u.ngn) {
+        set(payments, nanoid(), `Wallet,Phone Leads,${info?.amount},$${priceUsd},${chatId},${name},${new Date()},${priceNgn} NGN`)
         const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
         await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
       } else {
@@ -900,12 +909,14 @@ bot?.on('message', async msg => {
             () => bot?.sendDocument(chatId, file2).catch(),
           )
       }
-
+      const name = await get(nameOf, chatId)
       // wallet update
       if (coin === u.usd) {
+        set(payments, nanoid(), `Wallet,Validate Leads,${info?.amount},$${priceUsd},${chatId},${name},${new Date()}`)
         const usdOut = (wallet?.usdOut || 0) + priceUsd
         await set(walletOf, chatId, 'usdOut', usdOut)
       } else if (coin === u.ngn) {
+        set(payments, nanoid(), `Wallet,Validate Leads,${info?.amount},$${priceUsd},${chatId},${name},${new Date()},${priceNgn} NGN`)
         const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
         await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
       } else {
@@ -924,6 +935,7 @@ bot?.on('message', async msg => {
 
       // price validate
       const priceUsd = price
+      const name = await get(nameOf, chatId)
       if (coin === u.usd && usdBal < priceUsd) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
       const priceNgn = await usdToNgn(price)
       if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
@@ -948,9 +960,11 @@ bot?.on('message', async msg => {
 
       // wallet update
       if (coin === u.usd) {
+        set(payments, nanoid(), `Wallet,Bit.ly Link,${info?.link},$${priceUsd},${chatId},${name},${new Date()}`)
         const usdOut = (wallet?.usdOut || 0) + priceUsd
         await set(walletOf, chatId, 'usdOut', usdOut)
       } else if (coin === u.ngn) {
+        set(payments, nanoid(), `Wallet,Bit.ly Link,${info?.link},$${priceUsd},${chatId},${name},${new Date()},${priceNgn} NGN`)
         const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
         await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
       } else {
@@ -1663,7 +1677,12 @@ bot?.on('message', async msg => {
     if (message === 'Back' || message === 'No') return goto[a.walletSelectCurrency]()
 
     if (message !== 'Yes') return send(chatId, t.what)
-    return walletOk[info?.lastStep](info?.coin)
+
+    try {
+      return walletOk[info?.lastStep](info?.coin)
+    } catch (error) {
+      return sendMessage(chatId, 'Error code 209 ' + error?.message)
+    }
   }
 
   //
@@ -1996,7 +2015,7 @@ bot?.on('message', async msg => {
   }
 
   send(chatId, t.unknownCommand)
-})
+})?.then(a => console.log(a))?.catch(b => console.log("the error: ", b))
 
 async function getPurchasedDomains(chatId) {
   let ans = await get(domainsOf, chatId)
@@ -2066,33 +2085,6 @@ async function freeLinksAvailable(chatId) {
   return freeLinks > 0
 }
 
-function restoreData() {
-  try {
-    const backupJSON = fs.readFileSync('backup.json', 'utf-8')
-    const restoredData = JSON.parse(backupJSON)
-    Object.assign(state, restoredData.state)
-    Object.assign(linksOf, restoredData.linksOf)
-    Object.assign(walletOf, restoredData.walletOf)
-    Object.assign(expiryOf, restoredData.expiryOf)
-    Object.assign(clicksOf, restoredData.clicksOf)
-    Object.assign(clicksOn, restoredData.clicksOn)
-    Object.assign(fullUrlOf, restoredData.fullUrlOf)
-    Object.assign(domainsOf, restoredData.domainsOf)
-    Object.assign(nameOf, restoredData.nameOfChatId)
-    Object.assign(chatIdOf, restoredData.chatIdOfName)
-    Object.assign(chatIdBlocked, restoredData.chatIdBlocked)
-    Object.assign(loginCountOf, restoredData.loginCountOf)
-    Object.assign(canLogin, restoredData.canLogin)
-    Object.assign(planEndingTime, restoredData.planEndingTime)
-    Object.assign(chatIdOfPayment, restoredData.chatIdOfPayment)
-    Object.assign(totalShortLinks, restoredData.totalShortLinks)
-    Object.assign(freeShortLinksOf, restoredData.freeShortLinksOf)
-    Object.assign(freeDomainNamesAvailableFor, restoredData.freeDomainNamesAvailableFor)
-    log('Data restored.')
-  } catch (error) {
-    log('Error restoring data:', error.message)
-  }
-}
 
 async function backupTheData() {
   const backupData = {
@@ -2110,6 +2102,7 @@ async function backupTheData() {
     totalShortLinks: await getAll(totalShortLinks),
     freeShortLinksOf: await getAll(freeShortLinksOf),
     freeDomainNamesAvailableFor: await getAll(freeDomainNamesAvailableFor),
+    freeSmsCountOf: await getAll(freeSmsCountOf),
     payments: await getAll(payments),
     clicksOf: await getAll(clicksOf),
     clicksOn: await getAll(clicksOn),
@@ -2330,6 +2323,18 @@ app.get('/bot-link', async (req, res) => {
   res.send(process.env.APP_SUPPORT_LINK)
 })
 
+app.get('/free-sms-count/:chatId', async (req, res) => {
+  const chatId = req?.params?.chatId
+  let freeSmsCountOf = (await get(freeSmsCountOf, Number(chatId))) || 0
+  res.send(freeSmsCountOf)
+})
+
+app.get('/increment-free-sms-count/:chatId', async (req, res) => {
+  const chatId = req?.params?.chatId
+  increment(freeSmsCountOf, Number(chatId))
+  res.send('ok')
+})
+
 app.get('/login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
   const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
@@ -2504,13 +2509,15 @@ app.get('/unsubscribe', (req, res) => {
 })
 
 app.get('/planInfo', async (req, res) => {
+  if (process.env.OLD_APP_ACTIVE === 'false') return res.send('old app off now');
+
   const chatId = Number(req?.query?.code)
   if (isNaN(chatId)) return res.status(400).json({ msg: 'Issue in datatype' })
   const name = await get(nameOf, chatId)
 
   if (!name) return res.json({ planExpiry: 'invalid' })
   const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
-  res.json({
+  return res.json({
     pauseTime: 10 * 1000,
     planExpiry: (await get(planEndingTime, chatId)) || 0,
     loginCount: loginData.loginCount,
