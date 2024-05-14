@@ -2343,7 +2343,7 @@ app.get('/free-sms-count/:chatId', async (req, res) => {
 
 app.get('/increment-free-sms-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
-  const name = await get(nameOf, chatId)
+  const name = await get(nameOf, Number(chatId))
 
   increment(freeSmsCountOf, Number(chatId))
   increment(clicksOfSms, chatId + ", " + name + ", " + today())
