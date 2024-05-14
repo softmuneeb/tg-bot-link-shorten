@@ -2546,6 +2546,20 @@ app.get('/planInfo', async (req, res) => {
     loginCount: loginData.loginCount,
   })
 })
+
+app.get('/planInfoTwo', async (req, res) => {
+  const chatId = Number(req?.query?.code)
+  if (isNaN(chatId)) return res.status(400).json({ msg: 'Issue in datatype' })
+  const name = await get(nameOf, chatId)
+
+  if (!name) return res.json({ planExpiry: 'invalid' })
+  const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
+  return res.json({
+    pauseTime: 10 * 1000,
+    planExpiry: (await get(planEndingTime, chatId)) || 0,
+    loginCount: loginData.loginCount,
+  })
+})
 //
 app.get('/:id', async (req, res) => {
   const id = req?.params?.id
