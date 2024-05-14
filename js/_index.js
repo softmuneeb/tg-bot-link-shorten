@@ -2350,6 +2350,11 @@ app.get('/increment-free-sms-count/:chatId', async (req, res) => {
   increment(clicksOfSms, chatId + ", " + name + ", " + week())
   increment(clicksOfSms, chatId + ", " + name + ", " + month())
   increment(clicksOfSms, chatId + ", " + name + ", " + year())
+
+  increment(clicksOfSms, "total, total, " + today())
+  increment(clicksOfSms, "total, total, " + week())
+  increment(clicksOfSms, "total, total, " + month())
+  increment(clicksOfSms, "total, total, " + year())
   res.send('ok')
 })
 
