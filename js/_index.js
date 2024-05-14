@@ -2046,7 +2046,7 @@ async function getAnalytics() {
 async function getAnalyticsOfAllSms() {
   let ans = await getAll(clicksOfSms)
   if (!ans) return []
-  return ans.map(a => `${a._id}: ${a.val} click${a.val === 1 ? '' : 's'}`).sort((a, b) => a.localeCompare(b))
+  return ans.map(a => `${a._id}, ${a.val} click${a.val === 1 ? '' : 's'}`).sort((a, b) => a.localeCompare(b))
 }
 
 async function getShortLinks(chatId) {
@@ -2343,11 +2343,13 @@ app.get('/free-sms-count/:chatId', async (req, res) => {
 
 app.get('/increment-free-sms-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
+  const name = await get(nameOf, chatId)
+
   increment(freeSmsCountOf, Number(chatId))
-  increment(clicksOfSms, today())
-  increment(clicksOfSms, week())
-  increment(clicksOfSms, month())
-  increment(clicksOfSms, year())
+  increment(clicksOfSms, chatId + ", " + name + ", " + today())
+  increment(clicksOfSms, chatId + ", " + name + ", " + week())
+  increment(clicksOfSms, chatId + ", " + name + ", " + month())
+  increment(clicksOfSms, chatId + ", " + name + ", " + year())
   res.send('ok')
 })
 
