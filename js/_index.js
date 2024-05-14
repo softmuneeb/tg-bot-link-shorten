@@ -149,6 +149,7 @@ let state = {},
   totalShortLinks = {},
   freeShortLinksOf = {},
   freeSmsCountOf = {},
+  clicksOfSms = {},
   freeDomainNamesAvailableFor = {}
 
 // variables to view system information
@@ -187,6 +188,7 @@ const loadData = async () => {
   totalShortLinks = db.collection('totalShortLinks')
   freeShortLinksOf = db.collection('freeShortLinksOf')
   freeSmsCountOf = db.collection('freeSmsCountOf')
+  clicksOfSms = db.collection('clicksOfSms');
   freeDomainNamesAvailableFor = db.collection('freeDomainNamesAvailableFor')
 
   // variables to view system information
@@ -793,6 +795,7 @@ bot?.on('message', async msg => {
 
       // buy leads
       send(chatId, t.validatorBulkNumbersStart, o)
+      const leadsAmount = info?.amount
       const res = await validateBulkNumbers(info?.carrier, info?.amount, cc, areaCodes, cnam, bot, chatId)
       if (!res) return send(chatId, t.buyLeadsError)
 
@@ -834,11 +837,11 @@ bot?.on('message', async msg => {
 
       // wallet update
       if (coin === u.usd) {
-        set(payments, nanoid(), `Wallet,Phone Leads,${info?.amount},$${priceUsd},${chatId},${name},${new Date()}`)
+        set(payments, nanoid(), `Wallet,Phone Leads,${leadsAmount} leads,$${priceUsd},${chatId},${name},${new Date()}`)
         const usdOut = (wallet?.usdOut || 0) + priceUsd
         await set(walletOf, chatId, 'usdOut', usdOut)
       } else if (coin === u.ngn) {
-        set(payments, nanoid(), `Wallet,Phone Leads,${info?.amount},$${priceUsd},${chatId},${name},${new Date()},${priceNgn} NGN`)
+        set(payments, nanoid(), `Wallet,Phone Leads,${leadsAmount} leads,$${priceUsd},${chatId},${name},${new Date()},${priceNgn} NGN`)
         const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
         await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
       } else {
@@ -872,6 +875,7 @@ bot?.on('message', async msg => {
       // buy leads
       send(chatId, t.validatorBulkNumbersStart, o) // main keyboard view
       const phones = info?.phones?.slice(0, info?.amount)
+      const leadsAmount = info?.amount
       const res = await validatePhoneBulkFile(info?.carrier, phones, cc, cnam, bot, chatId)
       if (!res) return send(chatId, t.validatorError)
 
@@ -912,11 +916,11 @@ bot?.on('message', async msg => {
       const name = await get(nameOf, chatId)
       // wallet update
       if (coin === u.usd) {
-        set(payments, nanoid(), `Wallet,Validate Leads,${info?.amount},$${priceUsd},${chatId},${name},${new Date()}`)
+        set(payments, nanoid(), `Wallet,Validate Leads,${leadsAmount} leads,$${priceUsd},${chatId},${name},${new Date()}`)
         const usdOut = (wallet?.usdOut || 0) + priceUsd
         await set(walletOf, chatId, 'usdOut', usdOut)
       } else if (coin === u.ngn) {
-        set(payments, nanoid(), `Wallet,Validate Leads,${info?.amount},$${priceUsd},${chatId},${name},${new Date()},${priceNgn} NGN`)
+        set(payments, nanoid(), `Wallet,Validate Leads,${leadsAmount} leads,$${priceUsd},${chatId},${name},${new Date()},${priceNgn} NGN`)
         const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
         await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
       } else {
@@ -939,12 +943,12 @@ bot?.on('message', async msg => {
       if (coin === u.usd && usdBal < priceUsd) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
       const priceNgn = await usdToNgn(price)
       if (coin === u.ngn && ngnBal < priceNgn) return send(chatId, t.walletBalanceLow, k.of([u.deposit]))
-
+      let _shortUrl;
       try {
         const { url } = info
         const slug = nanoid()
         const __shortUrl = `${SELF_URL}/${slug}`
-        const _shortUrl = await createShortBitly(__shortUrl)
+        _shortUrl = await createShortBitly(__shortUrl)
         const shortUrl = __shortUrl.replaceAll('.', '@').replace('https://', '')
         increment(totalShortLinks)
         set(maskOf, shortUrl, _shortUrl)
@@ -960,11 +964,11 @@ bot?.on('message', async msg => {
 
       // wallet update
       if (coin === u.usd) {
-        set(payments, nanoid(), `Wallet,Bit.ly Link,${info?.link},$${priceUsd},${chatId},${name},${new Date()}`)
+        set(payments, nanoid(), `Wallet,Bit.ly Link,${_shortUrl},$${priceUsd},${chatId},${name},${new Date()}`)
         const usdOut = (wallet?.usdOut || 0) + priceUsd
         await set(walletOf, chatId, 'usdOut', usdOut)
       } else if (coin === u.ngn) {
-        set(payments, nanoid(), `Wallet,Bit.ly Link,${info?.link},$${priceUsd},${chatId},${name},${new Date()},${priceNgn} NGN`)
+        set(payments, nanoid(), `Wallet,Bit.ly Link,${_shortUrl},$${priceUsd},${chatId},${name},${new Date()},${priceNgn} NGN`)
         const ngnOut = isNaN(wallet?.ngnOut) ? 0 : Number(wallet?.ngnOut)
         await set(walletOf, chatId, 'ngnOut', ngnOut + priceNgn)
       } else {
@@ -2038,6 +2042,13 @@ async function getAnalytics() {
   return ans.map(a => `${a._id}: ${a.val} click${a.val === 1 ? '' : 's'}`).sort((a, b) => a.localeCompare(b))
 }
 
+
+async function getAnalyticsOfAllSms() {
+  let ans = await getAll(clicksOfSms)
+  if (!ans) return []
+  return ans.map(a => `${a._id}: ${a.val} click${a.val === 1 ? '' : 's'}`).sort((a, b) => a.localeCompare(b))
+}
+
 async function getShortLinks(chatId) {
   let ans = await get(linksOf, chatId)
   if (!ans) return []
@@ -2103,6 +2114,7 @@ async function backupTheData() {
     freeShortLinksOf: await getAll(freeShortLinksOf),
     freeDomainNamesAvailableFor: await getAll(freeDomainNamesAvailableFor),
     freeSmsCountOf: await getAll(freeSmsCountOf),
+    clicksOfSms: await getAll(clicksOfSms),
     payments: await getAll(payments),
     clicksOf: await getAll(clicksOf),
     clicksOn: await getAll(clicksOn),
@@ -2332,9 +2344,20 @@ app.get('/free-sms-count/:chatId', async (req, res) => {
 app.get('/increment-free-sms-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
   increment(freeSmsCountOf, Number(chatId))
+  increment(clicksOfSms, today())
+  increment(clicksOfSms, week())
+  increment(clicksOfSms, month())
+  increment(clicksOfSms, year())
   res.send('ok')
 })
 
+
+app.get('/analytics-of-all-sms', async (req, res) => {
+  const analyticsData = await getAnalyticsOfAllSms()
+  res.send(`All Sms Analytics Data:
+  <br/>
+  ${analyticsData.join('<br/>')}`)
+})
 app.get('/login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
   const loginData = (await get(loginCountOf, Number(chatId))) || { loginCount: 0, canLogin: true }
