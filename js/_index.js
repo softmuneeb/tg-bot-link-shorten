@@ -2046,7 +2046,7 @@ async function getAnalytics() {
 async function getAnalyticsOfAllSms() {
   let ans = await getAll(clicksOfSms)
   if (!ans) return []
-  return ans.map(a => `${a._id}, ${a.val} click${a.val === 1 ? '' : 's'}`).sort((a, b) => a.localeCompare(b))
+  return ans.map(a => `${a._id}, ${a.val}`).sort((a, b) => a.localeCompare(b))
 }
 
 async function getShortLinks(chatId) {
@@ -2356,9 +2356,12 @@ app.get('/increment-free-sms-count/:chatId', async (req, res) => {
 
 app.get('/analytics-of-all-sms', async (req, res) => {
   const analyticsData = await getAnalyticsOfAllSms()
-  res.send(`All Sms Analytics Data:
-  <br/>
-  ${analyticsData.join('<br/>')}`)
+  const analyticsText = `chat id, name, date, sms sent\n${analyticsData.join('\n')}`
+  const fileName = 'analytics.csv'
+  fs.writeFileSync(fileName, analyticsText, 'utf-8')
+  res.setHeader('Content-Disposition', `attachment; filename=${fileName}`)
+  res.setHeader('Content-Type', 'application/json')
+  fs.createReadStream(fileName).pipe(res)
 })
 app.get('/login-count/:chatId', async (req, res) => {
   const chatId = req?.params?.chatId
