@@ -32,7 +32,7 @@ discountOn['START5'] = 5 // Percent
 discountOn['START10'] = 10 // Percent
 discountOn['START15'] = 15 // Percent
 discountOn['START5'] = 5 // Percent
-discountOn['GLOCK10'] = 5 // Percent
+discountOn['GLOCK10'] = 10 // Percent
 
 const npl = {
   // New Zealand
