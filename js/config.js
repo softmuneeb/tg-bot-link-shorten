@@ -374,7 +374,7 @@ ${bal(usd, ngn)}`,
   buyLeadsSelectArea: 'Please select area',
   buyLeadsSelectAreaCode: 'Please select area code',
   buyLeadsSelectCarrier: 'Please select carrier',
-  buyLeadsSelectCnam: 'You want to search the owners name? CNAME costs extra 10$ per 1000 leads',
+  buyLeadsSelectCnam: 'You want to search the owners name? CNAME costs extra 13$ per 1000 leads',
   buyLeadsSelectAmount: (min, max) =>
     `How much leads do you want to purchase? Select or type a number. Minimum is ${min} and Maximum is ${max}`,
   buyLeadsSelectFormat: 'Choose format i.e Local (212) or International (+1212)',
