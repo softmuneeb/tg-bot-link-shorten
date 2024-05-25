@@ -31,7 +31,7 @@ const discountOn = {}
 discountOn['NOMADLY5'] = 5 // Percent
 discountOn['START108'] = 10 // Percent
 discountOn['START158'] = 15 // Percent
-discountOn['START58'] = 5 // Percent
+discountOn['FREE10'] = 10 // Percent
 discountOn['GLOCK5'] = 5 // Percent
 
 const npl = {
