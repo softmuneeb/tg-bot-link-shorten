@@ -28,11 +28,11 @@ const FREE_LINKS_HOURS = Number(process.env.FREE_LINKS_TIME_SECONDS) / 60 / 60
 const MONTHLY_PLAN_FREE_DOMAINS = Number(process.env.MONTHLY_PLAN_FREE_DOMAINS)
 
 const discountOn = {}
-discountOn['NOMADLY5'] = 5 // Percent
+discountOn['NOMADY5'] = 5 // Percent
 discountOn['START108'] = 10 // Percent
 discountOn['START158'] = 15 // Percent
-discountOn['FREE10'] = 10 // Percent
-discountOn['GLOCK5'] = 5 // Percent
+discountOn['FR10'] = 10 // Percent
+discountOn['GLK5'] = 5 // Percent
 
 const npl = {
   // New Zealand
