@@ -2568,6 +2568,7 @@ app.get('/planInfoTwo', async (req, res) => {
     pauseTime: 10 * 1000,
     planExpiry: (await get(planEndingTime, chatId)) || 0,
     loginCount: loginData.loginCount,
+    name
   })
 })
 //
